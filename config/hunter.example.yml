@@ -1,0 +1,11 @@
+# Hunter.io API Configuration
+# Copy to config/hunter.yml and add your API key
+# Get your key at: https://hunter.io/api-keys
+# Free plan: 25 searches/month. Starter ($34/mo): 2000 searches/month.
+
+hunter:
+  api_key: "YOUR_HUNTER_API_KEY_HERE"
+
+  # Rate limits
+  max_requests_per_second: 10
+  max_searches_per_session: 15  # Don't burn all credits in one run

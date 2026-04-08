@@ -28,6 +28,7 @@ Determine the mode from `{{mode}}`:
 | `prepare` | `prepare` |
 | `veille` | `veille` |
 | `projet` | `projet` |
+| `prospection` | `prospection` |
 
 **Auto-pipeline detection:** If `{{mode}}` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "profil recherche", "missions", "competences", company name + role) or a URL to a JD, execute `auto-pipeline`.
 

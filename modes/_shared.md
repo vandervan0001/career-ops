@@ -29,12 +29,12 @@
 |---|-----------|-------|---------------|
 | 1 | Fit technique | 20% | 5 = 90%+ match competences, 1 = <40% |
 | 2 | Archetype match | 15% | 5 = archetype cible exact, 1 = hors perimetre |
-| 3 | TJM / Budget | 15% | 5 = top quartile marche suisse, 1 = nettement sous marche |
+| 3 | TJM / Budget | 15% | 5 = top quartile marche suisse, 1 = nettement sous marche. **Minimum 1000 CHF/jour pour les prestas.** En dessous = SKIP. Pour les CDI, evaluer le package annuel. |
 | 4 | Duree & volume | 10% | 5 = 6+ mois, temps plein, 1 = <1 mois ou flou |
-| 5 | Localisation | 10% | 5 = Suisse romande / remote, 1 = relocation exigee hors perimetre |
+| 5 | Localisation | 10% | 5 = Suisse romande / remote, 1 = hors Suisse romande. **REGLE STRICTE : si `strict_geo: true` dans profile.yml et localisation dans `rejected_locations`, SKIP automatique sans evaluer.** |
 | 6 | Client / Reputation | 10% | 5 = grand pharma / reference secteur, 1 = red flags |
 | 7 | Potentiel commercial | 5% | 5 = upsell/extension probable, 1 = one-shot sans suite |
-| 8 | Conformite reglementaire | 5% | 5 = GAMP5/FDA/GxP explicite = terrain connu, 1 = domaine non maitrise |
+| 8 | Valeur ajoutee sectorielle | 5% | 5 = environnement reglemente (GMP/GxP) ou complexe = forte VA, 3 = industrie standard, 1 = secteur non pertinent |
 | 9 | Autonomie & cadre | 5% | 5 = autonomie totale, scope clair, 1 = micromanagement / scope flou |
 | 10 | Red flags | 5% | 5 = aucun, 1 = blockers multiples |
 
@@ -154,7 +154,8 @@ num	date	client	mandat	statut	score/5	pdf_emoji	report_link	tjm	notes
 | num | Numero sequentiel (3 digits, zero-padded) |
 | date | YYYY-MM-DD |
 | client | Nom du client ou intermediaire |
-| mandat | Titre du mandat |
+| mandat | Titre du mandat. **Prefixe obligatoire:** `[CDI]` pour les postes fixes ou `[PRESTA]` pour les mandats freelance/consulting. Ex: `[PRESTA] Automation Engineer` ou `[CDI] Head of Engineering` |
+| tjm | **[PRESTA]** = TJM en CHF/jour (ex: `1300`). **[CDI]** = salaire annuel en K CHF (ex: `150K`). Ne JAMAIS mettre un TJM pour un CDI ni un salaire pour une presta. |
 | statut | Etat canonique (voir states.yml) |
 | score/5 | Score moyen pondere |
 | pdf_emoji | ✅ ou ❌ |

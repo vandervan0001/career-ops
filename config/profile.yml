@@ -16,6 +16,10 @@ certifications:
   - "CAS Cybersecurity"
   - "CAS Artificial Intelligence"
 
+search_modes:
+  freelance: true   # Mandats consulting / TJM
+  executive: true   # Postes CDI Head of / C-level
+
 service_offering:
   primary_roles:
     - name: "Intégrateur Automation"
@@ -33,6 +37,30 @@ service_offering:
     - name: "Consultant Applied AI"
       level: "Senior"
       fit: "adjacent"
+
+  # Postes CDI executive ciblés
+  executive_roles:
+    - name: "Head of Automation / OT"
+      level: "Director"
+      fit: "primary"
+    - name: "Responsable département automation"
+      level: "Director"
+      fit: "primary"
+    - name: "VP Engineering / Manufacturing"
+      level: "C-level"
+      fit: "primary"
+    - name: "CTO / Directeur technique"
+      level: "C-level"
+      fit: "secondary"
+    - name: "Head of Digital / Industry 4.0"
+      level: "Director"
+      fit: "secondary"
+
+education:
+  current:
+    program: "MBA"
+    status: "en cours"
+    note: "Orientation leadership & management stratégique"
 
   tech_stack:
     siemens:
@@ -74,11 +102,21 @@ service_offering:
       - "Historian / PI"
 
 industries:
-  primary: "Pharma / Life Sciences"
-  secondary:
+  # Pas de restriction sectorielle — tout ce qui paye >= 1000 CHF/jour
+  primary: "Tous secteurs industriels"
+  preferred:
+    - "Pharma / Life Sciences"
     - "Chimie fine"
     - "Agroalimentaire"
     - "Énergie"
+    - "Horlogerie / luxe"
+    - "Manufacturing"
+    - "Cleantech"
+    - "Défense"
+    - "Aéronautique"
+    - "Médical / biomedical"
+    - "Logistique / transport"
+    - "Bâtiment / infrastructure"
 
 project_types:
   - "Migration de systèmes (PCS7 v7→v9, ControlLogix v20→v34)"
@@ -97,14 +135,58 @@ engagement_models:
 pricing:
   model: "TJM"
   currency: "CHF"
-  range: "[à définir]"
+  minimum_tjm: 1000  # Ne pas descendre en dessous de 1000 CHF/jour
+  target_tjm: 1300   # Cible
+  range: "1000-1800 CHF/jour"
+
+  # Convention colonne TJM dans mandats.md :
+  # [PRESTA] → TJM en CHF/jour (ex: "1300")
+  # [CDI] → Salaire annuel en K CHF (ex: "150K")
+  # Ne JAMAIS mettre un TJM pour un CDI
 
 location:
   country: "Suisse"
   region: "Suisse romande"
   city: "Le Mont-sur-Lausanne"
   timezone: "CET"
-  mobility: "Suisse romande, déplacements ponctuels DACH"
+  mobility: "Suisse romande uniquement"
+  strict_geo: true  # Si true, SKIP automatique pour tout mandat hors Suisse romande
+  accepted_locations:
+    - "Lausanne"
+    - "Genève"
+    - "Vaud"
+    - "Geneve"
+    - "Fribourg"
+    - "Neuchâtel"
+    - "Neuchatel"
+    - "Valais"
+    - "Yverdon"
+    - "Montreux"
+    - "Nyon"
+    - "Morges"
+    - "Bulle"
+    - "Sion"
+    - "Bienne"
+    - "Suisse romande"
+    - "Romandie"
+    - "remote"
+    - "télétravail"
+  rejected_locations:
+    - "Basel"
+    - "Bâle"
+    - "Zürich"
+    - "Zurich"
+    - "Bern"
+    - "Berne"
+    - "Buchs"
+    - "Rotkreuz"
+    - "Kaiseraugst"
+    - "Muttenz"
+    - "Stein"
+    - "Visp"
+    - "Deutschland"
+    - "Germany"
+    - "Allemagne"
 
 narrative:
   headline: "Ingénieur automation senior & chef de projet, spécialisé pharma/life sciences"

@@ -59,9 +59,11 @@ const (
 
 // Filter modes
 const (
-	filterAll  = "all"
-	filterSkip = "skip"
-	filterTop  = "top"
+	filterAll    = "all"
+	filterSkip   = "skip"
+	filterTop    = "top"
+	filterPresta = "presta"
+	filterCDI    = "cdi"
 )
 
 type pipelineTab struct {
@@ -71,11 +73,10 @@ type pipelineTab struct {
 
 var pipelineTabs = []pipelineTab{
 	{filterAll, "TOUS"},
-	{"evalue", "\u00c9VALU\u00c9S"},
-	{"qualifie", "QUALIFI\u00c9S"},
-	{"discussion", "DISCUSSION"},
-	{"signe", "SIGN\u00c9S"},
-	{filterTop, "TOP \u22654"},
+	{filterPresta, "PRESTA"},
+	{filterCDI, "CDI"},
+	{"signe", "SIGNÉS"},
+	{filterTop, "TOP ≥4"},
 	{filterSkip, "SKIP"},
 }
 
@@ -266,6 +267,17 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			m.statusCursor = 0
 		}
 
+	case "r":
+		// Refresh: reload mandats.md
+		newApps := data.ParseMandats(m.careerOpsPath)
+		if newApps != nil {
+			m.apps = newApps
+			m.metrics = data.ComputeMetrics(newApps)
+			m.applyFilterAndSort()
+			m.cursor = 0
+			m.scrollOffset = 0
+		}
+
 	case "pgdown", "ctrl+d":
 		m.scrollOffset += m.height / 2
 		return m, nil
@@ -342,6 +354,14 @@ func (m *PipelineModel) applyFilterAndSort() {
 			filtered = append(filtered, app)
 		case filterTop:
 			if app.Score >= 4.0 && norm != "skip" {
+				filtered = append(filtered, app)
+			}
+		case filterPresta:
+			if strings.Contains(strings.ToUpper(app.Title), "[PRESTA]") {
+				filtered = append(filtered, app)
+			}
+		case filterCDI:
+			if strings.Contains(strings.ToUpper(app.Title), "[CDI]") {
 				filtered = append(filtered, app)
 			}
 		default:
@@ -766,6 +786,7 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
+		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Esc") + descStyle.Render(" quit")
 
 	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2
