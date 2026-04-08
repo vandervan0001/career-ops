@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * test-all.mjs — Comprehensive test suite for career-ops
+ * test-all.mjs — Suite de tests pour consulting-ops
  *
- * Run before merging any PR or pushing changes.
- * Tests: syntax, scripts, dashboard, data contract, personal data, paths.
+ * Executer avant de merger un PR ou pousser des changements.
+ * Tests : syntaxe, scripts, dashboard, contrat de donnees, donnees personnelles, chemins.
  *
  * Usage:
- *   node test-all.mjs           # Run all tests
- *   node test-all.mjs --quick   # Skip dashboard build (faster)
+ *   node test-all.mjs           # Tous les tests
+ *   node test-all.mjs --quick   # Sans build dashboard (plus rapide)
  */
 
 import { execSync } from 'child_process';
@@ -39,7 +39,7 @@ function run(cmd, opts = {}) {
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
 
-console.log('\n🧪 career-ops test suite\n');
+console.log('\nconsulting-ops test suite\n');
 
 // ── 1. SYNTAX CHECKS ────────────────────────────────────────────
 
@@ -101,9 +101,9 @@ console.log('\n4. Data contract validation');
 const systemFiles = [
   'CLAUDE.md', 'VERSION', 'DATA_CONTRACT.md',
   'modes/_shared.md', 'modes/_profile.template.md',
-  'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
+  'modes/mandat.md', 'modes/cv.md', 'modes/scan.md',
   'templates/states.yml', 'templates/cv-template.html',
-  '.claude/skills/career-ops/SKILL.md',
+  'templates/proposal-template.html',
 ];
 
 for (const f of systemFiles) {
@@ -182,9 +182,10 @@ if (!absPathResult) {
 console.log('\n7. Mode file integrity');
 
 const expectedModes = [
-  '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
-  'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
-  'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
+  '_shared.md', '_profile.template.md', 'mandat.md', 'cv.md', 'scan.md',
+  'batch.md', 'auto-pipeline.md', 'client.md', 'contact.md',
+  'mandats.md', 'pipeline.md', 'projet.md', 'tracker.md', 'proposition.md',
+  'veille.md', 'prepare.md',
 ];
 
 for (const mode of expectedModes) {
@@ -211,7 +212,7 @@ const claude = readFile('CLAUDE.md');
 const requiredSections = [
   'Data Contract', 'Update Check', 'Ethical Use',
   'Offer Verification', 'Canonical States', 'TSV Format',
-  'First Run', 'Onboarding',
+  'First Run', 'Onboarding', 'consulting-ops',
 ];
 
 for (const section of requiredSections) {

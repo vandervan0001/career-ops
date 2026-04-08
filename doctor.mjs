@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * doctor.mjs — Setup validation for career-ops
- * Checks all prerequisites and prints a pass/fail checklist.
+ * doctor.mjs — Validation du setup consulting-ops
+ * Verifie tous les prerequis et affiche une checklist pass/fail.
  */
 
 import { existsSync, mkdirSync, readdirSync } from 'fs';
@@ -150,8 +150,8 @@ function checkAutoDir(name) {
 }
 
 async function main() {
-  console.log('\ncareer-ops doctor');
-  console.log('================\n');
+  console.log('\nconsulting-ops doctor');
+  console.log('====================\n');
 
   const checks = [
     checkNodeVersion(),

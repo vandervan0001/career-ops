@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * check-liveness.mjs — Playwright job link liveness checker
+ * check-liveness.mjs — Verification de liens via Playwright
  *
- * Tests whether job posting URLs are still active or have expired.
- * Uses the same detection logic as scan.md step 7.5.
- * Zero Claude API tokens — pure Playwright.
+ * Teste si les URLs d'opportunites/mandats sont encore actives ou expirees.
+ * Utilise la meme logique de detection que scan.md.
+ * Zero tokens Claude API — pur Playwright.
  *
  * Usage:
  *   node check-liveness.mjs <url1> [url2] ...
  *   node check-liveness.mjs --file urls.txt
  *
- * Exit code: 0 if all active, 1 if any expired or uncertain
+ * Exit code: 0 si tous actifs, 1 si expire ou incertain
  */
 
 import { chromium } from 'playwright';

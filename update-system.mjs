@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * update-system.mjs — Safe auto-updater for career-ops
+ * update-system.mjs — Auto-updater securise pour consulting-ops
  *
- * Updates ONLY system layer files (modes, scripts, dashboard, templates).
- * NEVER touches user data (cv.md, profile.yml, _profile.md, data/, reports/).
+ * Met a jour UNIQUEMENT les fichiers systeme (modes, scripts, dashboard, templates).
+ * NE TOUCHE JAMAIS aux donnees utilisateur (cv.md, profile.yml, _profile.md, data/, reports/).
  *
  * Usage:
- *   node update-system.mjs check      # Check if update available
- *   node update-system.mjs apply      # Apply update (after user confirms)
- *   node update-system.mjs rollback   # Rollback last update
- *   node update-system.mjs dismiss    # Dismiss update check
+ *   node update-system.mjs check      # Verifier si une mise a jour est disponible
+ *   node update-system.mjs apply      # Appliquer la mise a jour (apres confirmation)
+ *   node update-system.mjs rollback   # Revenir a la version precedente
+ *   node update-system.mjs dismiss    # Ignorer la verification de mise a jour
  *
- * See DATA_CONTRACT.md for the full system/user layer definitions.
+ * Voir DATA_CONTRACT.md pour les definitions des couches systeme/utilisateur.
  */
 
 import { execSync } from 'child_process';
