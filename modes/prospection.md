@@ -93,54 +93,77 @@ Pour chaque cible qualifiee :
 
 #### Entreprise qui recrute un poste automation (signal fort)
 ```
-Objet: {poste} chez {company} — alternative rapide
+Objet : {poste} chez {company}
 
-Bonjour {prenom},
+Bonjour,
 
-J'ai vu que vous cherchez un(e) {poste}. Le recrutement prend souvent 3-6 mois en automation — en attendant, {company_name} peut etre impact(e).
+J'ai vu que vous cherchez un(e) {poste}. Le recrutement prend souvent 3 à 6 mois en automation. En attendant, je peux intervenir en délégation senior.
 
-Chez Vanguard Systems, on intervient en delegation senior : {proof_point_pertinent}.
+J'ai accompagné {client_reference} sur un projet similaire : {proof_point_pertinent}.
 
-Un echange de 15 min pour voir si on peut aider en attendant votre recrutement ?
+Seriez-vous disponible pour un échange de 15 minutes ?
 
-Tai Van | Vanguard Systems
-+41 79 172 08 08 | vanguard-systems.ch
+Bien cordialement,
+Tai Van
+Vanguard Systems
++41 79 172 08 08
+vanguard-systems.ch
 ```
 
 #### Entreprise en expansion / nouveau projet (signal moyen)
 ```
-Objet: {type_projet} chez {company} — support automation
+Objet : {type_projet} chez {company}
 
-Bonjour {prenom},
+Bonjour,
 
-J'ai lu que {company} {detail_expansion}. Ce type de projet genere souvent des besoins en {type_expertise}.
+J'ai lu que {company} {détail_expansion}. Ce type de projet génère souvent des besoins en {type_expertise}.
 
-On a accompagne {client_reference} sur un projet similaire : {proof_point}.
+J'ai accompagné {client_référence} sur un projet similaire : {proof_point}.
 
-Seriez-vous ouvert a un echange de 15 min ?
+Seriez-vous ouvert à un échange de 15 minutes ?
 
-Tai Van | Vanguard Systems
+Bien cordialement,
+Tai Van
+Vanguard Systems
++41 79 172 08 08
+vanguard-systems.ch
 ```
 
-#### Prospection a froid (pas de signal specifique)
+#### Prospection à froid (pas de signal spécifique)
 ```
-Objet: Automation industrielle — {company}
+Objet : Automation industrielle chez {company}
 
-Bonjour {prenom},
+Bonjour,
 
-Je me permets de vous contacter car {company} evolue dans un secteur ou l'automation et la fiabilite des systemes sont critiques.
+Je me permets de vous contacter car {company} évolue dans un secteur où l'automation et la fiabilité des systèmes sont critiques.
 
-Vanguard Systems est un reseau de consultants seniors en automation industrielle. Nos clients (Merck, Novartis, Roche, Takeda) font appel a nous pour {type_besoin_secteur}.
+Je suis consultant senior en automation industrielle, basé en Suisse romande. J'ai accompagné Merck, Novartis, Roche et Takeda sur des projets de {type_besoin_secteur}.
 
-Si {company} a des projets de {migration/modernisation/digitalisation/qualification}, je serais ravi d'en discuter.
+Si {company} a des projets de migration, modernisation ou qualification, je serais disponible pour en discuter.
 
-Tai Van | Vanguard Systems
+Bien cordialement,
+Tai Van
+Vanguard Systems
++41 79 172 08 08
+vanguard-systems.ch
 ```
+
+**REGLE CRITIQUE : Tous les messages DOIVENT être rédigés en français correct avec les accents (é, è, ê, à, ù, ç, î, ô). Jamais de "e" sans accent quand il faut un "é". Jamais de "a" sans accent quand c'est "à". Le français sans accents donne une impression d'amateurisme.**
 
 ### Phase 5 — Envoi
 
 - **Email** : via `node send-email.mjs --to "{email}" --subject "{objet}" --body-file /tmp/prospection-{company}.txt`
-- **LinkedIn** : via Chrome MCP — connection request avec message court (300 chars)
+- **LinkedIn** : via Chrome MCP — workflow exact :
+  1. `navigate` vers le profil LinkedIn
+  2. `screenshot` pour verifier que c'est un decideur (titre dans le profil)
+  3. `find` "Se connecter button on profile section" → `left_click` sur le ref
+  4. `wait` 2 sec
+  5. `key` "Tab Tab Return" → ouvre le champ de note
+  6. `wait` 2 sec
+  7. `type` le message (300 chars max)
+  8. `key` "Tab Tab Return" → envoie
+  9. `wait` 3 sec + `screenshot` → verifier "Invitation envoyee" dans le toast
+  10. Si CAPTCHA ou rate limit → STOP, notifier, skip le reste
 - **Tracking** : chaque envoi est enregistre dans `data/prospection.tsv`
 
 ### Phase 6 — Suivi
@@ -164,7 +187,7 @@ Statuts : identifie, qualifie, envoye, relance_1, relance_2, reponse, rdv, perdu
 - **Limite d'envoi** : max 50 emails/jour (reputation SMTP), max 20 connections LinkedIn/jour (anti-ban)
 - **Personnalisation obligatoire** : JAMAIS de message generique. Chaque message reference un fait specifique sur l'entreprise.
 
-## Regles
+## Regles generales
 
 - JAMAIS envoyer de spam generique
 - TOUJOURS personnaliser avec un fait specifique sur l'entreprise
@@ -172,3 +195,57 @@ Statuts : identifie, qualifie, envoye, relance_1, relance_2, reponse, rdv, perdu
 - Respecter les limites de rate (email + LinkedIn)
 - Si une entreprise demande de ne plus etre contactee → blacklist immediate
 - Le ton est celui d'un pair, pas d'un vendeur
+
+## Regles d'ecriture — STRICTES (email + LinkedIn)
+
+### Style obligatoire
+- Naturel, comme un humain ecrirait. Pas de ton IA.
+- Phrases courtes. 2-3 phrases pour LinkedIn, 4-5 pour email.
+- Vouvoiement en Suisse, toujours.
+- Un fait specifique sur EUX, pas sur nous.
+
+### Interdit
+- Tirets longs (—), listes a puces dans les messages
+- "Je serais ravi de...", "je me permets de...", "n'hesitez pas a..."
+- Superlatifs ("excellent", "formidable", "impressionnant", "unique")
+- Corporate-speak ("synergie", "valeur ajoutee", "win-win", "leverage")
+- Emojis
+- Exclamation marks (!)
+- Mots en gras ou italique dans les messages
+
+### LinkedIn — connection request (300 chars max)
+- Max 2-3 phrases. Pas plus.
+- Pas de pitch. On ne vend rien. On propose un echange ou on dit pourquoi on se connecte.
+- Si possible, mentionner un contenu qu'ils ont publie ou partage.
+- Ton = collegue senior de la meme industrie, pas vendeur.
+
+#### Exemples qui marchent
+```
+Bonjour, j'ai vu votre projet d'expansion a Bulle. Je travaille en automation pharma dans la region, ca pourrait valoir un echange.
+```
+```
+Bonjour, on evolue dans le meme secteur en Suisse romande. Je fais de l'automation industrielle pour des sites de production. Content de vous avoir dans mon reseau.
+```
+```
+Votre post sur la digitalisation m'a interpelle. Je bosse sur des sujets similaires cote OT/automation. Ouvert a echanger ?
+```
+
+#### Ce qui tue le taux d'acceptation
+- Messages generiques copier-coller
+- Pitcher ses services dans la connection request
+- Parler de soi au lieu de parler d'eux
+- Ton trop formel ou robotique
+- Envoyer sans avoir regarde le profil
+
+### LinkedIn — qui connecter (filtre qualite)
+**OUI :**
+- C-level, VP, Directeurs, Head of
+- Responsables de departement, Plant managers
+- Decision-makers qui signent des bons de commande
+
+**NON :**
+- Ingenieurs individuels
+- Recruteurs / RH / talent acquisition
+- Commerciaux / sales
+- Profils juniors
+- Profils hors industrie/manufacturing
