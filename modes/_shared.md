@@ -1,11 +1,11 @@
-# System Context -- career-ops
+# System Context -- consulting-ops
 
 <!-- ============================================================
      THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.
      
      Your customizations go in modes/_profile.md (never auto-updated).
      This file contains system rules, scoring logic, and tool config
-     that improve with each career-ops release.
+     that improve with each consulting-ops release.
      ============================================================ -->
 
 ## Sources of Truth
@@ -13,121 +13,164 @@
 | File | Path | When |
 |------|------|------|
 | cv.md | `cv.md` (project root) | ALWAYS |
-| article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
-| profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
-| _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
+| profile.yml | `config/profile.yml` | ALWAYS (consultant identity and targets) |
+| _profile.md | `modes/_profile.md` | ALWAYS (archetypes, narrative, negotiation) |
 
-**RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
-**RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
+**RULE: NEVER hardcode metrics from proof points.** Read them from cv.md at evaluation time.
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
 
 ---
 
 ## Scoring System
 
-The evaluation uses 6 blocks (A-F) with a global score of 1-5:
+10 dimensions, weighted average 1-5:
 
-| Dimension | What it measures |
-|-----------|-----------------|
-| Match con CV | Skills, experience, proof points alignment |
-| North Star alignment | How well the role fits the user's target archetypes (from _profile.md) |
-| Comp | Salary vs market (5=top quartile, 1=well below) |
-| Cultural signals | Company culture, growth, stability, remote policy |
-| Red flags | Blockers, warnings (negative adjustments) |
-| **Global** | Weighted average of above |
+| # | Dimension | Poids | Criteres 1-5 |
+|---|-----------|-------|---------------|
+| 1 | Fit technique | 20% | 5 = 90%+ match competences, 1 = <40% |
+| 2 | Archetype match | 15% | 5 = archetype cible exact, 1 = hors perimetre |
+| 3 | TJM / Budget | 15% | 5 = top quartile marche suisse, 1 = nettement sous marche |
+| 4 | Duree & volume | 10% | 5 = 6+ mois, temps plein, 1 = <1 mois ou flou |
+| 5 | Localisation | 10% | 5 = Suisse romande / remote, 1 = relocation exigee hors perimetre |
+| 6 | Client / Reputation | 10% | 5 = grand pharma / reference secteur, 1 = red flags |
+| 7 | Potentiel commercial | 5% | 5 = upsell/extension probable, 1 = one-shot sans suite |
+| 8 | Conformite reglementaire | 5% | 5 = GAMP5/FDA/GxP explicite = terrain connu, 1 = domaine non maitrise |
+| 9 | Autonomie & cadre | 5% | 5 = autonomie totale, scope clair, 1 = micromanagement / scope flou |
+| 10 | Red flags | 5% | 5 = aucun, 1 = blockers multiples |
 
 **Score interpretation:**
-- 4.5+ → Strong match, recommend applying immediately
-- 4.0-4.4 → Good match, worth applying
-- 3.5-3.9 → Decent but not ideal, apply only if specific reason
-- Below 3.5 → Recommend against applying (see Ethical Use in CLAUDE.md)
+- 4.5+ = Prioritaire, postuler / repondre immediatement
+- 4.0-4.4 = Bon match, poursuivre
+- 3.5-3.9 = Acceptable si pipeline calme
+- <3.5 = Passer, sauf raison strategique specifique
+
+## Scoring <-> Report Relation
+
+| Bloc rapport | Dimensions alimentees |
+|--------------|-----------------------|
+| A: Resume mandat | dims 4 (duree), 5 (localisation), 8 (conformite) |
+| B: Fit technique | dims 1 (fit technique), 2 (archetype match) |
+| C: Positionnement | dims 2 (archetype match), 9 (autonomie & cadre) |
+| D: Marche & TJM | dims 3 (TJM/budget), 7 (potentiel commercial) |
+| E: Plan personnalisation | pas de score direct |
+| F: Preparation client | dims 6 (client/reputation), 10 (red flags) |
+
+---
 
 ## Archetype Detection
 
-Classify every offer into one of these types (or hybrid of 2):
+Classifier chaque mandat dans l'un des 5 archetypes (ou hybride de 2):
 
-| Archetype | Key signals in JD |
-|-----------|-------------------|
-| AI Platform / LLMOps | "observability", "evals", "pipelines", "monitoring", "reliability" |
-| Agentic / Automation | "agent", "HITL", "orchestration", "workflow", "multi-agent" |
-| Technical AI PM | "PRD", "roadmap", "discovery", "stakeholder", "product manager" |
-| AI Solutions Architect | "architecture", "enterprise", "integration", "design", "systems" |
-| AI Forward Deployed | "client-facing", "deploy", "prototype", "fast delivery", "field" |
-| AI Transformation | "change management", "adoption", "enablement", "transformation" |
+| Archetype | Signaux cles dans le mandat |
+|-----------|----------------------------|
+| **Integrateur Automation** | PLC, SCADA, DCS, migration, commissioning, FAT/SAT, mise en service |
+| **Chef de Projet Automation** | Planning, coordination, GAMP5, stakeholders, validation, budget |
+| **Expert OT / Infra industrielle** | Reseau OT, cybersecurite industrielle, IEC 62443, segmentation |
+| **Architecte Solutions** | MES, data historian, plateforme, migration globale, integration SI |
+| **Consultant Applied AI** | IA, ML, RAG, optimisation process, predictive maintenance, NLP |
 
-After detecting archetype, read `modes/_profile.md` for the user's specific framing and proof points for that archetype.
+Apres detection de l'archetype, lire `modes/_profile.md` pour le cadrage et les proof points specifiques.
+
+---
 
 ## Global Rules
 
 ### NEVER
 
-1. Invent experience or metrics
-2. Modify cv.md or portfolio files
-3. Submit applications on behalf of the candidate
-4. Share phone number in generated messages
-5. Recommend comp below market rate
-6. Generate a PDF without reading the JD first
-7. Use corporate-speak
-8. Ignore the tracker (every evaluated offer gets registered)
+1. Inventer des competences ou des metriques
+2. Modifier cv.md ou les fichiers portfolio
+3. Envoyer une proposition sans validation utilisateur
+4. Recommander un TJM en dessous du marche
+5. Generer un PDF sans avoir lu le cahier des charges / JD
+6. Utiliser du jargon corporate creux
+7. Ignorer le tracker (chaque mandat evalue est enregistre)
 
 ### ALWAYS
 
-0. **Cover letter:** If the form allows it, ALWAYS include one. Same visual design as CV. JD quotes mapped to proof points. 1 page max.
-1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
-1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
-2. Detect the role archetype and adapt framing per _profile.md
-3. Cite exact lines from CV when matching
-4. Use WebSearch for comp and company data
-5. Register in tracker after evaluating
-6. Generate content in the language of the JD (EN default)
-7. Be direct and actionable -- no fluff
-8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
-8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
-9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
-10. **Include `**URL:**` in every report header.**
+1. Lire cv.md, _profile.md, et profile.yml avant d'evaluer
+2. Detecter l'archetype du mandat et adapter le cadrage selon _profile.md
+3. Citer des lignes exactes du CV lors du matching
+4. Utiliser WebSearch pour TJM et donnees marche suisse
+5. Enregistrer dans le tracker apres evaluation
+6. Generer le contenu en francais (langue par defaut)
+7. Etre direct et actionnable -- pas de fluff
+8. Vocabulaire pharma/industrie precis (voir section ecriture professionnelle)
+9. **Tracker additions en TSV** -- JAMAIS editer applications.md directement. Ecrire le TSV dans `batch/tracker-additions/`.
+10. **Inclure `**URL:**` dans chaque en-tete de rapport.**
 
 ### Tools
 
-| Tool | Use |
-|------|-----|
-| WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
-| WebFetch | Fallback for extracting JDs from static pages |
-| Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
-| Read | cv.md, _profile.md, article-digest.md, cv-template.html |
-| Write | Temporary HTML for PDF, applications.md, reports .md |
-| Edit | Update tracker |
-| Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `canva_resume_design_id` in profile.yml. |
+| Tool | Utilisation |
+|------|-------------|
+| WebSearch | TJM suisse, tendances marche, reputation client, contacts LinkedIn |
+| WebFetch | Extraire des JD depuis des pages statiques (fallback) |
+| Read | cv.md, _profile.md, profile.yml |
+| Write | HTML temporaire pour PDF, applications.md, rapports .md |
+| Edit | Mettre a jour le tracker |
 | Bash | `node generate-pdf.mjs` |
-
-### Time-to-offer priority
-- Working demo + metrics > perfection
-- Apply sooner > learn more
-- 80/20 approach, timebox everything
 
 ---
 
-## Professional Writing & ATS Compatibility
+## Professional Writing -- French / Pharma / Industry
 
-These rules apply to ALL generated text that ends up in candidate-facing documents: PDF summaries, bullets, cover letters, form answers, LinkedIn messages. They do NOT apply to internal evaluation reports.
+Ces regles s'appliquent a TOUT texte genere pour le client ou pour des candidatures : CV adapte, message d'approche, reponses formulaires, profil LinkedIn. Elles ne s'appliquent PAS aux rapports d'evaluation internes.
 
-### Avoid cliché phrases
-- "passionate about" / "results-oriented" / "proven track record"
-- "leveraged" (use "used" or name the tool)
-- "spearheaded" (use "led" or "ran")
-- "facilitated" (use "ran" or "set up")
-- "synergies" / "robust" / "seamless" / "cutting-edge" / "innovative"
-- "in today's fast-paced world"
-- "demonstrated ability to" / "best practices" (name the practice)
+### Vocabulaire pharma a privilegier
+- "Qualification / validation" (pas "testing")
+- "Mise en service" (pas "commissioning" sauf contexte anglophone)
+- "Cahier des charges" (pas "requirements doc")
+- "Recette usine / recette site" (pour FAT/SAT)
+- "Automate programmable" (pour PLC en contexte francophone)
+- "Systeme de conduite" (pour DCS/SCADA en contexte francophone)
 
-### Unicode normalization for ATS
-`generate-pdf.mjs` automatically normalizes em-dashes, smart quotes, and zero-width characters to ASCII equivalents for maximum ATS compatibility. But avoid generating them in the first place.
+### Eviter les cliches
+- "passionne par" / "fort de X annees d'experience"
+- "synergie" / "robuste" / "seamless" / "cutting-edge" / "innovant"
+- "dans un monde en constante evolution"
+- "capacite demontree a" / "bonnes pratiques" (nommer la pratique)
 
-### Vary sentence structure
-- Don't start every bullet with the same verb
-- Mix sentence lengths (short. Then longer with context. Short again.)
-- Don't always use "X, Y, and Z" — sometimes two items, sometimes four
+### Privilegier le concret
+- "Migration 120 boucles DeltaV vers PlantPAx en 8 mois" > "migration reussie"
+- "Coordination 4 lots CVC/HVAC/process/utilities sur site Novartis Stein" > "gestion multi-lots"
+- Nommer les outils, projets, clients quand autorise
 
-### Prefer specifics over abstractions
-- "Cut p95 latency from 2.1s to 380ms" beats "improved performance"
-- "Postgres + pgvector for retrieval over 12k docs" beats "designed scalable RAG architecture"
-- Name tools, projects, and customers when allowed
+### Varier la structure
+- Ne pas commencer chaque puce par le meme verbe
+- Alterner phrases courtes et longues
+- Alterner entre 2, 3 et 4 elements dans les listes
+
+---
+
+## TSV Format -- Tracker
+
+10 colonnes, separateur tabulation:
+
+```
+num	date	client	mandat	statut	score/5	pdf_emoji	report_link	tjm	notes
+```
+
+| Colonne | Description |
+|---------|-------------|
+| num | Numero sequentiel (3 digits, zero-padded) |
+| date | YYYY-MM-DD |
+| client | Nom du client ou intermediaire |
+| mandat | Titre du mandat |
+| statut | Etat canonique (voir states.yml) |
+| score/5 | Score moyen pondere |
+| pdf_emoji | ✅ ou ❌ |
+| report_link | Lien relatif au rapport .md |
+| tjm | TJM negocie ou estime (CHF) |
+| notes | Notes libres |
+
+---
+
+## Pipeline Integrity
+
+- Chaque mandat evalue DOIT etre enregistre dans le tracker
+- Les etats doivent correspondre exactement aux valeurs de `templates/states.yml`
+- Un mandat ne peut pas reculer d'etat sauf si marque explicitement comme "Discarded"
+- Les rapports sont immutables apres generation (creer un addendum si mise a jour necessaire)
+
+## Canonical States
+
+Referencer `templates/states.yml` pour la liste exacte des etats et leurs alias.
