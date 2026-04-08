@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * dedup-tracker.mjs — Remove duplicate entries from applications.md
+ * dedup-tracker.mjs — Suppression des doublons dans mandats.md
  *
- * Groups by normalized company + fuzzy role match.
- * Keeps entry with highest score. If discarded entry had more advanced status,
- * preserves that status. Merges notes.
+ * Groupe par client normalise + correspondance floue du mandat.
+ * Garde l'entree avec le score le plus eleve. Si une entree supprimee
+ * avait un statut plus avance, conserve ce statut. Fusionne les notes.
  *
- * Run: node career-ops/dedup-tracker.mjs [--dry-run]
+ * Run: node dedup-tracker.mjs [--dry-run]
  */
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'fs';
@@ -14,23 +14,24 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
+// Support both layouts: data/mandats.md (boilerplate) and mandats.md (original)
+const APPS_FILE = existsSync(join(CAREER_OPS, 'data/mandats.md'))
+  ? join(CAREER_OPS, 'data/mandats.md')
+  : join(CAREER_OPS, 'mandats.md');
 const DRY_RUN = process.argv.includes('--dry-run');
 
-// Status advancement order (higher = more advanced in pipeline)
-// Aplicado > Rechazado because active application > terminal state
+// Ordre d'avancement des statuts (plus eleve = plus avance dans le pipeline)
 const STATUS_RANK = {
-  'no aplicar': 0,
-  'descartado': 0,
-  'rechazado': 1,  // Terminal — below active states
-  'evaluada': 2,
-  'aplicado': 3,
-  'respondido': 4,
-  'entrevista': 5,
-  'oferta': 6,
+  'skip': 0,
+  'perdu': 1,      // Terminal — en dessous des etats actifs
+  'identifie': 2,
+  'evalue': 3,
+  'qualifie': 4,
+  'proposition': 5,
+  'discussion': 6,
+  'signe': 7,
+  'en cours': 8,
+  'termine': 9,
 };
 
 function normalizeCompany(name) {
@@ -63,7 +64,7 @@ function parseScore(s) {
 
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
+  if (parts.length < 10) return null;
   const num = parseInt(parts[1]);
   if (isNaN(num)) return null;
   return {
@@ -75,14 +76,15 @@ function parseAppLine(line) {
     status: parts[6],
     pdf: parts[7],
     report: parts[8],
-    notes: parts[9] || '',
+    tjm: parts[9] || '',
+    notes: parts[10] || '',
     raw: line,
   };
 }
 
-// Read
+// Lecture
 if (!existsSync(APPS_FILE)) {
-  console.log('No applications.md found. Nothing to dedup.');
+  console.log('Aucun mandats.md trouve. Rien a dedupliquer.');
   process.exit(0);
 }
 const content = readFileSync(APPS_FILE, 'utf-8');
@@ -101,7 +103,7 @@ for (let i = 0; i < lines.length; i++) {
   }
 }
 
-console.log(`📊 ${entries.length} entries loaded`);
+console.log(`${entries.length} entrees chargees`);
 
 // Group by company+role
 const groups = new Map();
@@ -157,7 +159,7 @@ for (const [company, companyEntries] of groups) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
         parts[6] = bestStatus;
         lines[lineIdx] = '| ' + parts.slice(1, -1).join(' | ') + ' |';
-        console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
+        console.log(`  #${keeper.num}: statut promu a "${bestStatus}" (depuis #${cluster.find(e => e.status === bestStatus)?.num})`);
       }
     }
 
@@ -168,7 +170,7 @@ for (const [company, companyEntries] of groups) {
       if (lineIdx !== undefined) {
         linesToRemove.add(lineIdx);
         removed++;
-        console.log(`🗑️  Remove #${dup.num} (${dup.company} — ${dup.role}, ${dup.score}) → kept #${keeper.num} (${keeper.score})`);
+        console.log(`Supprime #${dup.num} (${dup.company} - ${dup.role}, ${dup.score}) -> conserve #${keeper.num} (${keeper.score})`);
       }
     }
   }
@@ -180,14 +182,14 @@ for (const idx of sortedRemoveIndices) {
   lines.splice(idx, 1);
 }
 
-console.log(`\n📊 ${removed} duplicates removed`);
+console.log(`\n${removed} doublons supprimes`);
 
 if (!DRY_RUN && removed > 0) {
   copyFileSync(APPS_FILE, APPS_FILE + '.bak');
   writeFileSync(APPS_FILE, lines.join('\n'));
-  console.log('✅ Written to applications.md (backup: applications.md.bak)');
+  console.log('Ecrit dans mandats.md (sauvegarde : mandats.md.bak)');
 } else if (DRY_RUN) {
-  console.log('(dry-run — no changes written)');
+  console.log('(dry-run - aucune modification ecrite)');
 } else {
-  console.log('✅ No duplicates found');
+  console.log('Aucun doublon trouve');
 }
