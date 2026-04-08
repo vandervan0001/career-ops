@@ -14,6 +14,8 @@
 #   3. Add/remove companies in tracked_companies
 #   4. Adjust search_queries for your preferred job boards
 #   5. Set enabled: false on companies you don't care about
+#
+# GEO FOCUS: Suisse romande uniquement (Vaud, Genève, Fribourg, Neuchâtel, Valais)
 
 # -- Title filter --
 # The scanner uses these keywords to decide if a title is relevant.
@@ -117,77 +119,87 @@ title_filter:
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.
+# GEO: All queries target Suisse romande (Lausanne, Genève, Vaud, Fribourg, Neuchâtel)
 
 search_queries:
 
-  # -- jobs.ch --
+  # -- jobs.ch (Suisse romande) --
   - name: "jobs.ch — Automation pharma Suisse romande"
     query: 'site:jobs.ch "automation" "pharma" Suisse romande'
     enabled: true
 
-  - name: "jobs.ch — Chef de projet automation Vaud"
-    query: 'site:jobs.ch "chef de projet" "automation" Vaud'
+  - name: "jobs.ch — Automation Lausanne/Genève/Vaud/Fribourg/Neuchâtel"
+    query: 'site:jobs.ch "automation" Lausanne OR Genève OR Vaud OR Fribourg OR Neuchâtel'
     enabled: true
 
-  - name: "jobs.ch — Ingénieur automation PLC Suisse"
-    query: 'site:jobs.ch "ingénieur automation" OR "PLC" OR "SCADA" Suisse'
+  - name: "jobs.ch — Chef de projet pharma Suisse romande"
+    query: 'site:jobs.ch "chef de projet" pharma "Suisse romande" OR Lausanne OR Genève OR Vaud'
     enabled: true
 
-  # -- jobup.ch --
+  - name: "jobs.ch — Ingénieur automation PLC Suisse romande"
+    query: 'site:jobs.ch "ingénieur automation" OR "PLC" OR "SCADA" Lausanne OR Genève OR Vaud OR Fribourg'
+    enabled: true
+
+  # -- jobup.ch (Suisse romande) --
+  - name: "jobup.ch — Automatisation Lausanne/Genève/Fribourg"
+    query: 'site:jobup.ch automatisation Lausanne OR Genève OR Fribourg'
+    enabled: true
+
   - name: "jobup.ch — Ingénieur automation PLC"
-    query: 'site:jobup.ch "ingénieur automation" OR "PLC" OR "automate"'
+    query: 'site:jobup.ch "ingénieur automation" OR "PLC" OR "automate" Vaud OR Genève'
     enabled: true
 
-  - name: "jobup.ch — OT cybersecurity Suisse"
-    query: 'site:jobup.ch "OT" OR "cybersécurité" OR "IEC 62443" Suisse'
+  - name: "jobup.ch — OT cybersecurity Suisse romande"
+    query: 'site:jobup.ch "OT" OR "cybersécurité" OR "IEC 62443" Suisse romande'
     enabled: true
 
-  # -- indeed.ch --
-  - name: "indeed.ch — Automation pharma freelance Suisse"
-    query: 'site:indeed.ch "automation" "pharma" freelance Suisse'
+  # -- indeed.ch (Suisse romande) --
+  - name: "indeed.ch — Automation pharma freelance Suisse romande"
+    query: 'site:indeed.ch "automation" "pharma" freelance Lausanne OR Genève OR Vaud'
     enabled: true
 
   - name: "indeed.ch — Chef de projet industriel Vaud"
     query: 'site:indeed.ch "chef de projet" industriel Vaud'
     enabled: true
 
-  # -- linkedin.com/jobs --
-  - name: "LinkedIn — Automation engineer pharma Switzerland"
-    query: 'site:linkedin.com/jobs "automation engineer" pharma Switzerland contract'
+  # -- linkedin.com/jobs (Suisse romande) --
+  - name: "LinkedIn — Automation pharma Suisse romande/Lausanne/Geneva"
+    query: 'site:linkedin.com/jobs automation pharma "Suisse romande" OR Lausanne OR Geneva'
     enabled: true
 
-  - name: "LinkedIn — Project manager automation pharma Swiss"
-    query: 'site:linkedin.com/jobs "project manager" automation pharma Swiss'
+  - name: "LinkedIn — Project manager automation pharma Suisse romande"
+    query: 'site:linkedin.com/jobs "project manager" automation pharma Lausanne OR Geneva OR Vaud'
     enabled: true
 
   # -- malt.ch --
-  - name: "malt.ch — Automation industrielle Suisse"
-    query: 'site:malt.ch "automation industrielle" Suisse'
+  - name: "malt.ch — Automation industrielle Suisse romande"
+    query: 'site:malt.ch "automation industrielle" Suisse romande OR Lausanne OR Genève'
     enabled: true
 
   # -- freelance.ch --
   - name: "freelance.ch — Automation OT pharma"
-    query: 'site:freelance.ch "automation" OR "OT" pharma'
+    query: 'site:freelance.ch "automation" OR "OT" pharma Suisse romande'
     enabled: true
 
   # -- hays.ch --
-  - name: "hays.ch — Automation contractor pharma"
-    query: 'site:hays.ch "automation" contractor OR freelance pharma'
+  - name: "hays.ch — Automation contractor pharma Suisse romande"
+    query: 'site:hays.ch "automation" contractor OR freelance pharma Lausanne OR Genève OR Vaud'
     enabled: true
 
   # -- michaelpage.ch --
-  - name: "michaelpage.ch — Ingénieur automation"
-    query: 'site:michaelpage.ch "ingénieur automation" OR "automation engineer"'
+  - name: "michaelpage.ch — Ingénieur automation Suisse romande"
+    query: 'site:michaelpage.ch "ingénieur automation" OR "automation engineer" Lausanne OR Genève OR Vaud'
     enabled: true
 
   # -- brunel.net --
-  - name: "brunel.net — Automation pharma Switzerland"
-    query: 'site:brunel.net "automation" pharma Switzerland'
+  - name: "brunel.net — Automation pharma Suisse romande"
+    query: 'site:brunel.net "automation" pharma Lausanne OR Genève OR Vaud OR "Suisse romande"'
     enabled: true
 
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
 # scan_method: websearch (default for consulting-ops)
+# GEO: Only companies with sites in Suisse romande are enabled.
 
 tracked_companies:
 
@@ -196,29 +208,29 @@ tracked_companies:
   - name: Jacobs
     careers_url: https://careers.jacobs.com/
     scan_method: websearch
-    scan_query: 'site:careers.jacobs.com automation OR pharma OR "project manager" Switzerland'
-    notes: "Engineering pharma, projets CH"
+    scan_query: 'site:careers.jacobs.com automation OR pharma OR "project manager" Lausanne OR Genève OR Vaud'
+    notes: "Engineering pharma, projets Suisse romande"
     enabled: true
 
   - name: Exyte
     careers_url: https://careers.exyte.net/
     scan_method: websearch
     scan_query: 'site:careers.exyte.net automation OR pharma OR commissioning Switzerland OR Basel'
-    notes: "Pharma cleanroom engineering, Basel"
-    enabled: true
+    notes: "Pharma cleanroom engineering, Basel — hors zone Suisse romande"
+    enabled: false
 
   - name: NNE
     careers_url: https://www.nne.com/careers/
     scan_method: websearch
-    scan_query: 'site:nne.com/careers automation OR pharma OR qualification'
-    notes: "Pharma engineering (Novo Nordisk subsidiary)"
+    scan_query: 'site:nne.com/careers automation OR pharma OR qualification Suisse romande OR Lausanne OR Genève'
+    notes: "Pharma engineering (Novo Nordisk subsidiary), mandats ponctuels CH"
     enabled: true
 
   - name: Boccard
     careers_url: https://www.boccard.com/join-us/our-job-offers/
     scan_method: websearch
-    scan_query: 'site:boccard.com automation OR pharma OR "life sciences" Suisse OR Switzerland'
-    notes: "Sous-traitance industrielle pharma"
+    scan_query: 'site:boccard.com automation OR pharma OR "life sciences" Suisse romande OR Lausanne OR Genève'
+    notes: "Sous-traitance industrielle pharma, presence Suisse romande"
     enabled: true
 
   # -- Instrumentation / DCS --
@@ -226,23 +238,23 @@ tracked_companies:
   - name: Yokogawa
     careers_url: https://www.yokogawa.com/eu/about/careers/job-listings/
     scan_method: websearch
-    scan_query: 'site:yokogawa.com automation OR DCS OR SCADA Switzerland OR Suisse'
-    notes: "DCS/SCADA pharma, EU operations"
+    scan_query: 'site:yokogawa.com automation OR DCS OR SCADA Suisse romande OR Lausanne OR Genève'
+    notes: "DCS/SCADA pharma, EU operations, mandats ponctuels"
     enabled: true
 
   - name: Endress+Hauser
     careers_url: https://careers.endress.com/
     scan_method: websearch
     scan_query: 'site:careers.endress.com automation OR instrumentation OR engineer Switzerland'
-    notes: "Instrumentation, Reinach BL"
-    enabled: true
+    notes: "Instrumentation, Reinach BL — hors zone Suisse romande"
+    enabled: false
 
   - name: Bürkert
     careers_url: https://www.burkert.com/en/company-career/career/job-openings
     scan_method: websearch
     scan_query: 'site:burkert.com career OR jobs automation OR "fluid control" Switzerland'
-    notes: "Fluid control systems"
-    enabled: true
+    notes: "Fluid control systems — pas de site Suisse romande"
+    enabled: false
 
   # -- Big Pharma --
 
@@ -250,40 +262,40 @@ tracked_companies:
     careers_url: https://www.lonza.com/careers/job-search
     scan_method: websearch
     scan_query: 'site:lonza.com/careers automation OR engineer OR "project manager" Visp OR Basel'
-    notes: "Pharma CDMO, Visp/Basel"
-    enabled: true
+    notes: "Pharma CDMO, Visp/Basel — hors zone Suisse romande"
+    enabled: false
 
   - name: Novartis
     careers_url: https://www.novartis.com/careers/career-search
     scan_method: websearch
     scan_query: 'site:novartis.com/careers automation OR "control system" OR OT OR engineer Basel OR Stein'
-    notes: "Big pharma, Basel/Stein"
-    enabled: true
+    notes: "Big pharma, Basel/Stein — hors zone Suisse romande"
+    enabled: false
 
   - name: Roche
     careers_url: https://careers.roche.com/global/en/switzerland
     scan_method: websearch
     scan_query: 'site:careers.roche.com automation OR engineer OR "project manager" Switzerland'
-    notes: "Big pharma, Basel/Kaiseraugst"
-    enabled: true
+    notes: "Big pharma, Basel/Kaiseraugst — hors zone Suisse romande"
+    enabled: false
 
   - name: Merck
     careers_url: https://careers.merckgroup.com/
     scan_method: websearch
-    scan_query: 'site:careers.merckgroup.com automation OR engineer OR pharma Corsier-sur-Vevey OR Switzerland'
-    notes: "Pharma, Corsier-sur-Vevey (Vaud)"
+    scan_query: 'site:careers.merckgroup.com automation OR engineer OR pharma Corsier-sur-Vevey OR Vaud'
+    notes: "Pharma, Corsier-sur-Vevey (Vaud) — Suisse romande"
     enabled: true
 
   - name: Takeda
     careers_url: https://jobs.takeda.com/location/canton-of-neuchatel-jobs/1113/2658434-2659495/3
     scan_method: websearch
-    scan_query: 'site:jobs.takeda.com automation OR engineer OR "project manager" Neuchatel OR Switzerland'
-    notes: "Pharma, Neuchâtel"
+    scan_query: 'site:jobs.takeda.com automation OR engineer OR "project manager" Neuchatel'
+    notes: "Pharma, Neuchâtel — Suisse romande"
     enabled: true
 
   - name: UCB
     careers_url: https://careers.ucb.com/global/en/
     scan_method: websearch
-    scan_query: 'site:careers.ucb.com automation OR engineer OR pharma Bulle OR Switzerland'
-    notes: "Biopharma, Bulle (Fribourg)"
+    scan_query: 'site:careers.ucb.com automation OR engineer OR pharma Bulle OR Fribourg'
+    notes: "Biopharma, Bulle (Fribourg) — Suisse romande"
     enabled: true
