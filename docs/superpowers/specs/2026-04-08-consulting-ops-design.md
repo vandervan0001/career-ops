@@ -54,7 +54,20 @@ Un mandat peut correspondre à plusieurs archetypes. L'archetype primaire déter
 
 ## 3. Scoring des mandats
 
-10 dimensions, chacune notée 1-5, moyenne pondérée :
+### Relation scoring ↔ report
+
+Les **10 dimensions** ci-dessous servent à calculer le score global du mandat (moyenne pondérée). Les **6 blocs A-F** (Section 5) structurent le report narratif. Chaque bloc alimente une ou plusieurs dimensions du scoring :
+
+- Bloc A (Résumé) → dimensions 4, 5, 8
+- Bloc B (Fit technique) → dimensions 1, 2
+- Bloc C (Positionnement) → dimension 2, 9
+- Bloc D (Marché & TJM) → dimension 3, 7
+- Bloc E (Personnalisation) → pas de score, plan d'action
+- Bloc F (Préparation client) → dimensions 6, 10
+
+Le score est calculé APRÈS la rédaction des 6 blocs, en synthèse.
+
+### 10 dimensions, chacune notée 1-5, moyenne pondérée :
 
 | # | Dimension | Description | Poids |
 |---|-----------|-------------|-------|
@@ -115,15 +128,28 @@ Identifié → Évalué → Qualifié → Proposition → Discussion → Signé 
 
 ### Pipeline inbox : `data/pipeline.md`
 
-Même format que l'original :
+Même format que l'original, headers traduits en français :
 
 ```markdown
-## Pendientes
+## En attente
 - [ ] <url_ou_description> [| Client | Mandat]
 
-## Procesadas
+## Traitées
 - [x] #NNN | URL | Client | Mandat | Score/5 | PDF
 ```
+
+### Mécanisme d'ajout au tracker
+
+Le système existant d'ajout via fichiers TSV dans `batch/tracker-additions/` est conservé. Le format TSV est adapté avec les nouvelles colonnes :
+
+```
+num	date	client	mandat	statut	score/5	pdf_emoji	report_link	tjm	notes
+```
+
+- Ne JAMAIS éditer `data/mandats.md` directement
+- Écrire dans `batch/tracker-additions/{num}-{client-slug}.tsv`
+- Fusionner via `node merge-tracker.mjs`
+- Le champ `tjm` est un entier (CHF/jour) ou vide si inconnu
 
 ---
 
@@ -160,6 +186,64 @@ Chaque évaluation de mandat produit un report structuré en 6 blocs :
 | **D) Marché & TJM** | WebSearch tarifs marché suisse pour le type de mandat, benchmark TJM, stratégie de pricing |
 | **E) Plan de personnalisation** | 5 adaptations CV + message d'approche personnalisé pour ce mandat |
 | **F) Préparation client** | Questions discovery à poser, points de négociation (TJM, durée, périmètre), red flags identifiés sur le client |
+
+### Mode `proposition` — spécification du prompt
+
+Ce mode est un **nouveau mode** (PAS un rename de `apply.md`). `apply.md` est un assistant interactif de remplissage de formulaires via Playwright — il n'a rien à voir avec la génération de propositions commerciales.
+
+**Input :**
+- Report d'évaluation existant (blocs A-F) OU cahier des charges brut
+- `cv.md` (profil consultant)
+- `config/profile.yml` (proof points, pricing)
+
+**Process :**
+1. Lire le report d'évaluation (ou en générer un si absent)
+2. Identifier l'archetype primaire et les proof points pertinents
+3. Reformuler le besoin client (montrer qu'on a compris)
+4. Structurer l'approche technique (phases, méthodologie)
+5. Estimer le volume (jours) et le planning
+6. Sélectionner 2-3 références projets les plus pertinentes
+7. Générer le HTML via `templates/proposal-template.html`
+8. Convertir en PDF via Playwright (`generate-pdf.mjs`)
+
+**Output :**
+- Fichier PDF dans `output/propositions/{num}-{client-slug}-proposition.pdf`
+- Le mode ne met PAS à jour le tracker (c'est l'utilisateur qui décide d'envoyer ou non)
+
+**Règles :**
+- JAMAIS inventer de métriques ou de références
+- TOUJOURS lire `cv.md` et `config/profile.yml` avant de générer
+- Langue adaptée au client (FR par défaut, EN si le mandat est en anglais)
+- Le TJM n'est PAS affiché dans la proposition sauf si l'utilisateur le demande explicitement
+
+### Mode `prepare` — spécification du prompt
+
+Mode de préparation avant un entretien ou call client.
+
+**Input :**
+- Report d'évaluation du mandat (obligatoire)
+- Dossier client (mode `client`, si disponible)
+- `config/profile.yml`
+
+**Process :**
+1. Lire le report d'évaluation et le dossier client
+2. Générer un framework de discussion structuré :
+   - **Ouverture** : 2-3 phrases pour cadrer la conversation
+   - **Questions discovery** : 8-10 questions organisées par thème (scope technique, organisation, planning, budget, décision)
+   - **Points de valeur** : 3-5 arguments clés à placer, liés aux proof points Vanguard
+   - **Objections anticipées** : 3-4 objections probables + réponses préparées (TJM trop élevé, pas de référence dans leur secteur, etc.)
+   - **Négociation** : fourchette TJM, conditions à négocier (durée, remote, exclusivité), BATNA
+   - **Red flags à surveiller** : signaux pendant l'entretien qui doivent alerter (scope creep, décision floue, intermédiaires, etc.)
+   - **Next steps** : actions à proposer en fin d'entretien
+
+**Output :**
+- Report markdown dans `reports/{num}-{client-slug}-prepare.md`
+- Pas de PDF, c'est un document de travail interne
+
+**Règles :**
+- TOUJOURS baser les arguments sur des proof points réels
+- Adapter le ton au type d'interlocuteur (ingénieur vs manager vs achat)
+- Inclure des chiffres concrets tirés des références (ex: "-35% temps résolution chez Merck")
 
 ---
 
@@ -302,6 +386,15 @@ Adaptations minimales du dashboard TUI existant :
 | Tabs de filtre | All, Evaluated, Applied, Interview, Top≥4, No Aplicar | **Tous, Évalués, Qualifiés, Discussion, Signés, Top≥4, SKIP** |
 | Colonnes | #, Date, Empresa, Rol, Score, Estado, PDF, Report, Notes | **#, Date, Client, Mandat, Score, Statut, PDF, Report, TJM, Notes** |
 | Statuts picker | Evaluated, Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP | Les 10 statuts canoniques de la section 4 |
+
+### Champ TJM dans le modèle Go
+
+Le champ TJM dans `CareerApplication` (renommé `Mandat`) :
+- **Type** : `int` (CHF/jour, ex: 1200)
+- **Valeur par défaut** : `0` (inconnu/non renseigné)
+- **Affichage** : `"1200"` si > 0, `"-"` si 0
+- **Tri** : les mandats sans TJM vont en bas
+- **Parsing** : colonne TJM dans `mandats.md`, entier simple (pas de range)
 | Thème | Catppuccin Mocha (inchangé) | Idem |
 
 ### Ce qui ne change pas
@@ -319,8 +412,10 @@ Adaptations minimales du dashboard TUI existant :
 ### Fichiers de configuration (User Layer)
 - `config/profile.yml` — réécrire entièrement (profil Vanguard)
 - `cv.md` — réécrire (CV canonique Tai Van)
-- `portals.yml` — réécrire (sources suisses)
-- `modes/_profile.md` — réécrire (archetypes ↔ proof points Vanguard)
+- `templates/portals.example.yml` — réécrire le template (sources suisses)
+- `portals.yml` — créer l'instance concrète (copie du template, gitignored)
+- `modes/_profile.template.md` — réécrire le template (archetypes ↔ proof points Vanguard)
+- `modes/_profile.md` — créer l'instance concrète (gitignored, basé sur le template)
 
 ### Modes (System Layer)
 - `modes/_shared.md` — réécrire (scoring, archetypes, règles globales)
@@ -336,9 +431,10 @@ Adaptations minimales du dashboard TUI existant :
 - `modes/tracker.md` → adapter (mandats.md, colonnes)
 - `modes/training.md` → renommer `modes/veille.md` + réécrire
 - `modes/project.md` → renommer `modes/projet.md` + adapter
-- `modes/apply.md` → renommer `modes/proposition.md` + réécrire (nouveau)
+- `modes/apply.md` → supprimer (remplacé conceptuellement par `proposition`, mais c'est un nouveau fichier)
+- `modes/proposition.md` — nouveau mode (génération de propositions commerciales)
 - `modes/prepare.md` — nouveau mode (préparation entretien client)
-- Supprimer variantes `modes/de/` et `modes/fr/` (on travaille en FR par défaut, EN si nécessaire)
+- Supprimer variantes `modes/de/`, `modes/fr/`, `modes/pt/` (on travaille en FR par défaut, EN si nécessaire)
 
 ### Templates
 - `templates/cv-template.html` → adapter (branding Vanguard, sections consulting)
@@ -346,11 +442,16 @@ Adaptations minimales du dashboard TUI existant :
 - `templates/states.yml` → réécrire (10 statuts canoniques)
 
 ### Scripts Node.js
-- `merge-tracker.mjs` → adapter (mandats.md au lieu de applications.md)
+- `merge-tracker.mjs` → adapter (mandats.md au lieu de applications.md, nouvelle colonne TJM)
 - `verify-pipeline.mjs` → adapter
-- `normalize-statuses.mjs` → adapter (nouveaux statuts)
+- `normalize-statuses.mjs` → adapter (nouveaux statuts canoniques)
 - `dedup-tracker.mjs` → adapter
 - `generate-pdf.mjs` → adapter (A4 par défaut)
+- `cv-sync-check.mjs` → adapter (référence mandats.md, nouveaux archetypes)
+- `doctor.mjs` → vérifier et adapter les références hardcodées
+- `test-all.mjs` → vérifier et adapter
+- `check-liveness.mjs` → vérifier et adapter
+- `update-system.mjs` → vérifier et adapter
 
 ### Dashboard Go
 - `dashboard/internal/data/career.go` → adapter parsing mandats.md
@@ -363,6 +464,18 @@ Adaptations minimales du dashboard TUI existant :
 
 ### Batch
 - `batch/batch-prompt.md` → adapter (terminologie, scoring, archetypes)
+
+### Autres fichiers à nettoyer
+- `interview-prep/story-bank.md` → supprimer le répertoire (remplacé par le mode `prepare`)
+- `.opencode/commands/` → hors scope v1, supprimer ou ignorer
+- `.claude/skills/career-ops/SKILL.md` → adapter si existant (renommer consulting-ops)
+
+### Statuts canoniques — convention d'identifiants
+
+Les IDs de statuts sont strictement ASCII, sans accents :
+- `identifie`, `evalue`, `qualifie`, `proposition`, `discussion`, `signe`, `en_cours`, `termine`, `perdu`, `skip`
+- Les labels d'affichage peuvent utiliser des accents : "Évalué", "Qualifié", "Signé", "Terminé"
+- `templates/states.yml` utilise le format `id: / label:` pour séparer les deux
 
 ---
 
