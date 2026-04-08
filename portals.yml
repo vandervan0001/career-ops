@@ -715,3 +715,159 @@ tracked_companies:
     scan_query: 'site:progressiverecruitment.com automation OR engineering OR pharma Switzerland OR Lausanne OR Geneva'
     notes: "Cabinet engineering (SThree group)"
     enabled: true
+
+  # -- Entreprises industrielles Suisse romande (ajout couverture max) --
+
+  - name: Tetra Pak
+    careers_url: https://jobs.tetrapak.com/
+    scan_method: websearch
+    scan_query: 'site:jobs.tetrapak.com automation OR engineer OR "project manager" Switzerland OR Romont'
+    notes: "Agroalimentaire packaging, Romont (FR)"
+    enabled: true
+
+  - name: Ineos
+    careers_url: https://www.ineos.com/careers/
+    scan_method: websearch
+    scan_query: 'site:ineos.com automation OR engineer OR "chef de projet" Switzerland OR Rolle OR Vaud'
+    notes: "Chimie/pétrochimie, Rolle (VD)"
+    enabled: true
+
+  - name: Firmenich (legacy)
+    careers_url: https://www.dsm-firmenich.com/careers
+    scan_method: websearch
+    scan_query: 'site:dsm-firmenich.com OR site:firmenich.com automation OR production OR engineer Genève OR Satigny OR "La Plaine"'
+    notes: "Arômes/parfums, sites production Genève (Satigny, La Plaine)"
+    enabled: true
+
+  - name: Givaudan
+    careers_url: https://careers.givaudan.com/
+    scan_method: websearch
+    scan_query: 'site:careers.givaudan.com automation OR engineer OR "project manager" OR production Vernier OR Genève OR Kemptthal'
+    notes: "Arômes/parfums, Vernier (GE) + Kemptthal"
+    enabled: true
+
+  - name: Logitech
+    careers_url: https://jobs.jobvite.com/logitech
+    scan_method: websearch
+    scan_query: 'site:jobvite.com/logitech OR site:logitech.com/careers automation OR engineer OR manufacturing OR production Lausanne'
+    notes: "Electronics, Lausanne (VD)"
+    enabled: true
+
+  - name: Nespresso (Nestlé Nespresso)
+    careers_url: https://www.nestle-nespresso.com/careers
+    scan_method: websearch
+    scan_query: 'site:nestle-nespresso.com OR site:nestle.com/jobs automation OR engineer OR production Avenches OR Orbe OR Romont'
+    notes: "Capsules café, Avenches/Orbe/Romont (VD/FR)"
+    enabled: true
+
+  - name: Kudelski Group
+    careers_url: https://www.nagra.com/careers
+    scan_method: websearch
+    scan_query: 'site:nagra.com OR site:kudelski.com engineer OR automation OR "project manager" Cheseaux OR Lausanne'
+    notes: "Cybersécurité/IoT, Cheseaux (VD)"
+    enabled: true
+
+  - name: Swatch Group
+    careers_url: https://www.swatchgroup.com/en/careers
+    scan_method: websearch
+    scan_query: 'site:swatchgroup.com automation OR production OR engineer OR industrialisation Bienne OR Neuchâtel OR Villeret'
+    notes: "Horlogerie, sites Neuchâtel/Bienne/Villeret"
+    enabled: true
+
+  - name: Richemont / Cartier
+    careers_url: https://www.richemont.com/careers/
+    scan_method: websearch
+    scan_query: 'site:richemont.com OR site:cartier.com automation OR production OR industrialisation OR engineer Villars-sur-Glâne OR Fribourg'
+    notes: "Luxe/horlogerie, Villars-sur-Glâne (FR)"
+    enabled: true
+
+  - name: Tornos
+    careers_url: https://www.tornos.com/en/careers
+    scan_method: websearch
+    scan_query: 'site:tornos.com automation OR engineer OR "chef de projet" Moutier OR Switzerland'
+    notes: "Machines-outils, Moutier (BE/JU)"
+    enabled: true
+
+  - name: Willemin-Macodel
+    careers_url: https://www.willemin-macodel.com/
+    scan_method: websearch
+    scan_query: '"willemin-macodel" OR site:willemin-macodel.com automation OR engineer OR production Delémont OR Jura'
+    notes: "Machines de précision, Delémont (JU)"
+    enabled: true
+
+  - name: Groupe E
+    careers_url: https://www.groupe-e.ch/emplois
+    scan_method: websearch
+    scan_query: 'site:groupe-e.ch automation OR ingénieur OR "chef de projet" OR électricien Fribourg OR Granges-Paccot'
+    notes: "Énergie, Granges-Paccot (FR)"
+    enabled: true
+
+  - name: SIG (Services Industriels Genève)
+    careers_url: https://wl.sig-ge.ch/emploi
+    scan_method: websearch
+    scan_query: 'site:sig-ge.ch OR "services industriels genève" automation OR ingénieur OR "chef de projet" Genève'
+    notes: "Utilities/énergie, Genève"
+    enabled: true
+
+  - name: Hôpitaux Universitaires Genève (HUG)
+    careers_url: https://www.hug.ch/emplois
+    scan_method: websearch
+    scan_query: 'site:hug.ch automation OR "ingénieur biomédical" OR "technique médicale" OR infrastructure Genève'
+    notes: "Hôpital, infrastructure technique/biomédicale, Genève"
+    enabled: true
+
+  - name: CHUV (Lausanne)
+    careers_url: https://www.chuv.ch/fr/chuv/travailler-au-chuv/
+    scan_method: websearch
+    scan_query: 'site:chuv.ch ingénieur OR automation OR "technique médicale" OR infrastructure Lausanne'
+    notes: "Hôpital, infrastructure technique/biomédicale, Lausanne"
+    enabled: true
+
+  - name: EPFL
+    careers_url: https://recruiting.epfl.ch/
+    scan_method: websearch
+    scan_query: 'site:recruiting.epfl.ch OR site:epfl.ch automation OR ingénieur OR "technical project" OR OT Lausanne'
+    notes: "École polytechnique, projets infra/labo, Lausanne"
+    enabled: true
+
+  - name: CERN
+    careers_url: https://careers.cern/
+    scan_method: websearch
+    scan_query: 'site:careers.cern automation OR PLC OR SCADA OR "control system" OR engineer Genève OR Meyrin'
+    notes: "Physique des particules, systèmes de contrôle, Meyrin (GE)"
+    enabled: true
+
+  - name: Caterpillar (ex-Bucyrus)
+    careers_url: https://careers.caterpillar.com/
+    scan_method: websearch
+    scan_query: 'site:careers.caterpillar.com OR site:cat.com automation OR engineer Switzerland OR Lufkin OR Genève'
+    notes: "Machines lourdes, présence Genève"
+    enabled: true
+
+  - name: MD Automation
+    careers_url: https://mdautomation.ch/
+    scan_method: websearch
+    scan_query: 'site:mdautomation.ch OR "MD Automation" automation OR ingénieur OR emploi Suisse romande'
+    notes: "Intégrateur automation local, Suisse romande"
+    enabled: true
+
+  - name: Corin Group
+    careers_url: https://www.coringroup.com/careers/
+    scan_method: websearch
+    scan_query: 'site:coringroup.com automation OR engineer OR production La Chaux-de-Fonds OR Switzerland'
+    notes: "Medtech orthopédique, La Chaux-de-Fonds (NE)"
+    enabled: true
+
+  - name: Ypsomed
+    careers_url: https://www.ypsomed.com/en/careers.html
+    scan_method: websearch
+    scan_query: 'site:ypsomed.com automation OR engineer OR production OR "project manager" Switzerland OR Burgdorf'
+    notes: "Medtech injection devices, Burgdorf (proche Berne)"
+    enabled: true
+
+  - name: Debiotech
+    careers_url: https://www.debiotech.com/careers/
+    scan_method: websearch
+    scan_query: '"debiotech" automation OR engineer OR production Lausanne'
+    notes: "Medtech microfluidique, Lausanne (VD)"
+    enabled: true
