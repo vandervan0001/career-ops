@@ -1,20 +1,20 @@
 package model
 
-// CareerApplication represents a single job application from the tracker.
-type CareerApplication struct {
+// Mandat represents a single consulting mandate from the tracker.
+type Mandat struct {
 	Number       int
 	Date         string
-	Company      string
-	Role         string
+	Client       string
+	Title        string
 	Status       string
 	Score        float64
 	ScoreRaw     string
 	HasPDF       bool
 	ReportPath   string
 	ReportNumber string
+	TJM          int
 	Notes        string
-	JobURL       string // URL of the original job posting
-	// Enrichment (lazy loaded from report)
+	JobURL       string
 	Archetype    string
 	TlDr         string
 	Remote       string
@@ -28,5 +28,6 @@ type PipelineMetrics struct {
 	AvgScore   float64
 	TopScore   float64
 	WithPDF    int
+	AvgTJM     float64
 	Actionable int
 }
