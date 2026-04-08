@@ -47,16 +47,16 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case screens.PipelineLoadReportMsg:
-		archetype, tldr, remote, comp := data.LoadReportSummary(msg.CareerOpsPath, msg.ReportPath)
-		m.pipeline.EnrichReport(msg.ReportPath, archetype, tldr, remote, comp)
+		archetype, tldr, remote, tjm := data.LoadReportSummary(msg.CareerOpsPath, msg.ReportPath)
+		m.pipeline.EnrichReport(msg.ReportPath, archetype, tldr, remote, tjm)
 		return m, nil
 
 	case screens.PipelineUpdateStatusMsg:
-		err := data.UpdateApplicationStatus(msg.CareerOpsPath, msg.App, msg.NewStatus)
+		err := data.UpdateMandatStatus(msg.CareerOpsPath, msg.App, msg.NewStatus)
 		if err != nil {
 			return m, nil
 		}
-		apps := data.ParseApplications(m.careerOpsPath)
+		apps := data.ParseMandats(m.careerOpsPath)
 		metrics := data.ComputeMetrics(apps)
 		old := m.pipeline
 		m.pipeline = screens.NewPipelineModel(
@@ -116,15 +116,15 @@ func (m appModel) View() string {
 }
 
 func main() {
-	pathFlag := flag.String("path", ".", "Path to career-ops directory")
+	pathFlag := flag.String("path", ".", "Path to consulting-ops directory")
 	flag.Parse()
 
 	careerOpsPath := *pathFlag
 
-	// Load applications
-	apps := data.ParseApplications(careerOpsPath)
+	// Load mandates
+	apps := data.ParseMandats(careerOpsPath)
 	if apps == nil {
-		fmt.Fprintf(os.Stderr, "Error: could not find applications.md in %s or %s/data/\n", careerOpsPath, careerOpsPath)
+		fmt.Fprintf(os.Stderr, "Error: could not find mandats.md in %s or %s/data/\n", careerOpsPath, careerOpsPath)
 		os.Exit(1)
 	}
 
@@ -139,9 +139,9 @@ func main() {
 		if app.ReportPath == "" {
 			continue
 		}
-		archetype, tldr, remote, comp := data.LoadReportSummary(careerOpsPath, app.ReportPath)
-		if archetype != "" || tldr != "" || remote != "" || comp != "" {
-			pm.EnrichReport(app.ReportPath, archetype, tldr, remote, comp)
+		archetype, tldr, remote, tjm := data.LoadReportSummary(careerOpsPath, app.ReportPath)
+		if archetype != "" || tldr != "" || remote != "" || tjm != "" {
+			pm.EnrichReport(app.ReportPath, archetype, tldr, remote, tjm)
 		}
 	}
 
