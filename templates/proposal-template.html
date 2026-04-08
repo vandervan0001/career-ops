@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{MANDAT_TITLE}} — Proposition commerciale</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('../fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('../fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('../fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('../fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  /* === TITLE PAGE === */
+  .title-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 40px;
+    page-break-after: always;
+  }
+
+  .title-page .company-header {
+    margin-bottom: 60px;
+  }
+
+  .title-page .company-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a365d;
+    letter-spacing: -0.02em;
+  }
+
+  .title-page .company-tagline {
+    font-size: 12px;
+    color: #2d6a8a;
+    margin-top: 4px;
+  }
+
+  .title-gradient {
+    height: 3px;
+    background: linear-gradient(to right, #1a365d, #2d6a8a);
+    border-radius: 2px;
+    margin: 16px 0 60px 0;
+    width: 120px;
+  }
+
+  .title-page .proposal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a365d;
+    margin-bottom: 8px;
+  }
+
+  .title-page .proposal-subtitle {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 40px;
+  }
+
+  .title-page .client-info {
+    font-size: 12px;
+    color: #444;
+    line-height: 1.8;
+  }
+
+  .title-page .client-label {
+    font-weight: 600;
+    color: #1a365d;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .title-page .date {
+    font-size: 11px;
+    color: #777;
+    margin-top: 40px;
+  }
+
+  /* === HEADER (inner pages) === */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 20px;
+  }
+
+  .page-header .logo-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a365d;
+  }
+
+  .page-header .doc-ref {
+    font-size: 9px;
+    color: #999;
+  }
+
+  /* === SECTIONS === */
+  .section {
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a365d;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #2d6a8a;
+    margin-bottom: 12px;
+  }
+
+  .section-number {
+    color: #2d6a8a;
+    margin-right: 8px;
+  }
+
+  .section-content {
+    font-size: 11px;
+    line-height: 1.7;
+    color: #333;
+  }
+
+  .section-content p {
+    margin-bottom: 8px;
+  }
+
+  .section-content ul {
+    padding-left: 18px;
+    margin-bottom: 8px;
+  }
+
+  .section-content li {
+    margin-bottom: 4px;
+  }
+
+  /* === TABLES === */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 10.5px;
+  }
+
+  thead th {
+    background: #1a365d;
+    color: #ffffff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  tbody td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #e5e5e5;
+    color: #333;
+    vertical-align: top;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #f7fafc;
+  }
+
+  tbody tr:hover {
+    background: #e8f0f5;
+  }
+
+  /* === PROFILES === */
+  .profile-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+
+  .profile-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a365d;
+  }
+
+  .profile-role {
+    font-size: 10px;
+    color: #2d6a8a;
+    margin-bottom: 6px;
+  }
+
+  .profile-bio {
+    font-size: 10.5px;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  /* === REFERENCES === */
+  .reference-item {
+    border-left: 3px solid #2d6a8a;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    background: #f7fafc;
+  }
+
+  .reference-client {
+    font-weight: 600;
+    color: #1a365d;
+    font-size: 11px;
+  }
+
+  .reference-desc {
+    font-size: 10.5px;
+    color: #444;
+    margin-top: 2px;
+  }
+
+  /* === CONDITIONS === */
+  .conditions-box {
+    background: #f7fafc;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 16px;
+    font-size: 10.5px;
+    line-height: 1.7;
+    color: #444;
+  }
+
+  .conditions-box strong {
+    color: #1a365d;
+  }
+
+  /* === FOOTER === */
+  .page-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 40px;
+    font-size: 8px;
+    color: #999;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #e5e5e5;
+  }
+
+  .page-footer .contact-info {
+    display: flex;
+    gap: 12px;
+  }
+
+  /* === PRINT === */
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page {
+      padding: 0;
+    }
+    .page-footer {
+      position: fixed;
+      bottom: 0;
+    }
+  }
+
+  /* === PAGE BREAK CONTROL === */
+  .avoid-break {
+    break-inside: avoid;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- TITLE PAGE -->
+<!-- ============================================ -->
+<div class="page title-page">
+  <div class="company-header">
+    <div class="company-name">{{COMPANY_NAME}}</div>
+    <div class="company-tagline">Conseil en automatisation</div>
+  </div>
+  <div class="title-gradient"></div>
+  <div class="proposal-title">{{MANDAT_TITLE}}</div>
+  <div class="proposal-subtitle">Proposition commerciale</div>
+  <div class="client-info">
+    <div class="client-label">Client</div>
+    <div>{{CLIENT_NAME}}</div>
+  </div>
+  <div class="date">{{DATE}}</div>
+</div>
+
+<!-- ============================================ -->
+<!-- CONTEXT -->
+<!-- ============================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="logo-text">{{COMPANY_NAME}}</span>
+    <span class="doc-ref">{{MANDAT_TITLE}} - {{DATE}}</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-number">1.</span>Contexte</div>
+    <div class="section-content">
+      {{CONTEXT}}
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- APPROACH -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-title"><span class="section-number">2.</span>Approche</div>
+    <div class="section-content">
+      {{APPROACH}}
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- DELIVERABLES -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-title"><span class="section-number">3.</span>Livrables</div>
+    <div class="section-content">
+      {{DELIVERABLES}}
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PROFILES -->
+<!-- ============================================ -->
+<div class="page page-break">
+  <div class="page-header">
+    <span class="logo-text">{{COMPANY_NAME}}</span>
+    <span class="doc-ref">{{MANDAT_TITLE}} - {{DATE}}</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-number">4.</span>Profils</div>
+    <div class="section-content">
+      {{PROFILES}}
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- COMMERCIAL -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-title"><span class="section-number">5.</span>Proposition commerciale</div>
+    <div class="section-content">
+      {{COMMERCIAL}}
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- REFERENCES -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-title"><span class="section-number">6.</span>References</div>
+    <div class="section-content">
+      {{REFERENCES}}
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- CONDITIONS -->
+<!-- ============================================ -->
+<div class="page page-break">
+  <div class="page-header">
+    <span class="logo-text">{{COMPANY_NAME}}</span>
+    <span class="doc-ref">{{MANDAT_TITLE}} - {{DATE}}</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-number">7.</span>Conditions</div>
+    <div class="section-content">
+      {{CONDITIONS}}
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="page-footer">
+  <div class="contact-info">
+    <span>{{COMPANY_EMAIL}}</span>
+    <span>{{COMPANY_PHONE}}</span>
+    <span>{{COMPANY_URL}}</span>
+  </div>
+  <div class="page-number"></div>
+</div>
+
+</body>
+</html>
