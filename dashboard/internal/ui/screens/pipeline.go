@@ -35,10 +35,10 @@ type PipelineLoadReportMsg struct {
 	ReportPath    string
 }
 
-// PipelineUpdateStatusMsg requests a status update for an application.
+// PipelineUpdateStatusMsg requests a status update for a mandate.
 type PipelineUpdateStatusMsg struct {
 	CareerOpsPath string
-	App           model.CareerApplication
+	App           model.Mandat
 	NewStatus     string
 }
 
@@ -46,7 +46,7 @@ type reportSummary struct {
 	archetype string
 	tldr      string
 	remote    string
-	comp      string
+	tjm       string
 }
 
 // Sort modes
@@ -59,12 +59,9 @@ const (
 
 // Filter modes
 const (
-	filterAll       = "all"
-	filterEvaluated = "evaluated"
-	filterApplied   = "applied"
-	filterInterview = "interview"
-	filterSkip      = "skip"
-	filterTop       = "top"
+	filterAll  = "all"
+	filterSkip = "skip"
+	filterTop  = "top"
 )
 
 type pipelineTab struct {
@@ -73,25 +70,26 @@ type pipelineTab struct {
 }
 
 var pipelineTabs = []pipelineTab{
-	{filterAll, "ALL"},
-	{filterEvaluated, "EVALUATED"},
-	{filterApplied, "APPLIED"},
-	{filterInterview, "INTERVIEW"},
+	{filterAll, "TOUS"},
+	{"evalue", "\u00c9VALU\u00c9S"},
+	{"qualifie", "QUALIFI\u00c9S"},
+	{"discussion", "DISCUSSION"},
+	{"signe", "SIGN\u00c9S"},
 	{filterTop, "TOP \u22654"},
 	{filterSkip, "SKIP"},
 }
 
 var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus}
 
-var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "SKIP"}
+var statusOptions = []string{"Identifi\u00e9", "\u00c9valu\u00e9", "Qualifi\u00e9", "Proposition", "Discussion", "Sign\u00e9", "En cours", "Termin\u00e9", "Perdu", "SKIP"}
 
 // statusGroupOrder defines display order for grouped view.
-var statusGroupOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
+var statusGroupOrder = []string{"signe", "en_cours", "discussion", "proposition", "qualifie", "evalue", "identifie", "termine", "perdu", "skip"}
 
-// PipelineModel implements the career pipeline dashboard screen.
+// PipelineModel implements the consulting pipeline dashboard screen.
 type PipelineModel struct {
-	apps          []model.CareerApplication
-	filtered      []model.CareerApplication
+	apps          []model.Mandat
+	filtered      []model.Mandat
 	metrics       model.PipelineMetrics
 	cursor        int
 	scrollOffset  int
@@ -108,7 +106,7 @@ type PipelineModel struct {
 }
 
 // NewPipelineModel creates a new pipeline screen.
-func NewPipelineModel(t theme.Theme, apps []model.CareerApplication, metrics model.PipelineMetrics, careerOpsPath string, width, height int) PipelineModel {
+func NewPipelineModel(t theme.Theme, apps []model.Mandat, metrics model.PipelineMetrics, careerOpsPath string, width, height int) PipelineModel {
 	m := PipelineModel{
 		apps:          apps,
 		metrics:       metrics,
@@ -150,19 +148,19 @@ func (m *PipelineModel) CopyReportCache(other *PipelineModel) {
 }
 
 // EnrichReport caches report summary data for preview.
-func (m *PipelineModel) EnrichReport(reportPath, archetype, tldr, remote, comp string) {
+func (m *PipelineModel) EnrichReport(reportPath, archetype, tldr, remote, tjm string) {
 	m.reportCache[reportPath] = reportSummary{
 		archetype: archetype,
 		tldr:      tldr,
 		remote:    remote,
-		comp:      comp,
+		tjm:       tjm,
 	}
 }
 
-// CurrentApp returns the currently selected application, if any.
-func (m PipelineModel) CurrentApp() (model.CareerApplication, bool) {
+// CurrentApp returns the currently selected mandate, if any.
+func (m PipelineModel) CurrentApp() (model.Mandat, bool) {
 	if m.cursor < 0 || m.cursor >= len(m.filtered) {
-		return model.CareerApplication{}, false
+		return model.Mandat{}, false
 	}
 	return m.filtered[m.cursor], true
 }
@@ -248,7 +246,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	case "enter":
 		if app, ok := m.CurrentApp(); ok && app.ReportPath != "" {
 			fullPath := filepath.Join(m.careerOpsPath, app.ReportPath)
-			title := fmt.Sprintf("%s \u2014 %s", app.Company, app.Role)
+			title := fmt.Sprintf("%s \u2014 %s", app.Client, app.Title)
 			jobURL := app.JobURL
 			return m, func() tea.Msg {
 				return PipelineOpenReportMsg{Path: fullPath, Title: title, JobURL: jobURL}
@@ -334,7 +332,7 @@ func (m PipelineModel) loadCurrentReport() tea.Cmd {
 
 // applyFilterAndSort rebuilds the filtered list from apps.
 func (m *PipelineModel) applyFilterAndSort() {
-	var filtered []model.CareerApplication
+	var filtered []model.Mandat
 
 	currentFilter := pipelineTabs[m.activeTab].filter
 	for _, app := range m.apps {
@@ -343,7 +341,7 @@ func (m *PipelineModel) applyFilterAndSort() {
 		case filterAll:
 			filtered = append(filtered, app)
 		case filterTop:
-			if app.Score >= 4.0 && norm != "no_aplicar" {
+			if app.Score >= 4.0 && norm != "skip" {
 				filtered = append(filtered, app)
 			}
 		default:
@@ -365,7 +363,7 @@ func (m *PipelineModel) applyFilterAndSort() {
 		})
 	case sortCompany:
 		sort.SliceStable(filtered, func(i, j int) bool {
-			return strings.ToLower(filtered[i].Company) < strings.ToLower(filtered[j].Company)
+			return strings.ToLower(filtered[i].Client) < strings.ToLower(filtered[j].Client)
 		})
 	case sortStatus:
 		sort.SliceStable(filtered, func(i, j int) bool {
@@ -388,7 +386,7 @@ func (m *PipelineModel) applyFilterAndSort() {
 			case sortDate:
 				return filtered[i].Date > filtered[j].Date
 			case sortCompany:
-				return strings.ToLower(filtered[i].Company) < strings.ToLower(filtered[j].Company)
+				return strings.ToLower(filtered[i].Client) < strings.ToLower(filtered[j].Client)
 			default:
 				return filtered[i].Score > filtered[j].Score
 			}
@@ -494,9 +492,9 @@ func (m PipelineModel) renderHeader() string {
 
 	right := lipgloss.NewStyle().Foreground(m.theme.Subtext)
 	avg := fmt.Sprintf("%.1f", m.metrics.AvgScore)
-	info := right.Render(fmt.Sprintf("%d offers | Avg %s/5", m.metrics.Total, avg))
+	info := right.Render(fmt.Sprintf("%d mandats | Avg %s/5", m.metrics.Total, avg))
 
-	title := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Blue).Render("CAREER PIPELINE")
+	title := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Blue).Render("CONSULTING PIPELINE")
 	gap := m.width - lipgloss.Width(title) - lipgloss.Width(info) - 4
 	if gap < 1 {
 		gap = 1
@@ -545,7 +543,7 @@ func (m PipelineModel) countForFilter(filter string) int {
 		case filterAll:
 			count++
 		case filterTop:
-			if app.Score >= 4.0 && norm != "no_aplicar" {
+			if app.Score >= 4.0 && norm != "skip" {
 				count++
 			}
 		default:
@@ -597,7 +595,7 @@ func (m PipelineModel) renderBody() string {
 		emptyStyle := lipgloss.NewStyle().
 			Foreground(m.theme.Subtext).
 			Padding(1, 2)
-		return emptyStyle.Render("No offers match this filter")
+		return emptyStyle.Render("No mandats match this filter")
 	}
 
 	var lines []string
@@ -629,37 +627,37 @@ func (m PipelineModel) renderBody() string {
 	return strings.Join(lines, "\n")
 }
 
-func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool) string {
+func (m PipelineModel) renderAppLine(app model.Mandat, selected bool) string {
 	padStyle := lipgloss.NewStyle().Padding(0, 2)
 
 	// Column widths
 	scoreW := 5   // "4.5  "
-	companyW := 20
+	clientW := 20
 	statusW := 12
-	compW := 14
-	// Role gets remaining space
-	roleW := m.width - scoreW - companyW - statusW - compW - 10
-	if roleW < 15 {
-		roleW = 15
+	tjmW := 8
+	// Title gets remaining space
+	titleW := m.width - scoreW - clientW - statusW - tjmW - 10
+	if titleW < 15 {
+		titleW = 15
 	}
 
 	// Score with color
 	scoreStyle := m.scoreStyle(app.Score)
 	score := scoreStyle.Render(fmt.Sprintf("%.1f", app.Score))
 
-	// Company (truncate)
-	company := app.Company
-	if len(company) > companyW {
-		company = company[:companyW-3] + "..."
+	// Client (truncate)
+	client := app.Client
+	if len(client) > clientW {
+		client = client[:clientW-3] + "..."
 	}
-	companyStyle := lipgloss.NewStyle().Foreground(m.theme.Text).Width(companyW)
+	clientStyle := lipgloss.NewStyle().Foreground(m.theme.Text).Width(clientW)
 
-	// Role (truncate)
-	role := app.Role
-	if len(role) > roleW {
-		role = role[:roleW-3] + "..."
+	// Title (truncate)
+	title := app.Title
+	if len(title) > titleW {
+		title = title[:titleW-3] + "..."
 	}
-	roleStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(roleW)
+	titleStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(titleW)
 
 	// Status with color -- fixed column
 	norm := data.NormalizeStatus(app.Status)
@@ -667,23 +665,22 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	statusStyle := lipgloss.NewStyle().Foreground(statusColor).Width(statusW)
 	statusText := statusStyle.Render(statusLabel(norm))
 
-	// Comp from report cache -- fixed column
-	compText := ""
-	if summary, ok := m.reportCache[app.ReportPath]; ok && summary.comp != "" {
-		comp := summary.comp
-		if len(comp) > compW-1 {
-			comp = comp[:compW-4] + "..."
-		}
-		compStyle := lipgloss.NewStyle().Foreground(m.theme.Yellow)
-		compText = compStyle.Render(comp)
+	// TJM column
+	tjmText := ""
+	if app.TJM > 0 {
+		tjmStyle := lipgloss.NewStyle().Foreground(m.theme.Yellow)
+		tjmText = tjmStyle.Render(fmt.Sprintf("%d", app.TJM))
+	} else {
+		tjmStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
+		tjmText = tjmStyle.Render("-")
 	}
 
 	line := fmt.Sprintf(" %s %s %s %s %s",
 		score,
-		companyStyle.Render(company),
-		roleStyle.Render(role),
+		clientStyle.Render(client),
+		titleStyle.Render(title),
 		statusText,
-		compText,
+		tjmText,
 	)
 
 	if selected {
@@ -715,15 +712,15 @@ func (m PipelineModel) renderPreview() string {
 	if summary, ok := m.reportCache[app.ReportPath]; ok {
 		if summary.archetype != "" {
 			lines = append(lines, padStyle.Render(
-				labelStyle.Render("Arquetipo: ")+valueStyle.Render(summary.archetype)))
+				labelStyle.Render("Archetype: ")+valueStyle.Render(summary.archetype)))
 		}
 		if summary.tldr != "" {
 			lines = append(lines, padStyle.Render(
 				labelStyle.Render("TL;DR: ")+valueStyle.Render(summary.tldr)))
 		}
-		if summary.comp != "" {
+		if summary.tjm != "" {
 			lines = append(lines, padStyle.Render(
-				labelStyle.Render("Comp: ")+valueStyle.Render(summary.comp)))
+				labelStyle.Render("TJM: ")+valueStyle.Render(summary.tjm)))
 		}
 		if summary.remote != "" {
 			lines = append(lines, padStyle.Render(
@@ -755,15 +752,15 @@ func (m PipelineModel) renderHelp() string {
 
 	if m.statusPicker {
 		return style.Render(
-			keyStyle.Render("↑↓") + descStyle.Render(" navigate  ") +
+			keyStyle.Render("\u2191\u2193") + descStyle.Render(" navigate  ") +
 				keyStyle.Render("Enter") + descStyle.Render(" confirm  ") +
 				keyStyle.Render("Esc") + descStyle.Render(" cancel"))
 	}
 
-	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("career-ops by santifer.io")
+	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("consulting-ops | vanguard-systems.ch")
 
-	keys := keyStyle.Render("↑↓") + descStyle.Render(" nav  ") +
-		keyStyle.Render("←→") + descStyle.Render(" tabs  ") +
+	keys := keyStyle.Render("\u2191\u2193") + descStyle.Render(" nav  ") +
+		keyStyle.Render("\u2190\u2192") + descStyle.Render(" tabs  ") +
 		keyStyle.Render("s") + descStyle.Render(" sort  ") +
 		keyStyle.Render("Enter") + descStyle.Render(" report  ") +
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
@@ -826,14 +823,16 @@ func (m PipelineModel) scoreStyle(score float64) lipgloss.Style {
 
 func (m PipelineModel) statusColorMap() map[string]lipgloss.Color {
 	return map[string]lipgloss.Color{
-		"interview": m.theme.Green,
-		"offer":     m.theme.Green,
-		"applied":   m.theme.Sky,
-		"responded": m.theme.Blue,
-		"evaluated": m.theme.Text,
-		"skip":      m.theme.Red,
-		"rejected":  m.theme.Subtext,
-		"discarded": m.theme.Subtext,
+		"signe":      m.theme.Green,
+		"en_cours":   m.theme.Green,
+		"discussion": m.theme.Sky,
+		"proposition": m.theme.Blue,
+		"qualifie":   m.theme.Text,
+		"evalue":     m.theme.Text,
+		"identifie":  m.theme.Subtext,
+		"termine":    m.theme.Subtext,
+		"perdu":      m.theme.Red,
+		"skip":       m.theme.Red,
 	}
 }
 
@@ -849,22 +848,26 @@ func (m PipelineModel) countByNormStatus(status string) int {
 
 func statusLabel(norm string) string {
 	switch norm {
-	case "interview":
-		return "Interview"
-	case "offer":
-		return "Offer"
-	case "responded":
-		return "Responded"
-	case "applied":
-		return "Applied"
-	case "evaluated":
-		return "Evaluated"
+	case "signe":
+		return "Sign\u00e9"
+	case "en_cours":
+		return "En cours"
+	case "discussion":
+		return "Discussion"
+	case "proposition":
+		return "Proposition"
+	case "qualifie":
+		return "Qualifi\u00e9"
+	case "evalue":
+		return "\u00c9valu\u00e9"
+	case "identifie":
+		return "Identifi\u00e9"
+	case "termine":
+		return "Termin\u00e9"
+	case "perdu":
+		return "Perdu"
 	case "skip":
 		return "Skip"
-	case "rejected":
-		return "Rejected"
-	case "discarded":
-		return "Discarded"
 	default:
 		return norm
 	}
