@@ -1,67 +1,66 @@
-# Modo: auto-pipeline — Pipeline Completo Automático
+# Mode : auto-pipeline -- Pipeline complet automatique
 
-Cuando el usuario pega un JD (texto o URL) sin sub-comando explícito, ejecutar TODO el pipeline en secuencia:
+Quand l'utilisateur colle un cahier des charges (texte ou URL) sans sous-commande explicite, executer TOUT le pipeline en sequence :
 
-## Paso 0 — Extraer JD
+## Etape 0 -- Extraire le cahier des charges
 
-Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para extraer el contenido:
+Si l'input est une **URL** (pas du texte colle), suivre cette strategie pour extraire le contenu :
 
-**Orden de prioridad:**
+**Ordre de priorite :**
 
-1. **Playwright (preferido):** La mayoría de portales de empleo (Lever, Ashby, Greenhouse, Workday) son SPAs. Usar `browser_navigate` + `browser_snapshot` para renderizar y leer el JD.
-2. **WebFetch (fallback):** Para páginas estáticas (ZipRecruiter, WeLoveProduct, company career pages).
-3. **WebSearch (último recurso):** Buscar título del rol + empresa en portales secundarios que indexan el JD en HTML estático.
+1. **Playwright (prefere) :** La plupart des plateformes d'appels d'offres et portails d'emploi sont des SPAs. Utiliser `browser_navigate` + `browser_snapshot` pour rendre et lire le cahier des charges.
+2. **WebFetch (fallback) :** Pour les pages statiques (sites institutionnels, pages carrieres classiques).
+3. **WebSearch (dernier recours) :** Rechercher titre du mandat + entreprise sur des portails secondaires indexant le cahier des charges en HTML statique.
 
-**Si ningún método funciona:** Pedir al candidato que pegue el JD manualmente o comparta un screenshot.
+**Si aucune methode ne fonctionne :** Demander au consultant de coller le cahier des charges manuellement ou de partager une capture d'ecran.
 
-**Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
+**Si l'input est du texte** (pas une URL) : utiliser directement, sans fetch.
 
-## Paso 1 — Evaluación A-F
-Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F).
+## Etape 1 -- Evaluation A-F
+Executer exactement comme le mode `mandat` (lire `modes/mandat.md` pour tous les blocs A-F).
 
-## Paso 2 — Guardar Report .md
-Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
+## Etape 2 -- Sauvegarder le report .md
+Sauvegarder l'evaluation complete dans `reports/{###}-{client-slug}-{YYYY-MM-DD}.md` (voir format dans `modes/mandat.md`).
 
-## Paso 3 — Generar PDF
-Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
+## Etape 3 -- Generer le PDF (CV)
+Executer le pipeline complet de `cv` (lire `modes/cv.md`).
 
-## Paso 4 — Draft Application Answers (solo si score >= 4.5)
+## Etape 4 -- Brouillon de reponse commerciale (uniquement si score >= 4.0)
 
-Si el score final es >= 4.5, generar borrador de respuestas para el formulario de aplicación:
+Si le score final est >= 4.0, generer un brouillon de positionnement pour la reponse :
 
-1. **Extraer preguntas del formulario**: Usar Playwright para navegar al formulario y hacer snapshot. Si no se pueden extraer, usar las preguntas genéricas.
-2. **Generar respuestas** siguiendo el tono (ver abajo).
-3. **Guardar en el report** como sección `## G) Draft Application Answers`.
+1. **Extraire les exigences cles du cahier des charges** : identifier les livrables, contraintes techniques, delais, budget si mentionne.
+2. **Generer les elements de reponse** suivant le ton (voir ci-dessous).
+3. **Sauvegarder dans le report** comme section `## G) Brouillon de positionnement`.
 
-### Preguntas genéricas (usar si no se pueden extraer del formulario)
+### Elements de positionnement
 
-- Why are you interested in this role?
-- Why do you want to work at [Company]?
-- Tell us about a relevant project or achievement
-- What makes you a good fit for this position?
-- How did you hear about this role?
+- Pourquoi Vanguard Systems est qualifie pour ce mandat ?
+- Quelle approche methodologique proposer ?
+- Quels livrables concrets ?
+- Quelles references pertinentes mettre en avant ?
+- Quelle estimation de charge (jours/homme) ?
 
-### Tono para Form Answers
+### Ton pour le positionnement commercial
 
-**Posición: "I'm choosing you."** el candidato tiene opciones y está eligiendo esta empresa por razones concretas.
+**Position : "Nous selectionnons nos mandats."** Le consultant a une expertise pointue et choisit les mandats ou il peut apporter le plus de valeur.
 
-**Reglas de tono:**
-- **Confiado sin arrogancia**: "I've spent the past year building production AI agent systems — your role is where I want to apply that experience next"
-- **Selectivo sin soberbia**: "I've been intentional about finding a team where I can contribute meaningfully from day one"
-- **Específico y concreto**: Siempre referenciar algo REAL del JD o de la empresa, y algo REAL de la experiencia del candidato
-- **Directo, sin fluff**: 2-4 frases por respuesta. Sin "I'm passionate about..." ni "I would love the opportunity to..."
-- **El hook es la prueba, no la afirmación**: En vez de "I'm great at X", decir "I built X that does Y"
+**Regles de ton :**
+- **Expert sans arrogance** : "Notre experience de 15+ projets de migration PCS7 vers TIA Portal nous permet d'anticiper les risques specifiques a votre environnement"
+- **Selectif sans condescendance** : "Ce mandat correspond exactement a notre axe d'expertise en automatisation pharma GMP"
+- **Specifique et concret** : Toujours referencer quelque chose de REEL du cahier des charges et quelque chose de REEL de l'experience du consultant
+- **Direct, sans blabla** : 2-4 phrases par element. Pas de "nous serions ravis de..." ni "nous nous tenons a votre disposition pour..."
+- **La preuve avant l'affirmation** : Au lieu de "nous sommes experts en X", dire "nous avons deploye X chez Y avec Z resultats"
 
-**Framework por pregunta:**
-- **Why this role?** → "Your [specific thing] maps directly to [specific thing I built]."
-- **Why this company?** → Mencionar algo concreto sobre la empresa. "I've been using [product] for [time/purpose]."
-- **Relevant experience?** → Un proof point cuantificado. "Built [X] that [metric]. Sold the company in 2025."
-- **Good fit?** → "I sit at the intersection of [A] and [B], which is exactly where this role lives."
-- **How did you hear?** → Honesto: "Found through [portal/scan], evaluated against my criteria, and it scored highest."
+**Framework par element :**
+- **Pourquoi ce mandat ?** -> "Votre [besoin specifique] correspond directement a [projet/competence concret de Vanguard]."
+- **Pourquoi Vanguard ?** -> Mentionner un projet similaire. "Nous avons realise [projet] pour [client] avec [resultat mesurable]."
+- **Approche ?** -> Une methodologie claire avec phases et jalons.
+- **Valeur ajoutee ?** -> "Nous apportons [A] et [B], ce qui est exactement ce que ce mandat demande."
 
-**Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
+**Langue** : Toujours en francais pour le marche suisse romand. Anglais si le cahier des charges est en anglais. Allemand si le cahier des charges est en allemand.
 
-## Paso 5 — Actualizar Tracker
-Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
+## Etape 5 -- Mettre a jour le tracker
+Enregistrer dans `data/mandats.md` avec toutes les colonnes incluant Report et PDF en oui/non.
 
-**Si algún paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.
+**Si une etape echoue**, continuer avec les suivantes et marquer l'etape en echec comme en attente dans le tracker.
