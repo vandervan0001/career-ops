@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * normalize-statuses.mjs — Clean non-canonical states in applications.md
+ * normalize-statuses.mjs — Normalisation des statuts dans mandats.md
  *
- * Maps all non-canonical statuses to canonical ones per states.yml:
- *   Evaluada, Aplicado, Respondido, Entrevista, Oferta, Rechazado, Descartado, NO APLICAR
+ * Mappe tous les statuts non-canoniques vers les canoniques selon states.yml :
+ *   Identifie, Evalue, Qualifie, Proposition, Discussion, Signe, En cours, Termine, Perdu, SKIP
  *
- * Also strips markdown bold (**) and dates from the status field,
- * moving DUPLICADO info to the notes column.
+ * Supprime aussi le gras markdown (**) et les dates du champ statut,
+ * deplace les infos DOUBLON vers la colonne notes.
  *
- * Run: node career-ops/normalize-statuses.mjs [--dry-run]
+ * Run: node normalize-statuses.mjs [--dry-run]
  */
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'fs';
@@ -16,86 +16,71 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
+// Support both layouts: data/mandats.md (boilerplate) and mandats.md (original)
+const APPS_FILE = existsSync(join(CAREER_OPS, 'data/mandats.md'))
+  ? join(CAREER_OPS, 'data/mandats.md')
+  : join(CAREER_OPS, 'mandats.md');
 const DRY_RUN = process.argv.includes('--dry-run');
 
-// Canonical status mapping
+// Mapping des statuts canoniques
 function normalizeStatus(raw) {
-  // Strip markdown bold
+  // Suppression du gras markdown
   let s = raw.replace(/\*\*/g, '').trim();
   const lower = s.toLowerCase();
 
-  // DUPLICADO variants → Descartado
-  if (/^duplicado/i.test(s) || /^dup\b/i.test(s)) {
-    return { status: 'Descartado', moveToNotes: raw.trim() };
+  // Variantes DOUBLON → Perdu
+  if (/^doublon/i.test(s) || /^dup\b/i.test(s)) {
+    return { status: 'Perdu', moveToNotes: raw.trim() };
   }
 
-  // CERRADA → Descartado
-  if (/^cerrada$/i.test(s)) return { status: 'Descartado' };
+  // Annule/Refuse → Perdu
+  if (/^annule/i.test(s)) return { status: 'Perdu' };
+  if (/^refuse/i.test(s)) return { status: 'Perdu' };
+  if (/^rejete/i.test(s)) return { status: 'Perdu' };
 
-  // Cancelada (possibly with date) → Descartado
-  if (/^cancelada/i.test(s)) return { status: 'Descartado' };
+  // Statut avec date → nettoyer la date
+  if (/^perdu\s+\d{4}/i.test(s)) return { status: 'Perdu' };
+  if (/^signe\s+\d{4}/i.test(s)) return { status: 'Signe' };
+  if (/^termine\s+\d{4}/i.test(s)) return { status: 'Termine' };
 
-  // Descartada → Descartado
-  if (/^descartada$/i.test(s)) return { status: 'Descartado' };
+  // Repost → Perdu
+  if (/^repost/i.test(s)) return { status: 'Perdu', moveToNotes: raw.trim() };
 
-  // Rechazada → Rechazado
-  if (/^rechazada$/i.test(s)) return { status: 'Rechazado' };
+  // Em dash, tiret, vide → Perdu
+  if (s === '\u2014' || s === '-' || s === '') return { status: 'Perdu' };
 
-  // Rechazado with date → Rechazado (strip date)
-  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rechazado' };
-
-  // Aplicado with date → Aplicado (strip date)
-  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Aplicado' };
-
-  // CONDICIONAL → Evaluada
-  if (/^condicional$/i.test(s)) return { status: 'Evaluada' };
-
-  // HOLD → Evaluada
-  if (/^hold$/i.test(s)) return { status: 'Evaluada' };
-
-  // MONITOR → Evaluada
-  if (/^monitor$/i.test(s)) return { status: 'Evaluada' };
-
-  // EVALUAR → Evaluada
-  if (/^evaluar$/i.test(s)) return { status: 'Evaluada' };
-
-  // Verificar → Evaluada
-  if (/^verificar$/i.test(s)) return { status: 'Evaluada' };
-
-  // GEO BLOCKER → NO APLICAR
-  if (/geo.?blocker/i.test(s)) return { status: 'NO APLICAR' };
-
-  // Repost #NNN → Descartado
-  if (/^repost/i.test(s)) return { status: 'Descartado', moveToNotes: raw.trim() };
-
-  // "—" (em dash, no status) → Descartado
-  if (s === '—' || s === '-' || s === '') return { status: 'Descartado' };
-
-  // Already canonical — just fix casing/bold
+  // Deja canonique — corriger la casse/le gras
   const canonical = [
-    'Evaluada', 'Aplicado', 'Respondido', 'Entrevista',
-    'Oferta', 'Rechazado', 'Descartado', 'NO APLICAR',
+    'Identifie', 'Evalue', 'Qualifie', 'Proposition',
+    'Discussion', 'Signe', 'En cours', 'Termine', 'Perdu', 'SKIP',
   ];
   for (const c of canonical) {
     if (lower === c.toLowerCase()) return { status: c };
   }
 
-  // Aliases from states.yml
-  if (['enviada', 'aplicada', 'applied', 'sent'].includes(lower)) return { status: 'Aplicado' };
-  if (['cerrada', 'descartada'].includes(lower)) return { status: 'Descartado' };
-  if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'NO APLICAR' };
+  // Alias selon states.yml
+  const aliases = {
+    'identifie': 'Identifie', 'identified': 'Identifie', 'nouveau': 'Identifie', 'new': 'Identifie',
+    'evalue': 'Evalue', 'evaluated': 'Evalue', 'analyse': 'Evalue', 'a evaluer': 'Evalue',
+    'qualifie': 'Qualifie', 'qualified': 'Qualifie', 'valide': 'Qualifie',
+    'proposition': 'Proposition', 'propose': 'Proposition', 'offre': 'Proposition', 'soumis': 'Proposition',
+    'discussion': 'Discussion', 'nego': 'Discussion', 'negociation': 'Discussion',
+    'signe': 'Signe', 'signed': 'Signe', 'gagne': 'Signe', 'won': 'Signe',
+    'en cours': 'En cours', 'actif': 'En cours', 'active': 'En cours', 'en_cours': 'En cours',
+    'termine': 'Termine', 'fini': 'Termine', 'cloture': 'Termine', 'done': 'Termine',
+    'perdu': 'Perdu', 'lost': 'Perdu',
+    'skip': 'SKIP', 'no_go': 'SKIP', 'abandon': 'SKIP', 'hors_scope': 'SKIP',
+  };
 
-  // Unknown — flag it
+  if (aliases[lower]) return { status: aliases[lower] };
+
+  // Inconnu — signaler
   return { status: null, unknown: true };
 }
 
-// Read applications.md
+// Lecture de mandats.md
 if (!existsSync(APPS_FILE)) {
-  console.log('No applications.md found. Nothing to normalize.');
+  console.log('Aucun mandats.md trouve. Rien a normaliser.');
   process.exit(0);
 }
 const content = readFileSync(APPS_FILE, 'utf-8');
@@ -109,8 +94,8 @@ for (let i = 0; i < lines.length; i++) {
   if (!line.startsWith('|')) continue;
 
   const parts = line.split('|').map(s => s.trim());
-  // Format: ['', '#', 'fecha', 'empresa', 'rol', 'score', 'STATUS', 'pdf', 'report', 'notas', '']
-  if (parts.length < 9) continue;
+  // Format: ['', '#', 'date', 'client', 'mandat', 'score', 'STATUS', 'pdf', 'report', 'tjm', 'notes', '']
+  if (parts.length < 10) continue;
   if (parts[1] === '#' || parts[1] === '---' || parts[1] === '') continue;
 
   const num = parseInt(parts[1]);
@@ -130,14 +115,14 @@ for (let i = 0; i < lines.length; i++) {
   const oldStatus = rawStatus;
   parts[6] = result.status;
 
-  // Move DUPLICADO info to notes if needed
-  if (result.moveToNotes && parts[9]) {
-    const existing = parts[9] || '';
+  // Deplacer info DOUBLON vers notes si necessaire
+  if (result.moveToNotes && parts[10]) {
+    const existing = parts[10] || '';
     if (!existing.includes(result.moveToNotes)) {
-      parts[9] = result.moveToNotes + (existing ? '. ' + existing : '');
+      parts[10] = result.moveToNotes + (existing ? '. ' + existing : '');
     }
-  } else if (result.moveToNotes && !parts[9]) {
-    parts[9] = result.moveToNotes;
+  } else if (result.moveToNotes && !parts[10]) {
+    parts[10] = result.moveToNotes;
   }
 
   // Also strip bold from score field
@@ -154,21 +139,21 @@ for (let i = 0; i < lines.length; i++) {
 }
 
 if (unknowns.length > 0) {
-  console.log(`\n⚠️  ${unknowns.length} unknown statuses:`);
+  console.log(`\n${unknowns.length} statuts inconnus :`);
   for (const u of unknowns) {
-    console.log(`  #${u.num} (line ${u.line}): "${u.rawStatus}"`);
+    console.log(`  #${u.num} (ligne ${u.line}): "${u.rawStatus}"`);
   }
 }
 
-console.log(`\n📊 ${changes} statuses normalized`);
+console.log(`\n${changes} statuts normalises`);
 
 if (!DRY_RUN && changes > 0) {
-  // Backup first
+  // Sauvegarde d'abord
   copyFileSync(APPS_FILE, APPS_FILE + '.bak');
   writeFileSync(APPS_FILE, lines.join('\n'));
-  console.log('✅ Written to applications.md (backup: applications.md.bak)');
+  console.log('Ecrit dans mandats.md (sauvegarde : mandats.md.bak)');
 } else if (DRY_RUN) {
-  console.log('(dry-run — no changes written)');
+  console.log('(dry-run - aucune modification ecrite)');
 } else {
-  console.log('✅ No changes needed');
+  console.log('Aucune modification necessaire');
 }
