@@ -196,6 +196,224 @@ search_queries:
     query: 'site:brunel.net "automation" pharma Lausanne OR Genève OR Vaud OR "Suisse romande"'
     enabled: true
 
+  # -- staffing-factory.ch --
+  - name: "staffing-factory.ch — Automation pharma Suisse romande"
+    query: 'site:staffing-factory.ch "automation" OR "pharma" Lausanne OR Genève OR Vaud OR Fribourg'
+    enabled: true
+
+  - name: "staffing-factory.ch — Ingénieur OT/PLC Suisse romande"
+    query: 'site:staffing-factory.ch "ingénieur" OR "PLC" OR "OT" Lausanne OR Genève OR Neuchâtel'
+    enabled: true
+
+  # -- adecco.ch --
+  - name: "adecco.ch — Automation engineer Suisse romande"
+    query: 'site:adecco.ch "automation" OR "automate" engineer Lausanne OR Genève OR Vaud OR Fribourg'
+    enabled: true
+
+  - name: "adecco.ch — Chef de projet pharma Suisse romande"
+    query: 'site:adecco.ch "chef de projet" OR "project manager" pharma Lausanne OR Genève OR Neuchâtel'
+    enabled: true
+
+  - name: "adecco.ch — Ingénieur industriel Suisse romande"
+    query: 'site:adecco.ch "ingénieur" industriel OR "engineering" Vaud OR Fribourg OR Valais'
+    enabled: true
+
+  # -- randstad.ch --
+  - name: "randstad.ch — Automation pharma Suisse romande"
+    query: 'site:randstad.ch "automation" OR "pharma" Lausanne OR Genève OR Vaud OR "Suisse romande"'
+    enabled: true
+
+  - name: "randstad.ch — Ingénieur PLC/SCADA Suisse romande"
+    query: 'site:randstad.ch "PLC" OR "SCADA" OR "automate" Lausanne OR Genève OR Fribourg OR Neuchâtel'
+    enabled: true
+
+  # -- manpower.ch --
+  - name: "manpower.ch — Automation engineer Suisse romande"
+    query: 'site:manpower.ch "automation" OR "automate" engineer Lausanne OR Genève OR Vaud'
+    enabled: true
+
+  - name: "manpower.ch — Chef de projet industriel Suisse romande"
+    query: 'site:manpower.ch "chef de projet" OR "project manager" industriel Lausanne OR Genève OR Fribourg'
+    enabled: true
+
+  # -- robert-half.ch --
+  - name: "robert-half.ch — Automation engineering Suisse romande"
+    query: 'site:roberthalf.ch "automation" OR "engineering" OR "ingénieur" Lausanne OR Genève OR Vaud'
+    enabled: true
+
+  - name: "robert-half.ch — Chef de projet technique Suisse romande"
+    query: 'site:roberthalf.ch "chef de projet" OR "project manager" technique Lausanne OR Genève OR Fribourg'
+    enabled: true
+
+  # -- swisslinx.com --
+  - name: "swisslinx.com — Automation pharma Suisse romande"
+    query: 'site:swisslinx.com "automation" OR "pharma" OR "engineering" Lausanne OR Geneva OR Vaud'
+    enabled: true
+
+  - name: "swisslinx.com — Project manager engineering Suisse romande"
+    query: 'site:swisslinx.com "project manager" OR "chef de projet" engineering Lausanne OR Geneva'
+    enabled: true
+
+  # -- careerplus.ch --
+  - name: "careerplus.ch — Automation engineer Suisse romande"
+    query: 'site:careerplus.ch "automation" OR "automate" OR "ingénieur" Lausanne OR Genève OR Fribourg OR Neuchâtel'
+    enabled: true
+
+  - name: "careerplus.ch — Chef de projet industriel Suisse romande"
+    query: 'site:careerplus.ch "chef de projet" OR "project manager" industriel OR pharma Vaud OR Fribourg'
+    enabled: true
+
+  # -- kelly.ch / Kelly Services --
+  - name: "kelly.ch — Engineering automation Suisse romande"
+    query: 'site:kellyservices.ch OR site:kelly.ch "automation" OR "engineering" Lausanne OR Genève OR Vaud'
+    enabled: true
+
+  # -- experis.ch (ManpowerGroup) --
+  - name: "experis.ch — Automation IT industriel Suisse romande"
+    query: 'site:experis.ch "automation" OR "IT industriel" OR "OT" Lausanne OR Genève OR Vaud'
+    enabled: true
+
+  - name: "experis.ch — Ingénieur pharma Suisse romande"
+    query: 'site:experis.ch "ingénieur" OR "engineer" pharma OR "life sciences" Lausanne OR Genève'
+    enabled: true
+
+  # -- spring-professional.ch (LHH) --
+  - name: "springprofessional.ch — Automation engineering Suisse romande"
+    query: 'site:springprofessional.ch "automation" OR "engineering" Lausanne OR Genève OR Vaud OR Fribourg'
+    enabled: true
+
+  - name: "springprofessional.ch — Chef de projet technique Suisse romande"
+    query: 'site:springprofessional.ch "chef de projet" OR "project manager" technique Lausanne OR Genève'
+    enabled: true
+
+  # -- morgan-philips.ch --
+  - name: "Morgan Philips — Engineering pharma Suisse romande"
+    query: 'site:jobs.morganphilips.com "engineering" OR "pharma" OR "automation" Lausanne OR Geneva OR Vaud'
+    enabled: true
+
+  - name: "Morgan Philips — Industry life sciences Suisse romande"
+    query: 'site:morganphilips.com "industry" OR "life sciences" OR "ingénieur" Lausanne OR Genève'
+    enabled: true
+
+  # -- proclinical.com (life sciences specialist) --
+  - name: "Proclinical — Life sciences Switzerland"
+    query: 'site:proclinical.com "automation" OR "engineering" OR "pharma" Switzerland OR Lausanne OR Geneva'
+    enabled: true
+
+  - name: "Proclinical — Contract pharma Suisse"
+    query: 'site:proclinical.com contract OR freelance pharma OR "life sciences" Switzerland'
+    enabled: true
+
+  # -- xing.com/jobs --
+  - name: "XING — Automation pharma Suisse romande"
+    query: 'site:xing.com/jobs "automation" OR "pharma" Lausanne OR Genève OR Vaud OR "Suisse romande"'
+    enabled: true
+
+  - name: "XING — Ingénieur PLC SCADA Suisse romande"
+    query: 'site:xing.com/jobs "PLC" OR "SCADA" OR "ingénieur" Lausanne OR Genève OR Fribourg'
+    enabled: true
+
+  # -- glassdoor.ch --
+  - name: "Glassdoor — Automation engineer Suisse romande"
+    query: 'site:glassdoor.com "automation engineer" OR "ingénieur automation" Lausanne OR Geneva OR Vaud'
+    enabled: true
+
+  - name: "Glassdoor — Pharma engineering Suisse romande"
+    query: 'site:glassdoor.com "pharma" "engineering" OR "automation" Lausanne OR Geneva OR Fribourg OR Neuchâtel'
+    enabled: true
+
+  # -- jobscout24.ch --
+  - name: "JobScout24 — Automation pharma Suisse romande"
+    query: 'site:jobscout24.ch "automation" OR "pharma" Lausanne OR Genève OR Vaud OR Fribourg'
+    enabled: true
+
+  - name: "JobScout24 — Ingénieur OT/PLC Suisse romande"
+    query: 'site:jobscout24.ch "PLC" OR "OT" OR "SCADA" Lausanne OR Genève OR Neuchâtel'
+    enabled: true
+
+  # -- jobcloud.ch --
+  - name: "JobCloud — Automation pharma Suisse romande"
+    query: 'site:jobcloud.ch "automation" OR "pharma" Lausanne OR Genève OR Vaud'
+    enabled: true
+
+  # -- indeed.ch (more queries) --
+  - name: "indeed.ch — Ingénieur automation PLC Suisse romande"
+    query: 'site:indeed.ch "ingénieur automation" OR "PLC" OR "SCADA" Lausanne OR Genève OR Vaud OR Fribourg'
+    enabled: true
+
+  - name: "indeed.ch — OT cybersecurity Suisse romande"
+    query: 'site:indeed.ch "OT" OR "cybersécurité" OR "IEC 62443" Lausanne OR Genève OR Neuchâtel'
+    enabled: true
+
+  - name: "indeed.ch — Project manager pharma engineering Suisse romande"
+    query: 'site:indeed.ch "project manager" OR "chef de projet" pharma OR engineering Lausanne OR Genève OR Vaud'
+    enabled: true
+
+  # -- Freelance / Contract portals --
+
+  # -- freelancermap.com --
+  - name: "freelancermap — Automation engineering Switzerland"
+    query: 'site:freelancermap.com "automation" OR "PLC" OR "OT" Switzerland OR Lausanne OR Geneva'
+    enabled: true
+
+  # -- gulp.ch (freelance IT/engineering) --
+  - name: "GULP — Automation engineering freelance Switzerland"
+    query: 'site:gulp.ch OR "gulp schweiz" "automation" OR "engineering" freelance Switzerland OR Lausanne OR Genève'
+    enabled: true
+
+  # -- Recruitment agencies specialized pharma/engineering --
+
+  # -- Alcandre (life sciences CH) --
+  - name: "Alcandre — Life sciences pharma Suisse"
+    query: '"alcandre" "life sciences" OR "pharma" Suisse OR Switzerland OR Lausanne OR Genève'
+    enabled: true
+
+  # -- Real Staffing (life sciences) --
+  - name: "Real Staffing — Life sciences pharma Suisse"
+    query: 'site:realstaffing.com "pharma" OR "life sciences" OR "automation" Switzerland OR Lausanne OR Geneva'
+    enabled: true
+
+  # -- EPM Scientific (life sciences) --
+  - name: "EPM Scientific — Life sciences Switzerland"
+    query: 'site:epmscientific.com "pharma" OR "automation" OR "engineering" Switzerland OR Lausanne OR Geneva'
+    enabled: true
+
+  # -- NES Fircroft (engineering) --
+  - name: "NES Fircroft — Engineering automation Switzerland"
+    query: 'site:nesfircroft.com "automation" OR "engineering" OR "pharma" Switzerland OR Lausanne OR Geneva'
+    enabled: true
+
+  # -- SThree / Progressive (engineering) --
+  - name: "Progressive — Engineering automation Switzerland"
+    query: 'site:progressiverecruitment.com "automation" OR "engineering" OR "pharma" Switzerland OR Lausanne OR Geneva'
+    enabled: true
+
+  # -- Akkodis (ex-Modis, engineering) --
+  - name: "Akkodis — Engineering automation Suisse romande"
+    query: 'site:akkodis.com "automation" OR "engineering" OR "pharma" Lausanne OR Genève OR Vaud OR "Suisse romande"'
+    enabled: true
+
+  - name: "Akkodis — IT industriel OT Suisse romande"
+    query: 'site:akkodis.com "OT" OR "IT industriel" OR "SCADA" Lausanne OR Genève OR Fribourg'
+    enabled: true
+
+  # -- Specialized pharma/engineering portals --
+
+  # -- pharmiweb.jobs --
+  - name: "PharmiWeb — Pharma Switzerland contract"
+    query: 'site:pharmiweb.jobs Switzerland OR Suisse "automation" OR "engineering" OR "pharma"'
+    enabled: true
+
+  # -- biospace / pharma job boards --
+  - name: "BioSpace — Life sciences Switzerland"
+    query: 'site:biospace.com jobs "Switzerland" OR "Lausanne" OR "Geneva" automation OR pharma OR engineering'
+    enabled: true
+
+  # -- ISA (automation society) --
+  - name: "ISA — Automation careers Switzerland"
+    query: 'site:isa.org careers OR jobs "automation" Switzerland OR Lausanne OR Geneva'
+    enabled: true
+
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
 # scan_method: websearch (default for consulting-ops)
@@ -298,4 +516,202 @@ tracked_companies:
     scan_method: websearch
     scan_query: 'site:careers.ucb.com automation OR engineer OR pharma Bulle OR Fribourg'
     notes: "Biopharma, Bulle (Fribourg) — Suisse romande"
+    enabled: true
+
+  # -- Manufacturing / Consumer goods (Suisse romande) --
+
+  - name: Philip Morris International
+    careers_url: https://www.pmi.com/careers/overview/
+    scan_method: websearch
+    scan_query: 'site:pmi.com OR site:pmicareers.com automation OR engineer OR "project manager" Lausanne OR Neuchâtel'
+    notes: "Manufacturing/tobacco, Operations Center Lausanne + usine Neuchâtel — Suisse romande"
+    enabled: true
+
+  - name: Nestlé
+    careers_url: https://www.nestle.com/jobs
+    scan_method: websearch
+    scan_query: 'site:nestle.com/jobs OR site:jobdetails.nestle.com automation OR engineer OR "project manager" Vevey OR Lausanne OR Vaud'
+    notes: "FMCG/manufacturing, HQ Vevey (Vaud) — Suisse romande"
+    enabled: true
+
+  - name: dsm-firmenich
+    careers_url: https://jobs.dsm-firmenich.com/careers
+    scan_method: websearch
+    scan_query: 'site:jobs.dsm-firmenich.com automation OR engineer OR "process" OR "project manager" Geneva OR Genève'
+    notes: "Parfums/arômes, process automation, HQ Genève — Suisse romande"
+    enabled: true
+
+  - name: Rolex
+    careers_url: https://www.carrieres-rolex.com/
+    scan_method: websearch
+    scan_query: 'site:carrieres-rolex.com automation OR ingénieur OR "chef de projet" OR industriel'
+    notes: "Manufacturing automation, Genève — Suisse romande"
+    enabled: true
+
+  - name: Bobst
+    careers_url: https://careers.bobst.com/en/
+    scan_method: websearch
+    scan_query: 'site:careers.bobst.com automation OR engineer OR "project manager" OR PLC OR SCADA'
+    notes: "Machines/automation, Mex (VD) près de Lausanne — Suisse romande"
+    enabled: true
+
+  - name: SICPA
+    careers_url: https://www.sicpa.com/career/open-positions
+    scan_method: websearch
+    scan_query: 'site:sicpa.com OR site:jobs.sicpa.com automation OR engineer OR "project manager" OR IT'
+    notes: "Sécurité/encres, Prilly (Lausanne) — Suisse romande"
+    enabled: true
+
+  # -- Utilities / Énergie --
+
+  - name: Romande Energie
+    careers_url: https://www.romande-energie.ch/carrieres
+    scan_method: websearch
+    scan_query: 'site:romande-energie.ch automation OR ingénieur OR "chef de projet" OR SCADA OR OT'
+    notes: "Utilities/énergie, Morges (VD) — Suisse romande"
+    enabled: true
+
+  - name: Alpiq
+    careers_url: https://www.alpiq.com/career/open-jobs
+    scan_method: websearch
+    scan_query: 'site:alpiq.com OR site:alpiq-intec.ch automation OR engineer OR "project manager" OR SCADA Lausanne OR Genève OR Vaud'
+    notes: "Énergie/InTec, Lausanne — Suisse romande"
+    enabled: true
+
+  # -- Engineering / Construction industrielle --
+
+  - name: BKW Engineering
+    careers_url: https://jobs.bkw.com/en/vacancies
+    scan_method: websearch
+    scan_query: 'site:jobs.bkw.com automation OR ingénieur OR "project manager" OR engineering Lausanne OR Genève OR Vaud OR Fribourg'
+    notes: "Ingénierie technique, présence Suisse romande"
+    enabled: true
+
+  - name: Implenia
+    careers_url: https://implenia.com/fr/carriere/
+    scan_method: websearch
+    scan_query: 'site:implenia.com automation OR ingénieur OR "chef de projet" Lausanne OR Genève OR Vaud OR Fribourg'
+    notes: "Construction industrielle, projets Suisse romande"
+    enabled: true
+
+  # -- Biotech / Life Sciences equipment --
+
+  - name: Sartorius
+    careers_url: https://www.sartorius.com/en/company/careers/vacancies-job-opportunities
+    scan_method: websearch
+    scan_query: 'site:sartorius.com OR site:sartorius-switzerland.ch automation OR engineer OR biotech Switzerland OR Lausanne OR Geneva'
+    notes: "Biotech equipment — Hors zone, pas de site Suisse romande connu"
+    enabled: false
+
+  - name: Cytiva (Danaher)
+    careers_url: https://jobs.danaher.com/global/en/cytiva
+    scan_method: websearch
+    scan_query: 'site:jobs.danaher.com cytiva automation OR engineer OR biotech Switzerland OR Lausanne OR Geneva'
+    notes: "Biotech equipment — Hors zone, activer si projet CH romande"
+    enabled: false
+
+  - name: GEA Group
+    careers_url: https://www.gea.com/en/careers/apply-now/
+    scan_method: websearch
+    scan_query: 'site:gea.com automation OR engineer OR pharma OR "process engineering" Switzerland OR Lausanne OR Geneva'
+    notes: "Process engineering pharma — Hors zone, activer si projet CH romande"
+    enabled: false
+
+  # -- Pharma packaging / processing --
+
+  - name: IMA Group
+    careers_url: https://careers.ima.it/?locale=en_US
+    scan_method: websearch
+    scan_query: 'site:ima.it OR site:careers.ima.it automation OR engineer OR pharma Switzerland OR Lausanne OR Geneva'
+    notes: "Pharma packaging/processing — Hors zone, activer si projet CH romande"
+    enabled: false
+
+  - name: Stevanato Group
+    careers_url: https://www.stevanatogroup.com/en/careers/
+    scan_method: websearch
+    scan_query: 'site:stevanatogroup.com automation OR engineer OR pharma Switzerland'
+    notes: "Pharma (conteneurs) — Hors zone, activer si projet CH romande"
+    enabled: false
+
+  # -- Lab equipment --
+
+  - name: Büchi Labortechnik
+    careers_url: https://www.buchi.com/en/buchi-world/careers
+    scan_method: websearch
+    scan_query: 'site:buchi.com automation OR engineer OR "project manager" Switzerland'
+    notes: "Lab equipment, Flawil (SG) — Hors zone, activer si projet CH romande"
+    enabled: false
+
+  # -- Biomedical --
+
+  - name: Medtronic
+    careers_url: https://jobs.medtronic.com/ch/switzerland-jobs
+    scan_method: websearch
+    scan_query: 'site:jobs.medtronic.com automation OR engineer OR "project manager" Tolochenaz OR Vaud OR Lausanne'
+    notes: "Biomedical, Tolochenaz (VD) — Suisse romande"
+    enabled: true
+
+  - name: Stryker
+    careers_url: https://careers.stryker.com/jobs
+    scan_method: websearch
+    scan_query: 'site:careers.stryker.com automation OR engineer OR "project manager" Switzerland'
+    notes: "Biomedical, Selzach (SO) — Hors zone, activer si projet CH romande"
+    enabled: false
+
+  - name: Johnson & Johnson
+    careers_url: https://www.careers.jnj.com/en/locations/emea/switzerland/
+    scan_method: websearch
+    scan_query: 'site:careers.jnj.com automation OR engineer OR "project manager" Switzerland OR Zug OR Schaffhausen'
+    notes: "Pharma/medical devices — Hors zone, activer si projet CH romande"
+    enabled: false
+
+  # -- Cabinets de recrutement spécialisés --
+
+  - name: Proclinical
+    careers_url: https://www.proclinical.com/jobs
+    scan_method: websearch
+    scan_query: 'site:proclinical.com "automation" OR "engineering" OR "pharma" Switzerland OR Lausanne OR Geneva'
+    notes: "Cabinet life sciences, mandats pharma/biotech Suisse"
+    enabled: true
+
+  - name: NES Fircroft
+    careers_url: https://www.nesfircroft.com/regions/recruitment-in-europe/switzerland-jobs/
+    scan_method: websearch
+    scan_query: 'site:nesfircroft.com automation OR engineering OR pharma Switzerland OR Lausanne OR Geneva'
+    notes: "Cabinet engineering, mandats Suisse"
+    enabled: true
+
+  - name: Akkodis (ex-Modis)
+    careers_url: https://www.akkodis.com/en-ch/careers/job-results
+    scan_method: websearch
+    scan_query: 'site:akkodis.com automation OR engineering OR pharma OR OT Lausanne OR Geneva OR Vaud OR "Suisse romande"'
+    notes: "Engineering staffing, présence Suisse romande"
+    enabled: true
+
+  - name: EPM Scientific
+    careers_url: https://www.epmscientific.com/en-us/jobs
+    scan_method: websearch
+    scan_query: 'site:epmscientific.com automation OR engineering OR pharma Switzerland OR Lausanne OR Geneva'
+    notes: "Cabinet life sciences, mandats pharma Suisse"
+    enabled: true
+
+  - name: Morgan Philips
+    careers_url: https://jobs.morganphilips.com/en-ch
+    scan_method: websearch
+    scan_query: 'site:morganphilips.com "engineering" OR "industry" OR "life sciences" Lausanne OR Genève OR Vaud'
+    notes: "Cabinet recrutement, présence Suisse romande"
+    enabled: true
+
+  - name: Real Staffing
+    careers_url: https://www.realstaffing.com/en-us/find-a-job/
+    scan_method: websearch
+    scan_query: 'site:realstaffing.com pharma OR "life sciences" OR automation Switzerland OR Lausanne OR Geneva'
+    notes: "Cabinet life sciences (SThree group)"
+    enabled: true
+
+  - name: Progressive Recruitment
+    careers_url: https://www.progressiverecruitment.com/en-us/
+    scan_method: websearch
+    scan_query: 'site:progressiverecruitment.com automation OR engineering OR pharma Switzerland OR Lausanne OR Geneva'
+    notes: "Cabinet engineering (SThree group)"
     enabled: true
