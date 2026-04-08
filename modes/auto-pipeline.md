@@ -1,4 +1,4 @@
-# Mode : auto-pipeline -- Pipeline complet automatique
+# Mode : auto-pipeline -- Pipeline complet automatique (full-auto)
 
 Quand l'utilisateur colle un cahier des charges (texte ou URL) sans sous-commande explicite, executer TOUT le pipeline en sequence :
 
@@ -16,51 +16,134 @@ Si l'input est une **URL** (pas du texte colle), suivre cette strategie pour ext
 
 **Si l'input est du texte** (pas une URL) : utiliser directement, sans fetch.
 
+## Etape 0.5 -- Filtre geographique
+
+**Avant toute evaluation**, verifier la localisation du mandat :
+
+1. Lire `config/profile.yml` -> section `location`.
+2. Si `strict_geo: true` :
+   - Extraire la localisation du mandat (ville, canton, region mentionnes dans le cahier des charges).
+   - Verifier contre `rejected_locations` : si la localisation du mandat contient un terme de cette liste -> **SKIP immediat**.
+   - Verifier contre `accepted_locations` : si aucun terme de cette liste ne correspond -> **SKIP immediat**.
+   - Si la localisation n'est pas mentionnee dans le cahier des charges, tenter une recherche WebSearch `"{entreprise}" localisation site Suisse` pour determiner le lieu.
+   - Si impossible a determiner : continuer mais ajouter une note "Localisation non confirmee -- verifier manuellement".
+3. Si SKIP :
+   - Statut dans le tracker : `skip`
+   - Note : "Hors zone geographique (Suisse romande uniquement)"
+   - **Ne PAS continuer le pipeline.** Ecrire le TSV dans `batch/tracker-additions/` et s'arreter.
+
 ## Etape 1 -- Evaluation A-F
 Executer exactement comme le mode `mandat` (lire `modes/mandat.md` pour tous les blocs A-F).
 
 ## Etape 2 -- Sauvegarder le report .md
 Sauvegarder l'evaluation complete dans `reports/{###}-{client-slug}-{YYYY-MM-DD}.md` (voir format dans `modes/mandat.md`).
 
-## Etape 3 -- Generer le PDF (CV)
-Executer le pipeline complet de `cv` (lire `modes/cv.md`).
+## Arbre de decision post-evaluation
 
-## Etape 4 -- Brouillon de reponse commerciale (uniquement si score >= 4.0)
+Apres l'evaluation, le pipeline se branche selon le score :
 
-Si le score final est >= 4.0, generer un brouillon de positionnement pour la reponse :
+- **Score >= 4.0** : Continuer etapes 3 a 6 (full-auto : CV + message + envoi)
+- **Score >= 3.5 et < 4.0** : Executer etapes 3 et 4 (CV + message) mais **PAS** d'envoi automatique. Sauvegarder dans `output/` pour review manuel.
+- **Score < 3.5** : SKIP. Mettre a jour le tracker uniquement (etape 7). Ne pas generer de CV ni de message.
 
-1. **Extraire les exigences cles du cahier des charges** : identifier les livrables, contraintes techniques, delais, budget si mentionne.
-2. **Generer les elements de reponse** suivant le ton (voir ci-dessous).
-3. **Sauvegarder dans le report** comme section `## G) Brouillon de positionnement`.
+## Etape 3 -- Generer CV PDF (score >= 3.5)
 
-### Elements de positionnement
+Executer le pipeline complet du mode `cv` (lire `modes/cv.md`) :
 
-- Pourquoi Vanguard Systems est qualifie pour ce mandat ?
-- Quelle approche methodologique proposer ?
-- Quels livrables concrets ?
-- Quelles references pertinentes mettre en avant ?
-- Quelle estimation de charge (jours/homme) ?
+1. Lire `cv.md` comme source de verite
+2. Extraire 15-20 mots-cles du cahier des charges
+3. Adapter le CV au mandat (profil, projets cles, competences)
+4. Generer le HTML depuis le template
+5. Ecrire dans `/tmp/cv-vanguard-{client-slug}.html`
+6. Executer : `node generate-pdf.mjs /tmp/cv-vanguard-{client-slug}.html output/cv-vanguard-{client-slug}-{YYYY-MM-DD}.pdf --format=a4`
 
-### Ton pour le positionnement commercial
+## Etape 4 -- Generer message d'approche (score >= 3.5)
 
-**Position : "Nous selectionnons nos mandats."** Le consultant a une expertise pointue et choisit les mandats ou il peut apporter le plus de valeur.
+Generer un message personnalise en suivant le framework 3 phrases de `modes/contact.md` :
 
-**Regles de ton :**
-- **Expert sans arrogance** : "Notre experience de 15+ projets de migration PCS7 vers TIA Portal nous permet d'anticiper les risques specifiques a votre environnement"
-- **Selectif sans condescendance** : "Ce mandat correspond exactement a notre axe d'expertise en automatisation pharma GMP"
-- **Specifique et concret** : Toujours referencer quelque chose de REEL du cahier des charges et quelque chose de REEL de l'experience du consultant
-- **Direct, sans blabla** : 2-4 phrases par element. Pas de "nous serions ravis de..." ni "nous nous tenons a votre disposition pour..."
-- **La preuve avant l'affirmation** : Au lieu de "nous sommes experts en X", dire "nous avons deploye X chez Y avec Z resultats"
+1. **Identifier la cible** : Chercher via WebSearch le decideur technique (CTO, chef de projet, responsable automation) de l'entreprise. Privilegier les decideurs operationnels, PAS les recruteurs.
+2. **Generer le message** (framework 3 phrases) :
+   - **Phrase 1 (Accroche)** : Element specifique sur LEUR entreprise ou defi actuel
+   - **Phrase 2 (Preuve)** : Realisation la plus pertinente du consultant pour CE contexte
+   - **Phrase 3 (Proposition)** : Echange de 15 min sur un sujet specifique
+3. **Contrainte** : Maximum 300 caracteres (limite LinkedIn connection request)
+4. **Generer 2 versions** :
+   - Version email (plus longue, 5-8 phrases, inclut references et proposition de valeur)
+   - Version LinkedIn (300 chars max, framework 3 phrases)
+5. **Sauvegarder** :
+   - Message email : `output/message-email-{client-slug}-{YYYY-MM-DD}.txt`
+   - Message LinkedIn : `output/message-linkedin-{client-slug}-{YYYY-MM-DD}.txt`
 
-**Framework par element :**
-- **Pourquoi ce mandat ?** -> "Votre [besoin specifique] correspond directement a [projet/competence concret de Vanguard]."
-- **Pourquoi Vanguard ?** -> Mentionner un projet similaire. "Nous avons realise [projet] pour [client] avec [resultat mesurable]."
-- **Approche ?** -> Une methodologie claire avec phases et jalons.
-- **Valeur ajoutee ?** -> "Nous apportons [A] et [B], ce qui est exactement ce que ce mandat demande."
+Si score >= 3.5 et < 4.0 : generer les messages mais afficher un avertissement :
+> "Score 3.X/5 -- messages generes dans output/ pour review manuel. Envoi automatique desactive."
 
-**Langue** : Toujours en francais pour le marche suisse romand. Anglais si le cahier des charges est en anglais. Allemand si le cahier des charges est en allemand.
+## Etape 5 -- Envoi email (score >= 4.0 uniquement)
 
-## Etape 5 -- Mettre a jour le tracker
-Enregistrer dans `data/mandats.md` avec toutes les colonnes incluant Report et PDF en oui/non.
+**Pre-requis** : Un email de contact a ete identifie (dans le cahier des charges, sur le site de l'entreprise, ou via WebSearch).
 
-**Si une etape echoue**, continuer avec les suivantes et marquer l'etape en echec comme en attente dans le tracker.
+1. Ecrire le message email dans `/tmp/message-{client-slug}.txt`
+2. Executer :
+   ```bash
+   node send-email.mjs --to "{contact_email}" --subject "Automation Engineer -- {mandat_title}" --body-file /tmp/message-{client-slug}.txt --attachment output/cv-vanguard-{client-slug}-{YYYY-MM-DD}.pdf
+   ```
+3. **Si aucun email trouve** : noter dans le tracker "Pas d'email de contact trouve -- envoi manuel requis" et continuer.
+4. **Si l'envoi echoue** : noter l'erreur dans le tracker et continuer.
+
+## Etape 6 -- Envoi LinkedIn (score >= 4.0 uniquement)
+
+**Pre-requis** : Un profil LinkedIn cible a ete identifie a l'etape 4.
+
+Utiliser les outils Chrome MCP pour envoyer une demande de connexion avec note :
+
+1. `navigate` vers le profil LinkedIn du decideur cible
+2. Chercher le bouton "Se connecter" / "Connect" et cliquer
+3. Chercher le bouton "Ajouter une note" / "Add a note" et cliquer
+4. Lire le contenu de `output/message-linkedin-{client-slug}-{YYYY-MM-DD}.txt`
+5. Taper le message dans le champ de texte (300 chars max)
+6. **Screenshot avant envoi** pour traçabilite
+7. Cliquer sur "Envoyer" / "Send"
+
+**Si le profil LinkedIn n'est pas trouve** : noter dans le tracker "Profil LinkedIn non identifie -- envoi manuel requis" et continuer.
+
+**Si LinkedIn demande un CAPTCHA ou verification** : s'arreter et notifier le consultant.
+
+**Voir `send-linkedin.mjs` pour la documentation detaillee du workflow.**
+
+## Etape 7 -- Mettre a jour le tracker
+
+Enregistrer dans `data/mandats.md` via `batch/tracker-additions/` avec toutes les colonnes :
+
+| Colonne | Valeur |
+|---------|--------|
+| Statut | `skip` / `evalue` / `qualifie` (si envoye) |
+| PDF | Oui/Non selon generation |
+| Notes | Resume + canaux d'envoi utilises (email/LinkedIn/aucun) |
+
+**Si une etape echoue**, continuer avec les suivantes et marquer l'etape en echec dans les notes du tracker.
+
+## Resume du flux
+
+```
+URL/texte
+   |
+   v
+[Etape 0] Extraire cahier des charges
+   |
+   v
+[Etape 0.5] Filtre geo --> SKIP si hors zone
+   |
+   v
+[Etape 1] Evaluation A-F --> Score
+   |
+   v
+[Etape 2] Sauvegarder report
+   |
+   +-- Score < 3.5 ---------> Tracker only (SKIP)
+   |
+   +-- Score 3.5-3.9 -------> CV + Message (review manuel)
+   |
+   +-- Score >= 4.0 --------> CV + Message + Email + LinkedIn (full-auto)
+   |
+   v
+[Etape 7] Tracker
+```
