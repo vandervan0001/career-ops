@@ -1,0 +1,137 @@
+# Consulting-Ops Profile Configuration
+# Single source of truth for Vanguard Systems consulting data across all modes.
+
+consultant:
+  full_name: "Tai Van"
+  company_name: "Vanguard Systems"
+  email: "contact@vanguard-systems.ch"
+  phone: "+41 79 172 08 08"
+  location: "Le Mont-sur-Lausanne, Suisse"
+  linkedin: "linkedin.com/in/taivan"
+  portfolio_url: "https://vanguard-systems.ch"
+
+certifications:
+  - "PMP (Project Management Professional)"
+  - "Lean Six Sigma Black Belt (LSSBB)"
+  - "CAS Cybersecurity"
+  - "CAS Artificial Intelligence"
+
+service_offering:
+  primary_roles:
+    - name: "Intégrateur Automation"
+      level: "Senior"
+      fit: "primary"
+    - name: "Chef de Projet Automation"
+      level: "Senior"
+      fit: "primary"
+    - name: "Expert OT / Infra industrielle"
+      level: "Senior"
+      fit: "primary"
+    - name: "Architecte Solutions"
+      level: "Senior"
+      fit: "secondary"
+    - name: "Consultant Applied AI"
+      level: "Senior"
+      fit: "adjacent"
+
+  tech_stack:
+    siemens:
+      - "PCS7"
+      - "WinCC"
+      - "TIA Portal"
+      - "S7-1500 / S7-400"
+      - "SIMATIC BATCH"
+    rockwell:
+      - "ControlLogix"
+      - "FactoryTalk View"
+      - "PlantPAx"
+      - "Studio 5000"
+    other_plc:
+      - "Beckhoff TwinCAT"
+      - "Emerson DeltaV"
+    networks_ot:
+      - "OPC UA"
+      - "Profinet"
+      - "Ethernet/IP"
+      - "Modbus TCP"
+    data_ai:
+      - "Python"
+      - "TensorFlow"
+      - "Azure ML"
+      - "Power BI"
+      - "RPA (UiPath / Power Automate)"
+      - "RAG (Retrieval-Augmented Generation)"
+    standards:
+      - "GAMP5"
+      - "GxP"
+      - "ISA-88 (Batch Control)"
+      - "ISA-95 (MES Integration)"
+      - "IEC 62443 (OT Cybersecurity)"
+      - "21 CFR Part 11"
+    mes_scada:
+      - "Wonderware / AVEVA"
+      - "Ignition"
+      - "Historian / PI"
+
+industries:
+  primary: "Pharma / Life Sciences"
+  secondary:
+    - "Chimie fine"
+    - "Agroalimentaire"
+    - "Énergie"
+
+project_types:
+  - "Migration de systèmes (PCS7 v7→v9, ControlLogix v20→v34)"
+  - "Commissioning & qualification (FAT/SAT/IQ/OQ)"
+  - "Architecture OT & cybersécurité industrielle"
+  - "Intégration MES / ERP"
+  - "Digitalisation & Industry 4.0"
+  - "Optimisation de processus par IA/ML"
+
+engagement_models:
+  - "Mandat direct (client final)"
+  - "Sous-traitance via intégrateur (Jacobs, Exyte, Boccard)"
+  - "Conseil / audit ponctuel"
+  - "Projet clé en main"
+
+pricing:
+  model: "TJM"
+  currency: "CHF"
+  range: "[à définir]"
+
+location:
+  country: "Suisse"
+  region: "Suisse romande"
+  city: "Le Mont-sur-Lausanne"
+  timezone: "CET"
+  mobility: "Suisse romande, déplacements ponctuels DACH"
+
+narrative:
+  headline: "Ingénieur automation senior & chef de projet, spécialisé pharma/life sciences"
+  exit_story: "15+ ans d'expérience en automation industrielle, des Big Pharma aux PME. Approche pragmatique, orientée résultats."
+  superpowers:
+    - "Multi-vendor (Siemens + Rockwell) en environnement régulé"
+    - "Chef de projet certifié PMP avec expertise technique profonde"
+    - "Cybersécurité OT (IEC 62443) — compétence rare en Suisse romande"
+    - "Applied AI pour l'industrie (optimisation, maintenance prédictive)"
+  proof_points:
+    - name: "Merck (Corsier-sur-Vevey)"
+      hero_metric: "+20% efficacité opérationnelle, -35% incidents"
+    - name: "Novartis"
+      hero_metric: "+50% visibilité processus, ROI atteint en Year 1"
+    - name: "Roche"
+      hero_metric: "-15% consommation énergie, +8% disponibilité"
+    - name: "Takeda"
+      hero_metric: "Projet livré on-schedule, zéro déviation qualité"
+    - name: "Sun Chemicals"
+      hero_metric: "-60% temps de traitement, ROI en 6 mois"
+
+partner:
+  name: "Eric Rouane"
+  role: "Senior Automation & Industrial IT"
+  experience: "20+ ans"
+  specialties:
+    - "CQV (Commissioning, Qualification, Validation)"
+    - "GMP / GAMP5"
+    - "Systèmes batch"
+  collaboration: "Projets conjoints sur mandats nécessitant double compétence"
