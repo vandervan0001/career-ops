@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8787", "-d", "output"],
+      "port": 8787
+    },
+    {
+      "name": "outreach-crm",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["crm-server.mjs"],
+      "port": 8788
+    }
+  ]
+}

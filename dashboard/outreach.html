@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outreach CRM - Scaliab</title>
+<style>
+:root {
+  --navy: #1a1a2e;
+  --navy-light: #232342;
+  --navy-mid: #2a2a4a;
+  --blue-accent: #3a5ba0;
+  --blue-hover: #4a6bb8;
+  --blue-light: #5a7bd0;
+  --white: #ffffff;
+  --gray-50: #f8f9fa;
+  --gray-100: #f0f1f3;
+  --gray-200: #e2e4e8;
+  --gray-300: #c8cbd0;
+  --gray-400: #9ca0a8;
+  --gray-500: #6c7280;
+  --gray-600: #4b5060;
+  --text-primary: #1a1a2e;
+  --text-secondary: #6c7280;
+  --seg-fiduciaire: #3a5ba0;
+  --seg-family-office: #7c3aed;
+  --seg-admin: #059669;
+  --seg-pme: #ea580c;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
+  --column-bg: #f0f1f3;
+  --radius: 8px;
+  --radius-sm: 6px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--gray-50);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.header .subtitle {
+  font-size: 13px;
+  color: var(--gray-400);
+  margin-left: auto;
+}
+
+/* Stats bar */
+.stats-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 12px 24px;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Filters */
+.filters-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 10px 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 6px 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--white);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: var(--blue-accent);
+}
+
+.filter-group input[type="search"] {
+  width: 200px;
+}
+
+.filter-reset {
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-reset:hover {
+  border-color: var(--blue-accent);
+  color: var(--blue-accent);
+}
+
+/* Kanban */
+.kanban-container {
+  padding: 16px 24px;
+  overflow-x: auto;
+}
+
+.kanban-board {
+  display: flex;
+  gap: 12px;
+  min-height: calc(100vh - 220px);
+  align-items: flex-start;
+}
+
+.kanban-column {
+  flex: 0 0 240px;
+  background: var(--column-bg);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 240px);
+}
+
+.column-header {
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--column-bg);
+  border-radius: var(--radius) var(--radius) 0 0;
+  z-index: 1;
+}
+
+.column-count {
+  background: var(--navy);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.column-cards {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 8px;
+  min-height: 60px;
+}
+
+.column-cards.drag-over {
+  background: rgba(58, 91, 160, 0.08);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* Cards */
+.prospect-card {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  box-shadow: var(--card-shadow);
+  cursor: grab;
+  transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.prospect-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.prospect-card.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.prospect-card[data-segment="fiduciaire"] { border-left-color: var(--seg-fiduciaire); }
+.prospect-card[data-segment="family_office"] { border-left-color: var(--seg-family-office); }
+.prospect-card[data-segment="admin"] { border-left-color: var(--seg-admin); }
+.prospect-card[data-segment="pme"] { border-left-color: var(--seg-pme); }
+
+.card-company {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.card-contact {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+}
+
+.card-email {
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.card-email a {
+  color: var(--blue-accent);
+  text-decoration: none;
+}
+
+.card-email a:hover {
+  text-decoration: underline;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-fiduciaire { background: #dbeafe; color: #1e40af; }
+.badge-family_office { background: #ede9fe; color: #6d28d9; }
+.badge-admin { background: #d1fae5; color: #065f46; }
+.badge-pme { background: #ffedd5; color: #c2410c; }
+
+.badge-location {
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--gray-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-campaign {
+  font-size: 10px;
+  color: var(--blue-accent);
+  background: rgba(58, 91, 160, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-date {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+/* Archive section */
+.archive-section {
+  margin: 16px 24px 24px;
+}
+
+.archive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  width: 100%;
+  transition: all 0.15s;
+}
+
+.archive-toggle:hover {
+  border-color: var(--blue-accent);
+  color: var(--text-primary);
+}
+
+.archive-toggle .arrow {
+  transition: transform 0.2s;
+  font-size: 11px;
+}
+
+.archive-toggle.open .arrow {
+  transform: rotate(90deg);
+}
+
+.archive-board {
+  display: none;
+  gap: 12px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.archive-board.open {
+  display: flex;
+}
+
+.archive-board .kanban-column {
+  flex: 0 0 220px;
+  max-height: 400px;
+}
+
+/* Changes textarea */
+.changes-section {
+  margin: 0 24px 24px;
+}
+
+.changes-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.changes-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--white);
+  resize: vertical;
+  outline: none;
+}
+
+.changes-textarea:focus {
+  border-color: var(--blue-accent);
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.loading .spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--blue-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.column-empty {
+  text-align: center;
+  padding: 20px 10px;
+  color: var(--gray-400);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Scrollbar */
+.column-cards::-webkit-scrollbar { width: 4px; }
+.column-cards::-webkit-scrollbar-track { background: transparent; }
+.column-cards::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 2px; }
+
+/* No email indicator */
+.no-email {
+  font-size: 11px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Outreach CRM</h1>
+  <span class="subtitle" id="lastUpdate"></span>
+</div>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><span class="stat-value" id="statTotal">-</span><span class="stat-label">Total prospects</span></div>
+  <div class="stat"><span class="stat-value" id="statEmail">-</span><span class="stat-label">Avec email</span></div>
+  <div class="stat"><span class="stat-value" id="statContacted">-</span><span class="stat-label">Contact&eacute;s</span></div>
+  <div class="stat"><span class="stat-value" id="statResponseRate">-</span><span class="stat-label">Taux r&eacute;ponse</span></div>
+  <div class="stat"><span class="stat-value" id="statRdv">-</span><span class="stat-label">RDV pris</span></div>
+  <div class="stat"><span class="stat-value" id="statConverti">-</span><span class="stat-label">Convertis</span></div>
+</div>
+
+<div class="filters-bar">
+  <div class="filter-group">
+    <label>Segment</label>
+    <select id="filterSegment">
+      <option value="">Tous</option>
+      <option value="fiduciaire">Fiduciaire</option>
+      <option value="family_office">Family Office</option>
+      <option value="admin">Admin</option>
+      <option value="pme">PME</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Campagne</label>
+    <select id="filterCampaign">
+      <option value="">Toutes</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Pays</label>
+    <select id="filterCountry">
+      <option value="">Tous</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Recherche</label>
+    <input type="search" id="filterSearch" placeholder="Entreprise, contact, email...">
+  </div>
+  <button class="filter-reset" id="filterReset">R&eacute;initialiser</button>
+</div>
+
+<div id="loadingIndicator" class="loading">
+  <div class="spinner"></div>
+  Chargement des prospects...
+</div>
+
+<div class="kanban-container" id="kanbanContainer" style="display:none;">
+  <div class="kanban-board" id="kanbanBoard"></div>
+</div>
+
+<div class="archive-section" id="archiveSection" style="display:none;">
+  <button class="archive-toggle" id="archiveToggle">
+    <span class="arrow">&#9654;</span>
+    Archiv&eacute;s (<span id="archiveCount">0</span>)
+  </button>
+  <div class="archive-board" id="archiveBoard"></div>
+</div>
+
+<div class="changes-section" id="changesSection" style="display:none;">
+  <h3>Modifications en attente</h3>
+  <textarea class="changes-textarea" id="changesTextarea" readonly placeholder="Les d&eacute;placements de cartes apparaitront ici..."></textarea>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Status definitions
+  const ACTIVE_STATUSES = [
+    { key: 'nouveau', label: 'Nouveau' },
+    { key: 'contacte', label: 'Contact\u00e9' },
+    { key: 'relance1', label: 'Relance 1' },
+    { key: 'relance2', label: 'Relance 2' },
+    { key: 'repondu', label: 'R\u00e9pondu' },
+    { key: 'rdv_pris', label: 'RDV pris' },
+    { key: 'converti', label: 'Converti' }
+  ];
+
+  const ARCHIVE_STATUSES = [
+    { key: 'pas_interesse', label: 'Pas int\u00e9ress\u00e9' },
+    { key: 'desabonne', label: 'D\u00e9sabonn\u00e9' },
+    { key: 'bounce', label: 'Bounce' },
+    { key: 'invalide', label: 'Invalide' }
+  ];
+
+  const SEGMENT_LABELS = {
+    fiduciaire: 'Fiduciaire',
+    family_office: 'Family Office',
+    admin: 'Admin',
+    pme: 'PME'
+  };
+
+  let allProspects = [];
+  let changes = [];
+
+  // Parse TSV
+  function parseTSV(text) {
+    const lines = text.split('\n');
+    const prospects = [];
+    for (const line of lines) {
+      if (!line.trim() || line.startsWith('#')) continue;
+      const cols = line.split('\t');
+      if (cols.length < 9) continue;
+      const id = cols[0].trim();
+      if (!id || isNaN(Number(id))) continue;
+      prospects.push({
+        id: id,
+        date: (cols[1] || '').trim(),
+        entreprise: (cols[2] || '').trim(),
+        contact: (cols[3] || '').trim(),
+        email: (cols[4] || '').trim(),
+        segment: (cols[5] || '').trim(),
+        ville: (cols[6] || '').trim(),
+        pays: (cols[7] || '').trim(),
+        statut: (cols[8] || '').trim(),
+        campagne: (cols[9] || '').trim(),
+        dernier_envoi: (cols[10] || '').trim(),
+        notes: (cols[11] || '').trim()
+      });
+    }
+    return prospects;
+  }
+
+  // Filter prospects
+  function filterProspects(prospects) {
+    const seg = document.getElementById('filterSegment').value;
+    const camp = document.getElementById('filterCampaign').value;
+    const country = document.getElementById('filterCountry').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+    return prospects.filter(p => {
+      if (seg && p.segment !== seg) return false;
+      if (camp && p.campagne !== camp) return false;
+      if (country && p.pays !== country) return false;
+      if (search) {
+        const haystack = (p.entreprise + ' ' + p.contact + ' ' + p.email).toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    });
+  }
+
+  // Create card HTML
+  function createCard(p) {
+    const card = document.createElement('div');
+    card.className = 'prospect-card';
+    card.dataset.id = p.id;
+    card.dataset.segment = p.segment;
+    card.draggable = true;
+
+    let emailHTML = '';
+    if (p.email) {
+      emailHTML = '<div class="card-email"><a href="mailto:' + escapeHTML(p.email) + '">' + escapeHTML(p.email) + '</a></div>';
+    } else {
+      emailHTML = '<div class="card-email"><span class="no-email">Pas d\'email</span></div>';
+    }
+
+    let contactHTML = '';
+    if (p.contact) {
+      contactHTML = '<div class="card-contact">' + escapeHTML(p.contact) + '</div>';
+    }
+
+    let locationHTML = '';
+    const loc = [p.ville, p.pays].filter(Boolean).join(', ');
+    if (loc) {
+      locationHTML = '<span class="badge badge-location">' + escapeHTML(loc) + '</span>';
+    }
+
+    let campaignHTML = '';
+    if (p.campagne) {
+      campaignHTML = '<span class="badge badge-campaign">' + escapeHTML(p.campagne) + '</span>';
+    }
+
+    let dateHTML = '';
+    if (p.dernier_envoi) {
+      dateHTML = '<span class="badge-date">' + escapeHTML(p.dernier_envoi) + '</span>';
+    }
+
+    const segClass = 'badge badge-' + p.segment;
+
+    card.innerHTML =
+      '<div class="card-company">' + escapeHTML(p.entreprise) + '</div>' +
+      contactHTML +
+      emailHTML +
+      '<div class="card-meta">' +
+        '<span class="' + segClass + '">' + escapeHTML(SEGMENT_LABELS[p.segment] || p.segment) + '</span>' +
+        locationHTML +
+        campaignHTML +
+        dateHTML +
+      '</div>';
+
+    // Drag events
+    card.addEventListener('dragstart', function(e) {
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', p.id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    card.addEventListener('dragend', function() {
+      card.classList.remove('dragging');
+      document.querySelectorAll('.column-cards.drag-over').forEach(function(el) {
+        el.classList.remove('drag-over');
+      });
+    });
+
+    return card;
+  }
+
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Build kanban columns
+  function buildBoard(prospects) {
+    const filtered = filterProspects(prospects);
+    const board = document.getElementById('kanbanBoard');
+    board.innerHTML = '';
+
+    const archiveBoard = document.getElementById('archiveBoard');
+    archiveBoard.innerHTML = '';
+
+    let archiveTotal = 0;
+
+    // Active columns
+    ACTIVE_STATUSES.forEach(function(status) {
+      const items = filtered.filter(function(p) { return p.statut === status.key; });
+      const col = createColumn(status, items);
+      board.appendChild(col);
+    });
+
+    // Archive columns
+    ARCHIVE_STATUSES.forEach(function(status) {
+      const items = filtered.filter(function(p) { return p.statut === status.key; });
+      archiveTotal += items.length;
+      const col = createColumn(status, items);
+      archiveBoard.appendChild(col);
+    });
+
+    document.getElementById('archiveCount').textContent = archiveTotal;
+
+    // Update stats
+    updateStats(filtered);
+  }
+
+  function createColumn(status, items) {
+    const col = document.createElement('div');
+    col.className = 'kanban-column';
+    col.dataset.status = status.key;
+
+    col.innerHTML =
+      '<div class="column-header">' +
+        '<span>' + escapeHTML(status.label) + '</span>' +
+        '<span class="column-count">' + items.length + '</span>' +
+      '</div>';
+
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'column-cards';
+    cardsContainer.dataset.status = status.key;
+
+    if (items.length === 0) {
+      cardsContainer.innerHTML = '<div class="column-empty">Aucun prospect</div>';
+    } else {
+      items.forEach(function(p) {
+        cardsContainer.appendChild(createCard(p));
+      });
+    }
+
+    // Drop events
+    cardsContainer.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      cardsContainer.classList.add('drag-over');
+    });
+
+    cardsContainer.addEventListener('dragleave', function(e) {
+      if (!cardsContainer.contains(e.relatedTarget)) {
+        cardsContainer.classList.remove('drag-over');
+      }
+    });
+
+    cardsContainer.addEventListener('drop', function(e) {
+      e.preventDefault();
+      cardsContainer.classList.remove('drag-over');
+      const prospectId = e.dataTransfer.getData('text/plain');
+      const newStatus = cardsContainer.dataset.status;
+
+      // Find prospect and update via API
+      const prospect = allProspects.find(function(p) { return p.id === prospectId; });
+      if (prospect && prospect.statut !== newStatus) {
+        const oldStatus = prospect.statut;
+        prospect.statut = newStatus;
+        buildBoard(allProspects);
+
+        // Persist to disk via API
+        fetch('/api/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: prospectId, status: newStatus })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (data.ok) {
+            changes.push('MOVE ' + prospectId + ' (' + data.entreprise + ') -> ' + newStatus);
+            updateChangesTextarea();
+          } else {
+            // Rollback on error
+            prospect.statut = oldStatus;
+            buildBoard(allProspects);
+            alert('Erreur : ' + (data.error || 'inconnue'));
+          }
+        }).catch(function(err) {
+          prospect.statut = oldStatus;
+          buildBoard(allProspects);
+          alert('Erreur réseau : ' + err.message);
+        });
+      }
+    });
+
+    col.appendChild(cardsContainer);
+    return col;
+  }
+
+  // Stats
+  function updateStats(prospects) {
+    const total = prospects.length;
+    const withEmail = prospects.filter(function(p) { return p.email; }).length;
+    const contacted = prospects.filter(function(p) {
+      return ['contacte', 'relance1', 'relance2', 'repondu', 'rdv_pris', 'converti'].includes(p.statut);
+    }).length;
+    const responded = prospects.filter(function(p) {
+      return ['repondu', 'rdv_pris', 'converti'].includes(p.statut);
+    }).length;
+    const rdv = prospects.filter(function(p) {
+      return ['rdv_pris', 'converti'].includes(p.statut);
+    }).length;
+    const converti = prospects.filter(function(p) {
+      return p.statut === 'converti';
+    }).length;
+
+    const responseRate = contacted > 0 ? Math.round((responded / contacted) * 100) + '%' : '0%';
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statEmail').textContent = withEmail;
+    document.getElementById('statContacted').textContent = contacted;
+    document.getElementById('statResponseRate').textContent = responseRate;
+    document.getElementById('statRdv').textContent = rdv;
+    document.getElementById('statConverti').textContent = converti;
+  }
+
+  // Changes textarea
+  function updateChangesTextarea() {
+    const section = document.getElementById('changesSection');
+    const textarea = document.getElementById('changesTextarea');
+    if (changes.length > 0) {
+      section.style.display = 'block';
+      textarea.value = changes.join('\n');
+    } else {
+      section.style.display = 'none';
+    }
+  }
+
+  // Populate dynamic filter options
+  function populateFilters(prospects) {
+    const campaigns = new Set();
+    const countries = new Set();
+
+    prospects.forEach(function(p) {
+      if (p.campagne) campaigns.add(p.campagne);
+      if (p.pays) countries.add(p.pays);
+    });
+
+    const campSelect = document.getElementById('filterCampaign');
+    Array.from(campaigns).sort().forEach(function(c) {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      campSelect.appendChild(opt);
+    });
+
+    const countrySelect = document.getElementById('filterCountry');
+    Array.from(countries).sort().forEach(function(c) {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      countrySelect.appendChild(opt);
+    });
+  }
+
+  // Filter event listeners
+  ['filterSegment', 'filterCampaign', 'filterCountry'].forEach(function(id) {
+    document.getElementById(id).addEventListener('change', function() {
+      buildBoard(allProspects);
+    });
+  });
+
+  document.getElementById('filterSearch').addEventListener('input', function() {
+    buildBoard(allProspects);
+  });
+
+  document.getElementById('filterReset').addEventListener('click', function() {
+    document.getElementById('filterSegment').value = '';
+    document.getElementById('filterCampaign').value = '';
+    document.getElementById('filterCountry').value = '';
+    document.getElementById('filterSearch').value = '';
+    buildBoard(allProspects);
+  });
+
+  // Archive toggle
+  document.getElementById('archiveToggle').addEventListener('click', function() {
+    const btn = this;
+    const board = document.getElementById('archiveBoard');
+    btn.classList.toggle('open');
+    board.classList.toggle('open');
+  });
+
+  // Load data
+  fetch('../data/prospects.tsv')
+    .then(function(res) {
+      if (!res.ok) throw new Error('Impossible de charger prospects.tsv');
+      return res.text();
+    })
+    .then(function(text) {
+      allProspects = parseTSV(text);
+      populateFilters(allProspects);
+
+      document.getElementById('loadingIndicator').style.display = 'none';
+      document.getElementById('kanbanContainer').style.display = 'block';
+      document.getElementById('archiveSection').style.display = 'block';
+      document.getElementById('lastUpdate').textContent = allProspects.length + ' prospects charg\u00e9s';
+
+      buildBoard(allProspects);
+    })
+    .catch(function(err) {
+      document.getElementById('loadingIndicator').innerHTML =
+        '<span style="color:var(--danger)">Erreur : ' + escapeHTML(err.message) +
+        '. V\u00e9rifiez que le fichier data/prospects.tsv est accessible.</span>';
+    });
+})();
+</script>
+
+</body>
+</html>

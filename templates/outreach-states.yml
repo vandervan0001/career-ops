@@ -1,0 +1,47 @@
+# Scaliab Outreach — Canonical States
+# Source of truth for prospect CRM statuses
+
+states:
+  - id: nouveau
+    label: "Nouveau"
+    description: "Prospect identifié, pas encore contacté"
+
+  - id: contacte
+    label: "Contacté"
+    description: "Premier email envoyé"
+
+  - id: relance1
+    label: "Relance 1"
+    description: "Premier follow-up envoyé (J+3)"
+
+  - id: relance2
+    label: "Relance 2"
+    description: "Deuxième follow-up envoyé (J+7)"
+
+  - id: repondu
+    label: "Répondu"
+    description: "Le prospect a répondu (positif ou négatif)"
+
+  - id: rdv_pris
+    label: "RDV pris"
+    description: "Diagnostic gratuit planifié"
+
+  - id: converti
+    label: "Converti"
+    description: "Client signé (session conseil, setup, ou clé-en-main)"
+
+  - id: pas_interesse
+    label: "Pas intéressé"
+    description: "Refus explicite du prospect"
+
+  - id: desabonne
+    label: "Désabonné"
+    description: "Demande de désinscription — NE PLUS CONTACTER"
+
+  - id: bounce
+    label: "Bounce"
+    description: "Email non délivré"
+
+  - id: invalide
+    label: "Invalide"
+    description: "Email invalide ou entreprise fermée"
