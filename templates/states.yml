@@ -1,68 +1,56 @@
-# Consulting-Ops — Canonical States
-# Source of truth for consulting-ops (writer) and dashboard (reader).
+# Career-Ops — Canonical States
+# Source of truth for career-ops (writer) and dashboard (reader).
 # Both systems MUST use these exact states.
 #
-# Rule: The status field in mandats.md must contain EXACTLY
+# Rule: The status field in applications.md must contain EXACTLY
 # one of these values (case-insensitive). No markdown bold (**),
 # no dates, no extra text. Dates go in the date column.
 
 states:
-  - id: identifie
-    label: "Identifié"
-    aliases: [identified, nouveau]
-    description: "Opportunité repérée, pas encore analysée"
-    dashboard_group: identifie
+  - id: evaluated
+    label: Evaluated
+    aliases: [evaluada]
+    description: Offer evaluated with report, pending decision
+    dashboard_group: evaluated
 
-  - id: evalue
-    label: "Évalué"
-    aliases: [evaluated, evaluada, evaluée]
-    description: "Scoring fait, report généré"
-    dashboard_group: evalue
+  - id: applied
+    label: Applied
+    aliases: [aplicado, enviada, aplicada, sent]
+    description: Application submitted
+    dashboard_group: applied
 
-  - id: qualifie
-    label: "Qualifié"
-    aliases: [qualified, qualifiée]
-    description: "Décision de poursuivre, premier contact établi"
-    dashboard_group: qualifie
+  - id: responded
+    label: Responded
+    aliases: [respondido]
+    description: Company has responded (not yet interview)
+    dashboard_group: responded
 
-  - id: proposition
-    label: "Proposition"
-    aliases: [proposed, proposé, offre_envoyée]
-    description: "CV adapté et/ou offre commerciale envoyée"
-    dashboard_group: proposition
+  - id: interview
+    label: Interview
+    aliases: [entrevista]
+    description: Active interview process
+    dashboard_group: interview
 
-  - id: discussion
-    label: "Discussion"
-    aliases: [interview, entretien, négociation]
-    description: "Échanges en cours, négociation TJM"
-    dashboard_group: discussion
+  - id: offer
+    label: Offer
+    aliases: [oferta]
+    description: Offer received
+    dashboard_group: offer
 
-  - id: signe
-    label: "Signé"
-    aliases: [signed, contrat, confirmé]
-    description: "Mandat confirmé, PO/contrat reçu"
-    dashboard_group: signe
+  - id: rejected
+    label: Rejected
+    aliases: [rechazado, rechazada]
+    description: Rejected by company
+    dashboard_group: rejected
 
-  - id: en_cours
-    label: "En cours"
-    aliases: [active, en cours, actif]
-    description: "Mission active"
-    dashboard_group: en_cours
-
-  - id: termine
-    label: "Terminé"
-    aliases: [completed, terminé, fini, livré]
-    description: "Mission livrée"
-    dashboard_group: termine
-
-  - id: perdu
-    label: "Perdu"
-    aliases: [lost, rejected, rechazado, refusé]
-    description: "Pas retenu ou abandonné"
-    dashboard_group: perdu
+  - id: discarded
+    label: Discarded
+    aliases: [descartado, descartada, cerrada, cancelada]
+    description: Discarded by candidate or offer closed
+    dashboard_group: discarded
 
   - id: skip
-    label: "SKIP"
-    aliases: [no_aplicar, skip, passer, pas_intéressant]
-    description: "Pas intéressant après évaluation"
+    label: SKIP
+    aliases: [no_aplicar, no aplicar, skip, monitor]
+    description: Doesn't fit, don't apply
     dashboard_group: skip

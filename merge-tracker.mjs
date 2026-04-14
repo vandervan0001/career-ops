@@ -1,35 +1,40 @@
 #!/usr/bin/env node
 /**
- * merge-tracker.mjs — Fusion des ajouts batch dans mandats.md
+ * merge-tracker.mjs — Merge batch tracker additions into applications.md
  *
- * Gere plusieurs formats TSV :
- * - 10-col: num\tdate\tclient\tmandat\tstatus\tscore\tpdf\treport\ttjm\tnotes
- * - 9-col:  num\tdate\tclient\tmandat\tstatus\tscore\tpdf\treport\ttjm (sans notes)
+ * Handles multiple TSV formats:
+ * - 9-col: num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport\tnotes
+ * - 8-col: num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport (no notes)
  * - Pipe-delimited (markdown table row): | col | col | ... |
  *
- * Dedup : client normalise + mandat fuzzy match + numero de rapport
- * Si doublon avec score superieur → mise a jour in-place, maj lien rapport
- * Valide le statut contre states.yml (rejette non-canonique, log warning)
+ * Dedup: company normalized + role fuzzy match + report number match
+ * If duplicate with higher score → update in-place, update report link
+ * Validates status against states.yml (rejects non-canonical, logs warning)
  *
- * Run: node merge-tracker.mjs [--dry-run] [--verify]
+ * Run: node career-ops/merge-tracker.mjs [--dry-run] [--verify]
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execFileSync } from 'child_process';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/mandats.md (boilerplate) and mandats.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/mandats.md'))
-  ? join(CAREER_OPS, 'data/mandats.md')
-  : join(CAREER_OPS, 'mandats.md');
+// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
+const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
+  ? join(CAREER_OPS, 'data/applications.md')
+  : join(CAREER_OPS, 'applications.md');
 const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 
-// Etats canoniques et alias
-const CANONICAL_STATES = ['Identifie', 'Evalue', 'Qualifie', 'Proposition', 'Discussion', 'Signe', 'En cours', 'Termine', 'Perdu', 'SKIP'];
+// Ensure required directories exist (fresh setup)
+mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+mkdirSync(ADDITIONS_DIR, { recursive: true });
+
+// Canonical states and aliases
+const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
 
 function validateStatus(status) {
   const clean = status.replace(/\*\*/g, '').replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
@@ -39,27 +44,27 @@ function validateStatus(status) {
     if (valid.toLowerCase() === lower) return valid;
   }
 
-  // Alias
+  // Aliases
   const aliases = {
-    'identifie': 'Identifie', 'identified': 'Identifie', 'nouveau': 'Identifie', 'new': 'Identifie',
-    'evalue': 'Evalue', 'evaluated': 'Evalue', 'analyse': 'Evalue', 'a evaluer': 'Evalue',
-    'qualifie': 'Qualifie', 'qualified': 'Qualifie', 'valide': 'Qualifie',
-    'proposition': 'Proposition', 'propose': 'Proposition', 'offre': 'Proposition', 'soumis': 'Proposition',
-    'discussion': 'Discussion', 'nego': 'Discussion', 'negociation': 'Discussion',
-    'signe': 'Signe', 'signed': 'Signe', 'gagne': 'Signe', 'won': 'Signe',
-    'en cours': 'En cours', 'actif': 'En cours', 'active': 'En cours', 'en_cours': 'En cours',
-    'termine': 'Termine', 'fini': 'Termine', 'cloture': 'Termine', 'done': 'Termine',
-    'perdu': 'Perdu', 'lost': 'Perdu', 'refuse': 'Perdu', 'annule': 'Perdu', 'rejete': 'Perdu',
-    'skip': 'SKIP', 'no_go': 'SKIP', 'abandon': 'SKIP', 'hors_scope': 'SKIP',
+    // Spanish → English
+    'evaluada': 'Evaluated', 'condicional': 'Evaluated', 'hold': 'Evaluated', 'evaluar': 'Evaluated', 'verificar': 'Evaluated',
+    'aplicado': 'Applied', 'enviada': 'Applied', 'aplicada': 'Applied', 'applied': 'Applied', 'sent': 'Applied',
+    'respondido': 'Responded',
+    'entrevista': 'Interview',
+    'oferta': 'Offer',
+    'rechazado': 'Rejected', 'rechazada': 'Rejected',
+    'descartado': 'Discarded', 'descartada': 'Discarded', 'cerrada': 'Discarded', 'cancelada': 'Discarded',
+    'no aplicar': 'SKIP', 'no_aplicar': 'SKIP', 'skip': 'SKIP', 'monitor': 'SKIP',
+    'geo blocker': 'SKIP',
   };
 
   if (aliases[lower]) return aliases[lower];
 
-  // Doublon/Repost → Perdu
-  if (/^(doublon|dup|repost)/i.test(lower)) return 'Perdu';
+  // DUPLICADO/Repost → Discarded
+  if (/^(duplicado|dup|repost)/i.test(lower)) return 'Discarded';
 
-  console.warn(`  Statut non-canonique "${status}" → defaut "Identifie"`);
-  return 'Identifie';
+  console.warn(`⚠️  Non-canonical status "${status}" → defaulting to "Evaluated"`);
+  return 'Evaluated';
 }
 
 function normalizeCompany(name) {
@@ -85,13 +90,13 @@ function parseScore(s) {
 
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 10) return null;
+  if (parts.length < 9) return null;
   const num = parseInt(parts[1]);
   if (isNaN(num) || num === 0) return null;
   return {
     num, date: parts[2], company: parts[3], role: parts[4],
     score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
-    tjm: parts[9] || '', notes: parts[10] || '', raw: line,
+    notes: parts[9] || '', raw: line,
   };
 }
 
@@ -109,11 +114,11 @@ function parseTsvContent(content, filename) {
   // Detect pipe-delimited (markdown table row)
   if (content.startsWith('|')) {
     parts = content.split('|').map(s => s.trim()).filter(Boolean);
-    if (parts.length < 9) {
-      console.warn(`  Format pipe invalide ${filename}: ${parts.length} champs`);
+    if (parts.length < 8) {
+      console.warn(`⚠️  Skipping malformed pipe-delimited ${filename}: ${parts.length} fields`);
       return null;
     }
-    // Format: num | date | client | mandat | score | status | pdf | report | tjm | notes
+    // Format: num | date | company | role | score | status | pdf | report | notes
     addition = {
       num: parseInt(parts[0]),
       date: parts[1],
@@ -123,38 +128,37 @@ function parseTsvContent(content, filename) {
       status: validateStatus(parts[5]),
       pdf: parts[6],
       report: parts[7],
-      tjm: parts[8] || '',
-      notes: parts[9] || '',
+      notes: parts[8] || '',
     };
   } else {
     // Tab-separated
     parts = content.split('\t');
-    if (parts.length < 9) {
-      console.warn(`  TSV malforme ${filename}: ${parts.length} champs`);
+    if (parts.length < 8) {
+      console.warn(`⚠️  Skipping malformed TSV ${filename}: ${parts.length} fields`);
       return null;
     }
 
-    // Detection d'ordre des colonnes : certains TSV ont (status, score), d'autres (score, status)
-    // Heuristique : si col4 ressemble a un score et col5 a un statut, ils sont inverses
+    // Detect column order: some TSVs have (status, score), others have (score, status)
+    // Heuristic: if col4 looks like a score and col5 looks like a status, they're swapped
     const col4 = parts[4].trim();
     const col5 = parts[5].trim();
     const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
     const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = /^(identifie|evalue|qualifie|proposition|discussion|signe|en.cours|termine|perdu|skip|doublon|repost|nouveau|analyse)/i.test(col4);
-    const col5LooksLikeStatus = /^(identifie|evalue|qualifie|proposition|discussion|signe|en.cours|termine|perdu|skip|doublon|repost|nouveau|analyse)/i.test(col5);
+    const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
+    const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
 
     let statusCol, scoreCol;
     if (col4LooksLikeStatus && !col4LooksLikeScore) {
-      // Format standard : col4=status, col5=score
+      // Standard format: col4=status, col5=score
       statusCol = col4; scoreCol = col5;
     } else if (col4LooksLikeScore && col5LooksLikeStatus) {
-      // Format inverse : col4=score, col5=status
+      // Swapped format: col4=score, col5=status
       statusCol = col5; scoreCol = col4;
     } else if (col5LooksLikeScore && !col4LooksLikeScore) {
-      // col5 est clairement un score → col4 est le statut
+      // col5 is definitely score → col4 must be status
       statusCol = col4; scoreCol = col5;
     } else {
-      // Defaut : format standard (statut avant score)
+      // Default: standard format (status before score)
       statusCol = col4; scoreCol = col5;
     }
 
@@ -167,13 +171,12 @@ function parseTsvContent(content, filename) {
       score: scoreCol,
       pdf: parts[6],
       report: parts[7],
-      tjm: parts[8] || '',
-      notes: parts[9] || '',
+      notes: parts[8] || '',
     };
   }
 
   if (isNaN(addition.num) || addition.num === 0) {
-    console.warn(`  ${filename} ignore : numero d'entree invalide`);
+    console.warn(`⚠️  Skipping ${filename}: invalid entry number`);
     return null;
   }
 
@@ -182,9 +185,9 @@ function parseTsvContent(content, filename) {
 
 // ---- Main ----
 
-// Lecture de mandats.md
+// Read applications.md
 if (!existsSync(APPS_FILE)) {
-  console.log('Aucun mandats.md trouve. Rien a fusionner.');
+  console.log('No applications.md found. Nothing to merge into.');
   process.exit(0);
 }
 const appContent = readFileSync(APPS_FILE, 'utf-8');
@@ -193,7 +196,7 @@ const existingApps = [];
 let maxNum = 0;
 
 for (const line of appLines) {
-  if (line.startsWith('|') && !line.includes('---') && !line.includes('Client')) {
+  if (line.startsWith('|') && !line.includes('---') && !line.includes('Empresa')) {
     const app = parseAppLine(line);
     if (app) {
       existingApps.push(app);
@@ -202,17 +205,17 @@ for (const line of appLines) {
   }
 }
 
-console.log(`Existants : ${existingApps.length} entrees, max #${maxNum}`);
+console.log(`📊 Existing: ${existingApps.length} entries, max #${maxNum}`);
 
 // Read tracker additions
 if (!existsSync(ADDITIONS_DIR)) {
-  console.log('Aucun repertoire tracker-additions trouve.');
+  console.log('No tracker-additions directory found.');
   process.exit(0);
 }
 
 const tsvFiles = readdirSync(ADDITIONS_DIR).filter(f => f.endsWith('.tsv'));
 if (tsvFiles.length === 0) {
-  console.log('Aucun ajout en attente a fusionner.');
+  console.log('✅ No pending additions to merge.');
   process.exit(0);
 }
 
@@ -223,7 +226,7 @@ tsvFiles.sort((a, b) => {
   return numA - numB;
 });
 
-console.log(`${tsvFiles.length} ajouts en attente`);
+console.log(`📥 Found ${tsvFiles.length} pending additions`);
 
 let added = 0;
 let updated = 0;
@@ -268,15 +271,15 @@ for (const file of tsvFiles) {
     const oldScore = parseScore(duplicate.score);
 
     if (newScore > oldScore) {
-      console.log(`Maj : #${duplicate.num} ${addition.company} - ${addition.role} (${oldScore}->${newScore})`);
+      console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | ${duplicate.tjm || addition.tjm || ''} | Re-eval ${addition.date} (${oldScore}->${newScore}). ${addition.notes} |`;
+        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
         appLines[lineIdx] = updatedLine;
         updated++;
       }
     } else {
-      console.log(`Ignore : ${addition.company} - ${addition.role} (existant #${duplicate.num} ${oldScore} >= nouveau ${newScore})`);
+      console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
       skipped++;
     }
   } else {
@@ -284,10 +287,10 @@ for (const file of tsvFiles) {
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
     if (addition.num > maxNum) maxNum = addition.num;
 
-    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.tjm} | ${addition.notes} |`;
+    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
     newLines.push(newLine);
     added++;
-    console.log(`Ajout #${entryNum}: ${addition.company} - ${addition.role} (${addition.score})`);
+    console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
   }
 }
 
@@ -315,18 +318,17 @@ if (!DRY_RUN) {
   for (const file of tsvFiles) {
     renameSync(join(ADDITIONS_DIR, file), join(MERGED_DIR, file));
   }
-  console.log(`\n${tsvFiles.length} TSV deplaces vers merged/`);
+  console.log(`\n✅ Moved ${tsvFiles.length} TSVs to merged/`);
 }
 
-console.log(`\nResume : +${added} ajoutes, ${updated} mis a jour, ${skipped} ignores`);
-if (DRY_RUN) console.log('(dry-run - aucune modification ecrite)');
+console.log(`\n📊 Summary: +${added} added, 🔄${updated} updated, ⏭️${skipped} skipped`);
+if (DRY_RUN) console.log('(dry-run — no changes written)');
 
 // Optional verify
 if (VERIFY && !DRY_RUN) {
-  console.log('\n--- Verification en cours ---');
-  const { execSync } = await import('child_process');
+  console.log('\n--- Running verification ---');
   try {
-    execSync(`node ${join(CAREER_OPS, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
+    execFileSync('node', [join(CAREER_OPS, 'verify-pipeline.mjs')], { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }

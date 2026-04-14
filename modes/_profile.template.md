@@ -1,4 +1,4 @@
-# Profil Consultant -- consulting-ops
+# User Profile Context -- career-ops
 
 <!-- ============================================================
      THIS FILE IS YOURS. It will NEVER be auto-updated.
@@ -10,94 +10,93 @@
      file (your overrides). Your customizations always win.
      ============================================================ -->
 
-## Archetypes cibles
+## Your Target Roles
 
-<!-- Remplacer par VOS archetypes. Ces 5 profils couvrent le
-     spectre des mandats automation / pharma en Suisse romande. -->
+<!-- Replace these with YOUR target roles. Examples:
+     - Senior Backend Engineer / Staff Platform Engineer
+     - AI Product Manager / Technical PM
+     - Data Engineer / ML Engineer
+     - DevOps / SRE / Platform
+     Whatever you're optimizing for. -->
 
-| Archetype | Axes thematiques | Ce que le client achete |
-|-----------|------------------|------------------------|
-| **Integrateur Automation** | PLC, SCADA, DCS, migration, FAT/SAT, mise en service | Quelqu'un qui livre une installation fonctionnelle, qualifiee, dans les delais |
-| **Chef de Projet Automation** | Planning, coordination, GAMP5, stakeholders, budget | Quelqu'un qui pilote un projet complexe multi-lots sans derapage |
-| **Expert OT / Infra industrielle** | Reseau OT, cybersec, IEC 62443, segmentation | Quelqu'un qui securise et modernise l'infrastructure industrielle |
-| **Architecte Solutions** | MES, data historian, plateforme, integration SI | Quelqu'un qui dessine et implemente une architecture coherente |
-| **Consultant Applied AI** | IA, ML, RAG, optimisation process, predictive | Quelqu'un qui applique l'IA a des problemes industriels concrets |
+| Archetype | Thematic axes | What they buy |
+|-----------|---------------|---------------|
+| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Someone who puts AI in production with metrics |
+| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Someone who builds reliable agent systems |
+| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Someone who translates business to AI product |
+| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Someone who designs end-to-end AI architectures |
+| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Someone who delivers AI solutions to clients fast |
+| **AI Transformation Lead** | Change management, adoption, org enablement | Someone who leads AI transformation in an org |
 
-## Cadrage adaptatif (Adaptive Framing)
+## Your Adaptive Framing
 
-<!-- Mapper VOS projets et proof points a chaque archetype.
-     Exemples avec des references pharma suisses. -->
+<!-- Map YOUR projects to each archetype. Example:
+     | Platform / LLMOps | My monitoring dashboard project | article-digest.md |
+     | Agentic | My chatbot with HITL escalation | cv.md section 3 | -->
 
-| Si le mandat est... | Mettre en avant... | Proof points |
-|---------------------|--------------------|--------------|
-| Integrateur Automation | Realisations terrain, mises en service, migrations PLC/DCS | Merck: migration 120 boucles DeltaV; Novartis Stein: commissioning ligne aseptique |
-| Chef de Projet Automation | Coordination multi-lots, respect budget/delais, GAMP5 | Roche Kaiseraugst: projet 4 lots CVC/process/utilities; Takeda: validation CSV |
-| Expert OT / Infra | Architecture reseau OT, segmentation, conformite IEC 62443 | Sun Chemicals: audit cybersec OT; Novartis: segmentation reseau usine |
-| Architecte Solutions | Design MES/data, integration ERP-MES-SCADA, roadmap digitale | Merck: architecture MES Syncade; Roche: data historian OSIsoft PI |
-| Consultant Applied AI | Cas d'usage IA industrielle, POC, ML en production | Predictive maintenance turbines; NLP extraction batch records; RAG documentation technique |
+| If the role is... | Emphasize about you... | Proof point sources |
+|-------------------|------------------------|---------------------|
+| Platform / LLMOps | Production systems builder, observability, evals | article-digest.md + cv.md |
+| Agentic / Automation | Multi-agent orchestration, HITL, reliability | article-digest.md + cv.md |
+| Technical AI PM | Product discovery, PRDs, metrics | cv.md + article-digest.md |
+| Solutions Architect | System design, integrations, enterprise-ready | article-digest.md + cv.md |
+| Forward Deployed Engineer | Fast delivery, client-facing, prototype to prod | cv.md + article-digest.md |
+| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
 
-## Pitch entreprise
+## Your Exit Narrative
 
-<!-- Remplacer par VOTRE pitch. -->
+<!-- Replace with YOUR story. This frames everything. -->
 
-**Vanguard Systems** -- Conseil et ingenierie en automation industrielle, specialise pharma et chimie fine en Suisse romande.
+Use the candidate's exit story from `config/profile.yml` to frame ALL content:
+- **In PDF Summaries:** Bridge from past to future
+- **In STAR stories:** Reference proof points from article-digest.md
+- **In Draft Answers:** The transition narrative appears in the first response
 
-Positionnement : le consultant qui comprend le process ET la reglementation. Pas un integrateur generaliste -- un specialiste qui parle le langage du client pharma (GAMP5, FDA 21 CFR Part 11, Annexe 11, Data Integrity).
+## Your Cross-cutting Advantage
 
-**Proposition de valeur en 1 phrase :** "De la specification a la mise en service, en conformite reglementaire, sans surprises."
+<!-- What's your "signature move"? What do you do that others can't? -->
 
-## Strategie TJM
+Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role.
 
-<!-- Adapter a VOTRE marche et positionnement. -->
+## Your Portfolio / Demo
 
-**Marche de reference :** Suisse romande, pharma/chimie fine
+<!-- If you have a live demo, dashboard, or public project:
+     url: https://yoursite.dev/demo
+     password: demo-2026
+     when_to_share: "LLMOps, AI Platform roles" -->
 
-| Archetype | Fourchette TJM (CHF) | Positionnement |
-|-----------|----------------------|----------------|
-| Integrateur Automation | 1'200 - 1'600 | Milieu-haut de marche |
-| Chef de Projet Automation | 1'400 - 1'800 | Haut de marche (GAMP5 = premium) |
-| Expert OT / Infra | 1'400 - 1'800 | Haut de marche (niche) |
-| Architecte Solutions | 1'500 - 2'000 | Premium |
-| Consultant Applied AI | 1'600 - 2'200 | Premium (rarete) |
+If you have a live demo/dashboard (check profile.yml), offer access in applications for relevant roles.
 
-**Regles de pricing :**
-- Jamais en dessous de 1'200 CHF/jour sauf mandat strategique (>6 mois, reference client majeure)
-- TJM affiche = haut de fourchette. Negocier a partir de la.
-- Duree longue (>6 mois) = remise max 5-10%
-- Regie > forfait pour les mandats complexes
+## Your Comp Targets
 
-## Scripts de negociation
+<!-- Research comp ranges for YOUR target roles -->
 
-<!-- Adapter a VOTRE style et situation. -->
+**General guidance:**
+- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind)
+- Frame by role title, not by skills
+- Contractor rates are typically 30-50% higher than employee base
 
-**TJM - premiere discussion :**
-> "Mon TJM standard pour ce type de mandat est de [HAUT DE FOURCHETTE] CHF. Ca inclut [scope precis]. On peut discuter de la structure selon la duree et le volume."
+## Your Negotiation Scripts
 
-**Poussee vers le bas :**
-> "Je comprends la contrainte budget. Sur un mandat de cette duree, je peux envisager [TJM - 5-10%] CHF si le scope est clairement defini et que le demarrage est rapide."
+<!-- Adapt to YOUR situation, currency, location -->
 
-**Duree -- engagement minimum :**
-> "Pour un mandat de cette complexite, je recommande un engagement minimum de 3 mois pour garantir la continuite. Au-dela, on revalide trimestriellement."
+**Salary expectations:**
+> "Based on market data for this role, I'm targeting [RANGE from profile.yml]. I'm flexible on structure -- what matters is the total package and the opportunity."
 
-**Exclusivite :**
-> "Je suis disponible a temps plein pour ce mandat. Si vous avez besoin d'une exclusivite formelle, on peut en discuter mais ca se reflete dans le TJM."
+**Geographic discount pushback:**
+> "The roles I'm competitive for are output-based, not location-based. My track record doesn't change based on postal code."
 
-**Question salaire quand le client veut comparer a un employe :**
-> "En tant que consultant independant, mon TJM couvre les charges sociales, la formation continue, les inter-contrats et l'assurance. Un TJM de 1'500 CHF correspond a un package employe d'environ 180-200K CHF annuel."
+**When offered below target:**
+> "I'm comparing with opportunities in the [higher range]. I'm drawn to [company] because of [reason]. Can we explore [target]?"
 
-## Politique localisation
+## Your Location Policy
 
-<!-- Adapter a VOTRE perimetre geographique. -->
+<!-- Adapt to YOUR situation -->
 
-**Perimetre principal :** Suisse romande (Geneve, Lausanne, Fribourg, Neuchatel, Valais, Jura)
+**In forms:**
+- Follow your actual availability from profile.yml
+- Specify timezone overlap in free-text fields
 
-**Regles :**
-- Suisse romande on-site : score 5
-- Suisse alemanique (Bale, Zurich) avec deplacements : score 4
-- Remote depuis Suisse : score 5
-- France voisine (Annecy, Lyon, Mulhouse) : score 3
-- Relocation hors Suisse : score 1
-
-**Dans les formulaires :**
-- Indiquer "Suisse romande, deplacements toute Suisse"
-- Preciser la disponibilite de demarrage
+**In evaluations (scoring):**
+- Remote dimension for hybrid outside your country: score **3.0** (not 1.0)
+- Only score 1.0 if JD says "must be on-site 4-5 days/week, no exceptions"

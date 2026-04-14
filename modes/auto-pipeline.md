@@ -1,149 +1,68 @@
-# Mode : auto-pipeline -- Pipeline complet automatique (full-auto)
+# Modo: auto-pipeline — Pipeline Completo Automático
 
-Quand l'utilisateur colle un cahier des charges (texte ou URL) sans sous-commande explicite, executer TOUT le pipeline en sequence :
+Cuando el usuario pega un JD (texto o URL) sin sub-comando explícito, ejecutar TODO el pipeline en secuencia:
 
-## Etape 0 -- Extraire le cahier des charges
+## Paso 0 — Extraer JD
 
-Si l'input est une **URL** (pas du texte colle), suivre cette strategie pour extraire le contenu :
+Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para extraer el contenido:
 
-**Ordre de priorite :**
+**Orden de prioridad:**
 
-1. **Playwright (prefere) :** La plupart des plateformes d'appels d'offres et portails d'emploi sont des SPAs. Utiliser `browser_navigate` + `browser_snapshot` pour rendre et lire le cahier des charges.
-2. **WebFetch (fallback) :** Pour les pages statiques (sites institutionnels, pages carrieres classiques).
-3. **WebSearch (dernier recours) :** Rechercher titre du mandat + entreprise sur des portails secondaires indexant le cahier des charges en HTML statique.
+1. **Playwright (preferido):** La mayoría de portales de empleo (Lever, Ashby, Greenhouse, Workday) son SPAs. Usar `browser_navigate` + `browser_snapshot` para renderizar y leer el JD.
+2. **WebFetch (fallback):** Para páginas estáticas (ZipRecruiter, WeLoveProduct, company career pages).
+3. **WebSearch (último recurso):** Buscar título del rol + empresa en portales secundarios que indexan el JD en HTML estático.
 
-**Si aucune methode ne fonctionne :** Demander au consultant de coller le cahier des charges manuellement ou de partager une capture d'ecran.
+**Si ningún método funciona:** Pedir al candidato que pegue el JD manualmente o comparta un screenshot.
 
-**Si l'input est du texte** (pas une URL) : utiliser directement, sans fetch.
+**Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
 
-## Etape 0.5 -- Filtre geographique
+## Paso 1 — Evaluación A-G
+Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F + Block G Posting Legitimacy).
 
-**Avant toute evaluation**, verifier la localisation du mandat :
+## Paso 2 — Guardar Report .md
+Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
+Include Block G in the saved report. Add `**Legitimacy:** {tier}` to the report header.
 
-1. Lire `config/profile.yml` -> section `location`.
-2. Si `strict_geo: true` :
-   - Extraire la localisation du mandat (ville, canton, region mentionnes dans le cahier des charges).
-   - Verifier contre `rejected_locations` : si la localisation du mandat contient un terme de cette liste -> **SKIP immediat**.
-   - Verifier contre `accepted_locations` : si aucun terme de cette liste ne correspond -> **SKIP immediat**.
-   - Si la localisation n'est pas mentionnee dans le cahier des charges, tenter une recherche WebSearch `"{entreprise}" localisation site Suisse` pour determiner le lieu.
-   - Si impossible a determiner : continuer mais ajouter une note "Localisation non confirmee -- verifier manuellement".
-3. Si SKIP :
-   - Statut dans le tracker : `skip`
-   - Note : "Hors zone geographique (Suisse romande uniquement)"
-   - **Ne PAS continuer le pipeline.** Ecrire le TSV dans `batch/tracker-additions/` et s'arreter.
+## Paso 3 — Generar PDF
+Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
 
-## Etape 1 -- Evaluation A-F
-Executer exactement comme le mode `mandat` (lire `modes/mandat.md` pour tous les blocs A-F).
+## Paso 4 — Draft Application Answers (solo si score >= 4.5)
 
-## Etape 2 -- Sauvegarder le report .md
-Sauvegarder l'evaluation complete dans `reports/{###}-{client-slug}-{YYYY-MM-DD}.md` (voir format dans `modes/mandat.md`).
+Si el score final es >= 4.5, generar borrador de respuestas para el formulario de aplicación:
 
-## Arbre de decision post-evaluation
+1. **Extraer preguntas del formulario**: Usar Playwright para navegar al formulario y hacer snapshot. Si no se pueden extraer, usar las preguntas genéricas.
+2. **Generar respuestas** siguiendo el tono (ver abajo).
+3. **Guardar en el report** como sección `## H) Draft Application Answers`.
 
-Apres l'evaluation, le pipeline se branche selon le score :
+### Preguntas genéricas (usar si no se pueden extraer del formulario)
 
-- **Score >= 4.0** : Continuer etapes 3 a 6 (full-auto : CV + message + envoi)
-- **Score >= 3.5 et < 4.0** : Executer etapes 3 et 4 (CV + message) mais **PAS** d'envoi automatique. Sauvegarder dans `output/` pour review manuel.
-- **Score < 3.5** : SKIP. Mettre a jour le tracker uniquement (etape 7). Ne pas generer de CV ni de message.
+- Why are you interested in this role?
+- Why do you want to work at [Company]?
+- Tell us about a relevant project or achievement
+- What makes you a good fit for this position?
+- How did you hear about this role?
 
-## Etape 3 -- Generer CV PDF (score >= 3.5)
+### Tono para Form Answers
 
-Executer le pipeline complet du mode `cv` (lire `modes/cv.md`) :
+**Posición: "I'm choosing you."** el candidato tiene opciones y está eligiendo esta empresa por razones concretas.
 
-1. Lire `cv.md` comme source de verite
-2. Extraire 15-20 mots-cles du cahier des charges
-3. Adapter le CV au mandat (profil, projets cles, competences)
-4. Generer le HTML depuis le template
-5. Ecrire dans `/tmp/cv-vanguard-{client-slug}.html`
-6. Executer : `node generate-pdf.mjs /tmp/cv-vanguard-{client-slug}.html output/cv-vanguard-{client-slug}-{YYYY-MM-DD}.pdf --format=a4`
+**Reglas de tono:**
+- **Confiado sin arrogancia**: "I've spent the past year building production AI agent systems — your role is where I want to apply that experience next"
+- **Selectivo sin soberbia**: "I've been intentional about finding a team where I can contribute meaningfully from day one"
+- **Específico y concreto**: Siempre referenciar algo REAL del JD o de la empresa, y algo REAL de la experiencia del candidato
+- **Directo, sin fluff**: 2-4 frases por respuesta. Sin "I'm passionate about..." ni "I would love the opportunity to..."
+- **El hook es la prueba, no la afirmación**: En vez de "I'm great at X", decir "I built X that does Y"
 
-## Etape 4 -- Generer message d'approche (score >= 3.5)
+**Framework por pregunta:**
+- **Why this role?** → "Your [specific thing] maps directly to [specific thing I built]."
+- **Why this company?** → Mencionar algo concreto sobre la empresa. "I've been using [product] for [time/purpose]."
+- **Relevant experience?** → Un proof point cuantificado. "Built [X] that [metric]. Sold the company in 2025."
+- **Good fit?** → "I sit at the intersection of [A] and [B], which is exactly where this role lives."
+- **How did you hear?** → Honesto: "Found through [portal/scan], evaluated against my criteria, and it scored highest."
 
-Generer un message personnalise en suivant le framework 3 phrases de `modes/contact.md` :
+**Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
 
-1. **Identifier la cible** : Chercher via WebSearch le decideur technique (CTO, chef de projet, responsable automation) de l'entreprise. Privilegier les decideurs operationnels, PAS les recruteurs.
-2. **Generer le message** (framework 3 phrases) :
-   - **Phrase 1 (Accroche)** : Element specifique sur LEUR entreprise ou defi actuel
-   - **Phrase 2 (Preuve)** : Realisation la plus pertinente du consultant pour CE contexte
-   - **Phrase 3 (Proposition)** : Echange de 15 min sur un sujet specifique
-3. **Contrainte** : Maximum 300 caracteres (limite LinkedIn connection request)
-4. **Generer 2 versions** :
-   - Version email (plus longue, 5-8 phrases, inclut references et proposition de valeur)
-   - Version LinkedIn (300 chars max, framework 3 phrases)
-5. **Sauvegarder** :
-   - Message email : `output/message-email-{client-slug}-{YYYY-MM-DD}.txt`
-   - Message LinkedIn : `output/message-linkedin-{client-slug}-{YYYY-MM-DD}.txt`
+## Paso 5 — Actualizar Tracker
+Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
 
-Si score >= 3.5 et < 4.0 : generer les messages mais afficher un avertissement :
-> "Score 3.X/5 -- messages generes dans output/ pour review manuel. Envoi automatique desactive."
-
-## Etape 5 -- Envoi email (score >= 4.0 uniquement)
-
-**Pre-requis** : Un email de contact a ete identifie (dans le cahier des charges, sur le site de l'entreprise, ou via WebSearch).
-
-1. Ecrire le message email dans `/tmp/message-{client-slug}.txt`
-2. Executer :
-   ```bash
-   node send-email.mjs --to "{contact_email}" --subject "Automation Engineer -- {mandat_title}" --body-file /tmp/message-{client-slug}.txt --attachment output/cv-vanguard-{client-slug}-{YYYY-MM-DD}.pdf
-   ```
-3. **Si aucun email trouve** : noter dans le tracker "Pas d'email de contact trouve -- envoi manuel requis" et continuer.
-4. **Si l'envoi echoue** : noter l'erreur dans le tracker et continuer.
-
-## Etape 6 -- Envoi LinkedIn (score >= 4.0 uniquement)
-
-**Pre-requis** : Un profil LinkedIn cible a ete identifie a l'etape 4.
-
-Utiliser les outils Chrome MCP pour envoyer une demande de connexion avec note :
-
-1. `navigate` vers le profil LinkedIn du decideur cible
-2. Chercher le bouton "Se connecter" / "Connect" et cliquer
-3. Chercher le bouton "Ajouter une note" / "Add a note" et cliquer
-4. Lire le contenu de `output/message-linkedin-{client-slug}-{YYYY-MM-DD}.txt`
-5. Taper le message dans le champ de texte (300 chars max)
-6. **Screenshot avant envoi** pour traçabilite
-7. Cliquer sur "Envoyer" / "Send"
-
-**Si le profil LinkedIn n'est pas trouve** : noter dans le tracker "Profil LinkedIn non identifie -- envoi manuel requis" et continuer.
-
-**Si LinkedIn demande un CAPTCHA ou verification** : s'arreter et notifier le consultant.
-
-**Voir `send-linkedin.mjs` pour la documentation detaillee du workflow.**
-
-## Etape 7 -- Mettre a jour le tracker
-
-Enregistrer dans `data/mandats.md` via `batch/tracker-additions/` avec toutes les colonnes :
-
-| Colonne | Valeur |
-|---------|--------|
-| Statut | `skip` / `evalue` / `qualifie` (si envoye) |
-| PDF | Oui/Non selon generation |
-| Notes | Resume + canaux d'envoi utilises (email/LinkedIn/aucun) |
-
-**Si une etape echoue**, continuer avec les suivantes et marquer l'etape en echec dans les notes du tracker.
-
-## Resume du flux
-
-```
-URL/texte
-   |
-   v
-[Etape 0] Extraire cahier des charges
-   |
-   v
-[Etape 0.5] Filtre geo --> SKIP si hors zone
-   |
-   v
-[Etape 1] Evaluation A-F --> Score
-   |
-   v
-[Etape 2] Sauvegarder report
-   |
-   +-- Score < 3.5 ---------> Tracker only (SKIP)
-   |
-   +-- Score 3.5-3.9 -------> CV + Message (review manuel)
-   |
-   +-- Score >= 4.0 --------> CV + Message + Email + LinkedIn (full-auto)
-   |
-   v
-[Etape 7] Tracker
-```
+**Si algún paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.

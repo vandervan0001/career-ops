@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * cv-sync-check.mjs — Valide la coherence du setup consulting-ops.
+ * cv-sync-check.mjs — Validates that the career-ops setup is consistent.
  *
- * Controles :
- * 1. cv.md existe
- * 2. config/profile.yml existe et contient les champs requis
- * 3. Pas de metriques codees en dur dans _shared.md ou batch/batch-prompt.md
- * 4. Fraicheur de article-digest.md (si existant)
+ * Checks:
+ * 1. cv.md exists
+ * 2. config/profile.yml exists and has required fields
+ * 3. No hardcoded metrics in _shared.md or batch/batch-prompt.md
+ * 4. article-digest.md freshness (if exists)
  */
 
 import { readFileSync, existsSync, statSync } from 'fs';
@@ -82,7 +82,7 @@ if (existsSync(digestPath)) {
 }
 
 // Output results
-console.log('\n=== consulting-ops sync check ===\n');
+console.log('\n=== career-ops sync check ===\n');
 
 if (errors.length === 0 && warnings.length === 0) {
   console.log('All checks passed.');

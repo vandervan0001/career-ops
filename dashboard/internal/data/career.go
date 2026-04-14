@@ -5,8 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/santifer/career-ops/dashboard/internal/model"
 )
@@ -14,24 +16,24 @@ import (
 var (
 	reReportLink     = regexp.MustCompile(`\[(\d+)\]\(([^)]+)\)`)
 	reScoreValue     = regexp.MustCompile(`(\d+\.?\d*)/5`)
-	reArchetype      = regexp.MustCompile(`(?i)\*\*Archetype(?:\s+detectado)?\*\*\s*\|\s*(.+)`)
+	reArchetype      = regexp.MustCompile(`(?i)\*\*Arquetipo(?:\s+detectado)?\*\*\s*\|\s*(.+)`)
 	reTlDr           = regexp.MustCompile(`(?i)\*\*TL;DR\*\*\s*\|\s*(.+)`)
 	reTlDrColon      = regexp.MustCompile(`(?i)\*\*TL;DR:\*\*\s*(.+)`)
 	reRemote         = regexp.MustCompile(`(?i)\*\*Remote\*\*\s*\|\s*(.+)`)
-	reTJM            = regexp.MustCompile(`(?i)\*\*TJM\*\*\s*\|\s*(.+)`)
-	reArchetypeColon = regexp.MustCompile(`(?i)\*\*Archetype:\*\*\s*(.+)`)
+	reComp           = regexp.MustCompile(`(?i)\*\*Comp\*\*\s*\|\s*(.+)`)
+	reArchetypeColon = regexp.MustCompile(`(?i)\*\*Arquetipo:\*\*\s*(.+)`)
 	reReportURL      = regexp.MustCompile(`(?m)^\*\*URL:\*\*\s*(https?://\S+)`)
 	reBatchID        = regexp.MustCompile(`(?m)^\*\*Batch ID:\*\*\s*(\d+)`)
 )
 
-// ParseMandats reads mandats.md and returns parsed mandates.
-// It tries both {path}/mandats.md and {path}/data/mandats.md for compatibility.
-func ParseMandats(careerOpsPath string) []model.Mandat {
-	filePath := filepath.Join(careerOpsPath, "mandats.md")
+// ParseApplications reads applications.md and returns parsed applications.
+// It tries both {path}/applications.md and {path}/data/applications.md for compatibility.
+func ParseApplications(careerOpsPath string) []model.CareerApplication {
+	filePath := filepath.Join(careerOpsPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		// Fallback: try data/ subdirectory
-		filePath = filepath.Join(careerOpsPath, "data", "mandats.md")
+		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
 		content, err = os.ReadFile(filePath)
 		if err != nil {
 			return nil
@@ -39,7 +41,7 @@ func ParseMandats(careerOpsPath string) []model.Mandat {
 	}
 
 	lines := strings.Split(string(content), "\n")
-	apps := make([]model.Mandat, 0)
+	apps := make([]model.CareerApplication, 0)
 	num := 0
 
 	for _, line := range lines {
@@ -75,13 +77,13 @@ func ParseMandats(careerOpsPath string) []model.Mandat {
 		}
 
 		num++
-		app := model.Mandat{
-			Number: num,
-			Date:   fields[1],
-			Client: fields[2],
-			Title:  fields[3],
-			Status: fields[5],
-			HasPDF: strings.Contains(fields[6], "\u2705"),
+		app := model.CareerApplication{
+			Number:  num,
+			Date:    fields[1],
+			Company: fields[2],
+			Role:    fields[3],
+			Status:  fields[5],
+			HasPDF:  strings.Contains(fields[6], "\u2705"),
 		}
 
 		// Parse score (field 4 = Score column)
@@ -96,14 +98,9 @@ func ParseMandats(careerOpsPath string) []model.Mandat {
 			app.ReportPath = rm[2]
 		}
 
-		// TJM (field 8 if exists)
+		// Notes (field 8 if exists)
 		if len(fields) > 8 {
-			app.TJM, _ = strconv.Atoi(strings.TrimSpace(fields[8]))
-		}
-
-		// Notes (field 9 if exists)
-		if len(fields) > 9 {
-			app.Notes = fields[9]
+			app.Notes = fields[8]
 		}
 
 		apps = append(apps, app)
@@ -113,8 +110,8 @@ func ParseMandats(careerOpsPath string) []model.Mandat {
 	// 1. **URL:** field in report header (newest reports)
 	// 2. **Batch ID:** in report -> batch-input.tsv URL lookup
 	// 3. report_num -> batch-state completed mapping (legacy)
-	// 4. scan-history.tsv (pipeline scan entries matched by client+title)
-	// 5. client name fallback from batch-input.tsv
+	// 4. scan-history.tsv (pipeline scan entries matched by company+role)
+	// 5. company name fallback from batch-input.tsv
 	batchURLs := loadBatchInputURLs(careerOpsPath)
 	reportNumURLs := loadJobURLs(careerOpsPath)
 
@@ -156,10 +153,10 @@ func ParseMandats(careerOpsPath string) []model.Mandat {
 		}
 	}
 
-	// Strategy 4: scan-history.tsv (pipeline scan entries matched by client+title)
+	// Strategy 4: scan-history.tsv (pipeline scan entries matched by company+role)
 	enrichFromScanHistory(careerOpsPath, apps)
 
-	// Strategy 5: client name fallback from batch-input.tsv
+	// Strategy 5: company name fallback from batch-input.tsv
 	enrichAppURLsByCompany(careerOpsPath, apps)
 
 	return apps
@@ -180,7 +177,7 @@ func loadBatchInputURLs(careerOpsPath string) map[string]string {
 		}
 		id := fields[0]
 		notes := fields[3]
-		// Extract real job URL from notes: "Title @ Client | Match% | https://actual-url"
+		// Extract real job URL from notes: "Title @ Company | Match% | https://actual-url"
 		if idx := strings.LastIndex(notes, "| "); idx >= 0 {
 			u := strings.TrimSpace(notes[idx+2:])
 			if strings.HasPrefix(u, "http") {
@@ -225,7 +222,7 @@ func loadJobURLs(careerOpsPath string) map[string]string {
 		e := batchEntry{id: fields[0]}
 		notes := fields[3]
 
-		// Extract URL from notes: "Title @ Client | Match% | https://actual-url"
+		// Extract URL from notes: "Title @ Company | Match% | https://actual-url"
 		if idx := strings.LastIndex(notes, "| "); idx >= 0 {
 			u := strings.TrimSpace(notes[idx+2:])
 			if strings.HasPrefix(u, "http") {
@@ -237,7 +234,7 @@ func loadJobURLs(careerOpsPath string) map[string]string {
 			e.url = fields[1]
 		}
 
-		// Extract company and role: "Title @ Client | Match% | URL"
+		// Extract company and role: "Role @ Company | Match% | URL"
 		notesPart := notes
 		if pipeIdx := strings.Index(notesPart, " | "); pipeIdx >= 0 {
 			notesPart = notesPart[:pipeIdx]
@@ -283,15 +280,15 @@ func loadJobURLs(careerOpsPath string) map[string]string {
 	return reportToURL
 }
 
-// enrichFromScanHistory fills JobURL from scan-history.tsv by matching client name.
-func enrichFromScanHistory(careerOpsPath string, apps []model.Mandat) {
+// enrichFromScanHistory fills JobURL from scan-history.tsv by matching company name.
+func enrichFromScanHistory(careerOpsPath string, apps []model.CareerApplication) {
 	scanPath := filepath.Join(careerOpsPath, "scan-history.tsv")
 	scanData, err := os.ReadFile(scanPath)
 	if err != nil {
 		return
 	}
 
-	// Build client -> URL index from scan-history
+	// Build company -> URL index from scan-history
 	type scanEntry struct {
 		url     string
 		company string
@@ -317,19 +314,19 @@ func enrichFromScanHistory(careerOpsPath string, apps []model.Mandat) {
 		if apps[i].JobURL != "" {
 			continue
 		}
-		key := normalizeCompany(apps[i].Client)
+		key := normalizeCompany(apps[i].Company)
 		matches := byCompany[key]
 		if len(matches) == 1 {
 			apps[i].JobURL = matches[0].url
 		} else if len(matches) > 1 {
-			// Multiple entries: pick best title match
-			appTitle := strings.ToLower(apps[i].Title)
+			// Multiple entries: pick best role match
+			appRole := strings.ToLower(apps[i].Role)
 			best := matches[0].url
 			bestScore := 0
 			for _, m := range matches {
 				score := 0
 				mTitle := strings.ToLower(m.title)
-				for _, word := range strings.Fields(appTitle) {
+				for _, word := range strings.Fields(appRole) {
 					if len(word) > 2 && strings.Contains(mTitle, word) {
 						score++
 					}
@@ -347,22 +344,22 @@ func enrichFromScanHistory(careerOpsPath string, apps []model.Mandat) {
 // normalizeCompany strips common suffixes and lowercases a company name.
 func normalizeCompany(name string) string {
 	s := strings.ToLower(strings.TrimSpace(name))
-	for _, suffix := range []string{" inc.", " inc", " llc", " ltd", " corp", " corporation", " technologies", " technology", " group", " co.", " ag", " sa", " gmbh"} {
+	for _, suffix := range []string{" inc.", " inc", " llc", " ltd", " corp", " corporation", " technologies", " technology", " group", " co."} {
 		s = strings.TrimSuffix(s, suffix)
 	}
 	return strings.TrimSpace(s)
 }
 
-// enrichAppURLsByCompany fills in JobURL for mandats that didn't get one via report_num mapping.
-// It matches by client name from batch-input.tsv notes.
-func enrichAppURLsByCompany(careerOpsPath string, apps []model.Mandat) {
+// enrichAppURLsByCompany fills in JobURL for apps that didn't get one via report_num mapping.
+// It matches by company name from batch-input.tsv notes.
+func enrichAppURLsByCompany(careerOpsPath string, apps []model.CareerApplication) {
 	inputPath := filepath.Join(careerOpsPath, "batch", "batch-input.tsv")
 	inputData, err := os.ReadFile(inputPath)
 	if err != nil {
 		return
 	}
 
-	// Build client -> []entry index
+	// Build company -> []entry index
 	type entry struct {
 		role string
 		url  string
@@ -403,20 +400,20 @@ func enrichAppURLsByCompany(careerOpsPath string, apps []model.Mandat) {
 		if apps[i].JobURL != "" {
 			continue
 		}
-		key := normalizeCompany(apps[i].Client)
+		key := normalizeCompany(apps[i].Company)
 		matches := byCompany[key]
 		if len(matches) == 1 {
 			apps[i].JobURL = matches[0].url
 		} else if len(matches) > 1 {
-			// Multiple entries for same client: pick best title match
-			appTitle := strings.ToLower(apps[i].Title)
+			// Multiple entries for same company: pick best role match
+			appRole := strings.ToLower(apps[i].Role)
 			best := matches[0].url
 			bestScore := 0
 			for _, m := range matches {
 				score := 0
 				mRole := strings.ToLower(m.role)
 				// Count matching words
-				for _, word := range strings.Fields(appTitle) {
+				for _, word := range strings.Fields(appRole) {
 					if len(word) > 2 && strings.Contains(mRole, word) {
 						score++
 					}
@@ -431,8 +428,8 @@ func enrichAppURLsByCompany(careerOpsPath string, apps []model.Mandat) {
 	}
 }
 
-// ComputeMetrics calculates aggregate metrics from mandates.
-func ComputeMetrics(apps []model.Mandat) model.PipelineMetrics {
+// ComputeMetrics calculates aggregate metrics from applications.
+func ComputeMetrics(apps []model.CareerApplication) model.PipelineMetrics {
 	m := model.PipelineMetrics{
 		Total:    len(apps),
 		ByStatus: make(map[string]int),
@@ -440,8 +437,6 @@ func ComputeMetrics(apps []model.Mandat) model.PipelineMetrics {
 
 	var totalScore float64
 	var scored int
-	var totalTJM float64
-	var tjmCount int
 
 	for _, app := range apps {
 		status := NormalizeStatus(app.Status)
@@ -457,11 +452,7 @@ func ComputeMetrics(apps []model.Mandat) model.PipelineMetrics {
 		if app.HasPDF {
 			m.WithPDF++
 		}
-		if app.TJM > 0 {
-			totalTJM += float64(app.TJM)
-			tjmCount++
-		}
-		if status != "skip" && status != "perdu" && status != "termine" {
+		if status != "skip" && status != "rejected" && status != "discarded" {
 			m.Actionable++
 		}
 	}
@@ -469,52 +460,47 @@ func ComputeMetrics(apps []model.Mandat) model.PipelineMetrics {
 	if scored > 0 {
 		m.AvgScore = totalScore / float64(scored)
 	}
-	if tjmCount > 0 {
-		m.AvgTJM = totalTJM / float64(tjmCount)
-	}
 
 	return m
 }
 
 // NormalizeStatus normalizes raw status text to a canonical form.
-// Aliases match French consulting pipeline statuses.
+// Aliases match states.yml -- keep in sync with career-ops/states.yml
 func NormalizeStatus(raw string) string {
 	// Strip markdown bold and trailing dates
 	s := strings.ReplaceAll(raw, "**", "")
 	s = strings.TrimSpace(strings.ToLower(s))
-	// Strip trailing date (e.g., "identifie 2026-03-12")
+	// Strip trailing date (e.g., "aplicado 2026-03-12")
 	if idx := strings.Index(s, " 202"); idx > 0 {
 		s = strings.TrimSpace(s[:idx])
 	}
 
 	switch {
-	case s == "skip" || s == "no_aplicar" || strings.Contains(s, "no aplicar") || strings.Contains(s, "geo blocker"):
+	// Most restrictive first — accepts both English and Spanish
+	case strings.Contains(s, "no aplicar") || strings.Contains(s, "no_aplicar") || s == "skip" || strings.Contains(s, "geo blocker"):
 		return "skip"
-	case s == "identifie" || s == "identifié" || s == "identified":
-		return "identifie"
-	case s == "evalue" || s == "évalué" || s == "évaluée" || s == "evaluee" || s == "evaluated" || s == "evaluada" || s == "evaluada" || s == "evaluar" || s == "verificar" || s == "condicional" || s == "hold" || s == "monitor":
-		return "evalue"
-	case s == "qualifie" || s == "qualifié" || s == "qualifiée" || s == "qualifiee" || s == "qualified":
-		return "qualifie"
-	case s == "proposition" || s == "proposal" || s == "offre" || s == "offer":
-		return "proposition"
-	case s == "discussion" || s == "entretien" || s == "interview" || s == "responded" || s == "respondido":
-		return "discussion"
-	case s == "signe" || s == "signé" || s == "signée" || s == "signee" || s == "signed":
-		return "signe"
-	case s == "en_cours" || s == "en cours" || s == "in_progress" || s == "active" || s == "actif":
-		return "en_cours"
-	case s == "termine" || s == "terminé" || s == "terminée" || s == "terminee" || s == "completed" || s == "done":
-		return "termine"
-	case s == "perdu" || s == "lost" || s == "rejected" || s == "rechazado" || s == "rechazada" || s == "discarded" || s == "descartado" || s == "descartada" || s == "cerrada" || s == "cancelada" || strings.HasPrefix(s, "duplicado") || strings.HasPrefix(s, "dup"):
-		return "perdu"
+	case strings.Contains(s, "interview") || strings.Contains(s, "entrevista"):
+		return "interview"
+	case s == "offer" || strings.Contains(s, "oferta"):
+		return "offer"
+	case strings.Contains(s, "responded") || strings.Contains(s, "respondido"):
+		return "responded"
+	case strings.Contains(s, "applied") || strings.Contains(s, "aplicado") || s == "enviada" || s == "aplicada" || s == "sent":
+		return "applied"
+	case strings.Contains(s, "rejected") || strings.Contains(s, "rechazado") || s == "rechazada":
+		return "rejected"
+	case strings.Contains(s, "discarded") || strings.Contains(s, "descartado") || s == "descartada" || s == "cerrada" || s == "cancelada" ||
+		strings.HasPrefix(s, "duplicado") || strings.HasPrefix(s, "dup"):
+		return "discarded"
+	case strings.Contains(s, "evaluated") || strings.Contains(s, "evaluada") || s == "condicional" || s == "hold" || s == "monitor" || s == "evaluar" || s == "verificar":
+		return "evaluated"
 	default:
 		return s
 	}
 }
 
 // LoadReportSummary extracts key fields from a report file.
-func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remote, tjm string) {
+func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remote, comp string) {
 	fullPath := filepath.Join(careerOpsPath, reportPath)
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
@@ -539,8 +525,8 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 		remote = cleanTableCell(m[1])
 	}
 
-	if m := reTJM.FindStringSubmatch(text); m != nil {
-		tjm = cleanTableCell(m[1])
+	if m := reComp.FindStringSubmatch(text); m != nil {
+		comp = cleanTableCell(m[1])
 	}
 
 	// Truncate long fields
@@ -551,12 +537,12 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 	return
 }
 
-// UpdateMandatStatus updates the status of a mandate in mandats.md.
-func UpdateMandatStatus(careerOpsPath string, app model.Mandat, newStatus string) error {
-	filePath := filepath.Join(careerOpsPath, "mandats.md")
+// UpdateApplicationStatus updates the status of an application in applications.md.
+func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, newStatus string) error {
+	filePath := filepath.Join(careerOpsPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		filePath = filepath.Join(careerOpsPath, "data", "mandats.md")
+		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
 		content, err = os.ReadFile(filePath)
 		if err != nil {
 			return err
@@ -580,7 +566,7 @@ func UpdateMandatStatus(careerOpsPath string, app model.Mandat, newStatus string
 	}
 
 	if !found {
-		return fmt.Errorf("mandate not found: report %s", app.ReportNumber)
+		return fmt.Errorf("application not found: report %s", app.ReportNumber)
 	}
 
 	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
@@ -602,27 +588,149 @@ func cleanTableCell(s string) string {
 // StatusPriority returns the sort priority for a status (lower = higher priority).
 func StatusPriority(status string) int {
 	switch NormalizeStatus(status) {
-	case "signe":
+	case "interview":
 		return 0
-	case "en_cours":
+	case "offer":
 		return 1
-	case "discussion":
+	case "responded":
 		return 2
-	case "proposition":
+	case "applied":
 		return 3
-	case "qualifie":
+	case "evaluated":
 		return 4
-	case "evalue":
-		return 5
-	case "identifie":
-		return 6
-	case "termine":
-		return 7
-	case "perdu":
-		return 8
 	case "skip":
-		return 9
+		return 5
+	case "rejected":
+		return 6
+	case "discarded":
+		return 7
 	default:
-		return 10
+		return 8
 	}
+}
+
+// ComputeProgressMetrics computes progress-oriented analytics from applications.
+func ComputeProgressMetrics(apps []model.CareerApplication) model.ProgressMetrics {
+	pm := model.ProgressMetrics{}
+
+	// Count by normalized status
+	statusCounts := make(map[string]int)
+	var totalScore float64
+	var scored int
+
+	for _, app := range apps {
+		norm := NormalizeStatus(app.Status)
+		statusCounts[norm]++
+
+		if app.Score > 0 {
+			totalScore += app.Score
+			scored++
+			if app.Score > pm.TopScore {
+				pm.TopScore = app.Score
+			}
+		}
+
+		if norm == "offer" {
+			pm.TotalOffers++
+		}
+		if norm != "skip" && norm != "rejected" && norm != "discarded" {
+			pm.ActiveApps++
+		}
+	}
+
+	if scored > 0 {
+		pm.AvgScore = totalScore / float64(scored)
+	}
+
+	// Funnel: each stage counts all apps that reached at least that stage.
+	// An app in "interview" has passed through evaluated -> applied -> responded -> interview.
+	total := len(apps)
+	applied := statusCounts["applied"] + statusCounts["responded"] + statusCounts["interview"] + statusCounts["offer"] + statusCounts["rejected"]
+	responded := statusCounts["responded"] + statusCounts["interview"] + statusCounts["offer"]
+	interview := statusCounts["interview"] + statusCounts["offer"]
+	offer := statusCounts["offer"]
+
+	pm.FunnelStages = []model.FunnelStage{
+		{Label: "Evaluated", Count: total, Pct: 100.0},
+		{Label: "Applied", Count: applied, Pct: safePct(applied, total)},
+		{Label: "Responded", Count: responded, Pct: safePct(responded, applied)},
+		{Label: "Interview", Count: interview, Pct: safePct(interview, applied)},
+		{Label: "Offer", Count: offer, Pct: safePct(offer, applied)},
+	}
+
+	// Rates (relative to applied)
+	if applied > 0 {
+		pm.ResponseRate = float64(responded) / float64(applied) * 100
+		pm.InterviewRate = float64(interview) / float64(applied) * 100
+		pm.OfferRate = float64(offer) / float64(applied) * 100
+	}
+
+	// Score distribution
+	buckets := [5]int{} // 0: 4.5-5.0, 1: 4.0-4.4, 2: 3.5-3.9, 3: 3.0-3.4, 4: <3.0
+	for _, app := range apps {
+		if app.Score <= 0 {
+			continue
+		}
+		switch {
+		case app.Score >= 4.5:
+			buckets[0]++
+		case app.Score >= 4.0:
+			buckets[1]++
+		case app.Score >= 3.5:
+			buckets[2]++
+		case app.Score >= 3.0:
+			buckets[3]++
+		default:
+			buckets[4]++
+		}
+	}
+	pm.ScoreBuckets = []model.ScoreBucket{
+		{Label: "4.5-5.0", Count: buckets[0]},
+		{Label: "4.0-4.4", Count: buckets[1]},
+		{Label: "3.5-3.9", Count: buckets[2]},
+		{Label: "3.0-3.4", Count: buckets[3]},
+		{Label: "  <3.0", Count: buckets[4]},
+	}
+
+	// Weekly activity: group by ISO week from Date field, show last 8 weeks.
+	weekCounts := make(map[string]int)
+	for _, app := range apps {
+		if app.Date == "" {
+			continue
+		}
+		t, err := time.Parse("2006-01-02", app.Date)
+		if err != nil {
+			continue
+		}
+		year, week := t.ISOWeek()
+		key := fmt.Sprintf("%d-W%02d", year, week)
+		weekCounts[key]++
+	}
+
+	// Sort weeks and take last 8
+	var weeks []string
+	for w := range weekCounts {
+		weeks = append(weeks, w)
+	}
+	sort.Strings(weeks)
+	if len(weeks) > 8 {
+		weeks = weeks[len(weeks)-8:]
+	}
+
+	for _, w := range weeks {
+		pm.WeeklyActivity = append(pm.WeeklyActivity, model.WeekActivity{
+			Week:  w,
+			Count: weekCounts[w],
+		})
+	}
+
+	return pm
+}
+
+// safePct returns the percentage of part/whole, or 0 if whole is 0.
+func safePct(part, whole int) float64 {
+	if whole == 0 {
+		return 0
+	}
+	return float64(part) / float64(whole) * 100
 }
