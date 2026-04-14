@@ -20,8 +20,10 @@ import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
+// Support both layouts: data/mandats.md (consulting-ops), data/applications.md (boilerplate), applications.md (original)
+const APPS_FILE = existsSync(join(CAREER_OPS, 'data/mandats.md'))
+  ? join(CAREER_OPS, 'data/mandats.md')
+  : existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')
   : join(CAREER_OPS, 'applications.md');
 const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');

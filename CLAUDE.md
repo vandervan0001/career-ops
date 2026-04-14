@@ -287,6 +287,8 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - Report numbering: sequential 3-digit zero-padded, max existing + 1
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
+- **RULE: Commit autonomously — NEVER ask the user to commit.** After any session that modifies data files, commit without prompting. Stage only: `data/mandats.md`, `data/scan-history.tsv`, `data/pipeline.md`, `reports/*.md`, `batch/tracker-additions/merged/*.tsv`, `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml`, and any system files changed by updates or patches. Never stage `._*` files (macOS metadata), `output/`, `node_modules/`, or `.env`/credentials.
+- **RULE: Before running `node update-system.mjs apply`, always commit user data files first** (`data/mandats.md`, `data/scan-history.tsv`, `data/pipeline.md`, `cv.md`, `reports/*.md`). The update fetches from upstream git and can overwrite the working tree if these files are uncommitted. Commit → then update.
 
 ### TSV Format for Tracker Additions
 
