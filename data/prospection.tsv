@@ -13,7 +13,7 @@ date	company	contact	email	linkedin	sector	signal	score	message_sent	status	note
 2026-04-09	Givaudan	Joris Jellema	joris.jellema@givaudan.com	linkedin.com/in/jorisjellema	chimie/aromes	site Geneva	7	email+linkedin	relance_1	Batch 2 — LinkedIn invitation envoyee
 2026-04-09	Procter & Gamble	Tomas Andrascik	tomas.andrascik@pg.com	linkedin.com/in/tomas-andrascik-25a5714	FMCG	supply externe Europe	6	email	envoye	Batch 2 — LinkedIn connexion restreinte
 2026-04-09	Galderma	Alvaro Jaramillo	alvaro.jaramillo@galderma.com		pharma/dermo	site Lausanne	7	email	relance_1	Batch 2 — LinkedIn profil introuvable
-2026-04-09	Romande Energie	Franck Barraud	franck.barraud@romande-energie.ch	linkedin.com/in/franck-barraud-b0155692	energie/utilities	NIS2/OT cybersecurite	7	email+linkedin	relance_1	Batch 2 — LinkedIn invitation envoyee
+2026-04-09	Romande Energie	Franck Barraud	franck.barraud@romande-energie.ch	linkedin.com/in/franck-barraud-b0155692	energie/utilities	NIS2/OT cybersecurite	7	email+linkedin	archive	Réponse 2026-04-15 : pas la bonne personne (Services SA). Redirigé vers Assia Garbinato, Directrice Digital & Innovation, Romande Energie SA. Ne plus contacter.
 2026-04-09	Stryker	Marc Wisler	marc.wisler@stryker.com		medtech	transfert produit	6	email	envoye	Batch 2 — LinkedIn hors Suisse romande (Selzach)
 2026-04-09	Debiopharm	Moreno Centelleghe	moreno.centelleghe@debiopharm.com	linkedin.com/in/moreno-centelleghe-eur-ing-mba-9a025134	pharma/biotech	production GMP Valais	8	email+linkedin	relance_1	Batch 2 — LinkedIn invitation envoyee
 2026-04-09	SIG Combibloc	Matthieu Sandevoir	matthieu.sandevoir@sig.biz		manufacturing/packaging	systemes remplissage	6	email	envoye	Batch 2 — LinkedIn Paris (hors region) + restreint
@@ -81,3 +81,4 @@ date	company	contact	email	linkedin	sector	signal	score	message_sent	status	note
 2026-04-15	Breguet	Nakis Karapatis	nakis.karapatis@breguet.com	linkedin.com/in/nakis-karapatis-87a68b	horlogerie/luxe	Vallee de Joux	8	email+linkedin	envoye	Batch 7 — VP Head of Operations, 2e, email EN + invitation LinkedIn envoyée
 2026-04-15	Blancpain Habillage	Cédric Vantal	cedric.vantal@blancpain.com	linkedin.com/in/cedric-vantal-62b799138	horlogerie/luxe	site Delemont JU	7	email+linkedin	envoye	Batch 7 — Directeur de site Division Habillage, 3e, invitation LinkedIn envoyée
 2026-04-15	Tornos	Yvan Bucher	bucher.y@tornos.com	linkedin.com/in/yvan-bucher-5298367b	manufacturing	machines CNC Bassecourt	7	email+linkedin	envoye	Batch 7 — Head of Swiss Machine Assembly, 2e, invitation LinkedIn envoyée
+2026-04-15	Romande Energie SA	Assia Garbinato	assia.garbinato@romande-energie.ch		energie/utilities	NIS2/OT — redirect Franck Barraud	7	email	envoye	Directrice Digital & Innovation — orientée par Franck Barraud, email envoyé 2026-04-15
