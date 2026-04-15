@@ -1,13 +1,13 @@
 date	company	contact	email	linkedin	sector	signal	score	message_sent	status	notes
-2026-04-08	UCB	Denis Fabris	denis.fabris@ucb.com		pharma	expansion Bulle	8	email	relance_1	Prospection froide batch 1
+2026-04-08	UCB	Denis Fabris	denis.fabris@ucb.com		pharma	expansion Bulle	8	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle biologiques SCADA 21 CFR
 2026-04-08	Medtronic	Alp Tunca	alp.tunca@medtronic.com		medtech	site Tolochenaz	7	email	reponse	Réponse 2026-04-13 : pas de besoin actuel, garde le contact pour futurs projets. Relancer dans 3 mois.
-2026-04-08	Rolex	Tony Cantin	tony.cantin@rolex.com		horlogerie	industrialisation	6	email	relance_1	Prospection froide batch 1
-2026-04-08	BOBST	Philippe Millioud	philippe.millioud@bobst.com		manufacturing	site Mex	6	email	relance_1	Prospection froide batch 1
-2026-04-08	SICPA	Jonas Schenk	jonas.schenk@sicpa.com		securite/encres	production Lausanne	7	email	relance_1	Prospection froide batch 1
-2026-04-08	PMI	Patrick Monney	patrick.monney@pmi.com		tabac/FMCG	sites production	7	email	relance_1	Prospection froide batch 1
-2026-04-08	dsm-firmenich	Simon Maurer	maurer.simon@dsm-firmenich.com		chimie/aromes	modernisation Geneve	7	email	relance_1	Prospection froide batch 1
-2026-04-08	Nestlé	Olivier Robin	olivier.robin@nestle.com		FMCG	transformation digitale	7	email	relance_1	Prospection froide batch 1
-2026-04-08	Bulgari	Arnaud Casse	arnaud.casse@bulgari.com		luxe/horlogerie	site Neuchatel	6	email	relance_1	Prospection froide batch 1
+2026-04-08	Rolex	Tony Cantin	tony.cantin@rolex.com		horlogerie	industrialisation	6	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle lignes assembly horlogerie
+2026-04-08	BOBST	Philippe Millioud	philippe.millioud@bobst.com		manufacturing	site Mex	6	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle packaging automation
+2026-04-08	SICPA	Jonas Schenk	jonas.schenk@sicpa.com		securite/encres	production Lausanne	7	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle OT cybersec NIS2
+2026-04-08	PMI	Patrick Monney	patrick.monney@pmi.com		tabac/FMCG	sites production	7	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle lignes iQOS Neuchâtel
+2026-04-08	dsm-firmenich	Simon Maurer	maurer.simon@dsm-firmenich.com		chimie/aromes	modernisation Geneve	7	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle modernisation contrôle arômes
+2026-04-08	Nestlé	Olivier Robin	olivier.robin@nestle.com		FMCG	transformation digitale	7	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle Industrie 4.0 F&B
+2026-04-08	Bulgari	Arnaud Casse	arnaud.casse@bulgari.com		luxe/horlogerie	site Neuchatel	6	email	relance_2	Relance J+7 envoyée 2026-04-15 — angle automation manufacture luxe
 2026-04-09	Ferring	Rafel Hermiz	rafel.hermiz@ferring.com		pharma	site Saint-Prex	8	email	relance_1	Batch 2 — contact verifie Hunter 100%
 2026-04-09	APCO Technologies	Edouard Périchon	e.perichon@apco-technologies.eu		medtech/automation	fournisseur systemes	7	email	relance_1	Batch 2 — pattern {f}.{last}@apco-technologies.eu
 2026-04-09	Givaudan	Joris Jellema	joris.jellema@givaudan.com	linkedin.com/in/jorisjellema	chimie/aromes	site Geneva	7	email+linkedin	relance_1	Batch 2 — LinkedIn invitation envoyee
@@ -75,3 +75,9 @@ date	company	contact	email	linkedin	sector	signal	score	message_sent	status	note
 75	2026-04-15	Sécheron SA	Stefano Meinardi	stefano.meinardi@secheron.com	linkedin.com/in/stefano-meinardi10051986	ferroviaire/électrotechnique	composants sécurité-rail Satigny GE	7	email+linkedin	envoye	Batch 6 -- Head of Production (EMBA), Hunter 97%, LinkedIn invitation FR envoyée
 76	2026-04-15	Holcim	Christine Gröll	christine.groell@holcim.com	linkedin.com/in/chgroell	ciment/industrie	Head of Production Holcim Suisse	7	email+linkedin	envoye	Batch 6 -- Head of Production, Hunter 88% verify OK, LinkedIn invitation EN envoyée
 77	2026-04-15	Metalor	Jean-François Mineau	jean-francois.mineau@metalor.com	linkedin.com/in/jfmineau	métaux précieux	traçabilité procédés Le Grand-Saconnex GE	7	email+linkedin	envoye	Batch 6 -- Technical Director Business Group Electrotechnics, Hunter 99%, LinkedIn invitation FR envoyée
+2026-04-15	LeClanché	Pierre Blanc	pierre.blanc@leclanche.com	linkedin.com/in/pierre-blanc-2659728	energie/batteries	production Yverdon	8	email+linkedin	envoye	Batch 7 — CEO & CTIO, 2e, invitation LinkedIn envoyée
+2026-04-15	Liebherr Bulle	Yves Lesquibille	yves.lesquibille@liebherr.com	linkedin.com/in/yves-lesquibille-81287a16a	manufacturing	expansion lignes moteurs	7	email+linkedin	envoye	Batch 7 — Head of Production, 2e, invitation LinkedIn envoyée
+2026-04-15	Blancpain	Pascal Ricci	pascal.ricci@blancpain.com	linkedin.com/in/pascal-ricci	horlogerie/luxe	manufacture Le Locle	7	email+linkedin	envoye	Batch 7 — VP Directeur Production, 2e, invitation LinkedIn envoyée
+2026-04-15	Breguet	Nakis Karapatis	nakis.karapatis@breguet.com	linkedin.com/in/nakis-karapatis-87a68b	horlogerie/luxe	Vallee de Joux	8	email+linkedin	envoye	Batch 7 — VP Head of Operations, 2e, email EN + invitation LinkedIn envoyée
+2026-04-15	Blancpain Habillage	Cédric Vantal	cedric.vantal@blancpain.com	linkedin.com/in/cedric-vantal-62b799138	horlogerie/luxe	site Delemont JU	7	email+linkedin	envoye	Batch 7 — Directeur de site Division Habillage, 3e, invitation LinkedIn envoyée
+2026-04-15	Tornos	Yvan Bucher	bucher.y@tornos.com	linkedin.com/in/yvan-bucher-5298367b	manufacturing	machines CNC Bassecourt	7	email+linkedin	envoye	Batch 7 — Head of Swiss Machine Assembly, 2e, invitation LinkedIn envoyée
