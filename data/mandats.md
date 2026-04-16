@@ -2,6 +2,14 @@
 
 | # | Date | Client | Mandat | Score | Statut | PDF | Report | TJM | Notes |
 |---|------|--------|--------|-------|--------|-----|--------|-----|-------|
+| 42 | 2026-04-14 | agap2 Switzerland | [CDI] Automation Engineer — Machines Spéciales | 3.0/5 | evalue | CDI ~95K | ❌ |  | Lausanne, PLC Siemens/Rockwell/Beckhoff, 4 ans requis, CDI non-exécutif, pas pharma/GMP |
+| 44 | 2026-04-15 | Takeda | [CDI] Automation Data Engineer (Neuchâtel) | 3.7/5 | evalue | CDI ~130K | ❌ |  | Neuchâtel, data engineering + SCADA/MES/OT, GMP pharma, CDI non-exécutif — tracker uniquement |
+| 45 | 2026-04-16 | UCB-Pharma SA | [CDI] Head Qualification, Validation, Digital & Data Integrity | 3.3/5 | evalue | CDI ~160K | ❌ |  | Bulle VD, HEAD level mais QA/compliance focus (10 ans QA requis), pas automation — CDI non-actionnable |
+| 46 | 2026-04-16 | UCB-Pharma SA | [CDI] DCS Engineer | 3.2/5 | evalue | CDI ~120K | ❌ |  | Bulle VD, DeltaV 5+ ans, pharma/biotech GMP, CDI non-exécutif — tracker uniquement |
+| 47 | 2026-04-16 | UCB-Pharma SA | [CDI] MES Engineer | 3.0/5 | evalue | CDI ~115K | ❌ |  | Bulle VD, Syncade/DeltaV MES, 5+ ans, pharma/biotech, CDI non-exécutif — tracker uniquement |
+| 48 | 2026-04-16 | Randstad (Schweiz) AG | [CDI] Automation Engineer - Software & Commissioning | 3.0/5 | evalue | CDI ~110K | ❌ |  | Neuchâtel, Rockwell/AB + C++/SQL, machines spéciales industrie, 20-25% travel, CDI non-exécutif |
+| 49 | 2026-04-16 | OK Job SA | [CDI] Ingénieur Automation et Systèmes Industriels | 3.0/5 | evalue | CDI ~110K | ❌ |  | Neuchâtel, Siemens TIA Portal/WinCC/SCADA, 5 ans requis, CDI non-exécutif |
+| 52 | 2026-04-16 | Amaris Consulting | [CDI] Automation Engineer F/H/X | 3.3/5 | evalue | CDI ~110K | ❌ |  | Biel/Bienne, IQ/OQ/PQ FAT/SAT, Siemens/Rockwell/Beckhoff, 3+ ans, CDI non-exécutif |
 | 38 | 2026-04-13 | agap2 Switzerland | [CDI] CAPEX Project Manager Pharma/Biotech | 3.6/5 | evalue | CDI ~115K | ❌ | [038](reports/038-agap2-capex-pm-lausanne-2026-04-13.md) | Lausanne Bel-Air, PM CAPEX 2-50MCHF, salaire opaque, CDI integrateur |
 | 34 | 2026-04-10 | Dietrich Engineering Consultants (DEC Group) | [CDI] Services Automation & Software Engineer | 3.9/5 | evalue | CDI ~115k | ❌ | [034](reports/034-dec-group-automation-software-engineer-ecublens-2026-04-10.md) | Ecublens VD, GAMP5/21CFR, Siemens TIA Portal — excellent fit tech, CDI avec 40% travel |
 | 35 | 2026-04-10 | APCO Technologies SA | [CDI] Automation Engineer | 3.3/5 | skip | CDI ~110k | ❌ | [035](reports/035-apco-technologies-automation-engineer-aigle-2026-04-10.md) | Aigle VD, Siemens TIA Portal, pas pharma/GMP, deplacements internationaux frequents |
