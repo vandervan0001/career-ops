@@ -17,6 +17,17 @@ import yaml from 'js-yaml';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SMTP_FILE = join(ROOT, 'config', 'smtp.yml');
+const SIGNATURE_FILE = join(ROOT, 'config', 'signature.html');
+
+function buildHtmlEmail(text) {
+  const signature = existsSync(SIGNATURE_FILE) ? readFileSync(SIGNATURE_FILE, 'utf-8') : '';
+  const htmlBody = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+  return `<div style="font-family: Tahoma; font-size: 14px; color: #000;">${htmlBody}</div>${signature ? `<br>${signature}` : ''}`;
+}
 
 function loadSmtpConfig() {
   if (!existsSync(SMTP_FILE)) {
@@ -107,9 +118,10 @@ if (args.includes('--test')) {
   const smtp = loadSmtpConfig();
   const emailBody = bodyFile && existsSync(bodyFile) ? readFileSync(bodyFile, 'utf-8') : (body || '');
   const attachments = attachment && existsSync(attachment) ? [{ path: attachment }] : undefined;
+  const htmlEmail = buildHtmlEmail(emailBody);
 
   try {
-    const info = await sendEmail({ to, subject, body: emailBody, attachments, smtp });
+    const info = await sendEmail({ to, subject, body: emailBody, html: htmlEmail, attachments, smtp });
     console.log(`Email envoye a ${to} (${info.messageId})`);
   } catch (err) {
     console.error(`ERREUR: ${err.message}`);
