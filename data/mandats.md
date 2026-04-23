@@ -2,6 +2,13 @@
 
 | # | Date | Client | Mandat | Score | Statut | PDF | Report | TJM | Notes |
 |---|------|--------|--------|-------|--------|-----|--------|-----|-------|
+| 53 | 2026-04-23 | Recrutis Agency | [CDI] Ingénieur-e en Automation industrielle (Monthey) | 4.0/5 | Evaluated | ❌ |  | ~130K CHF/an (vérifier si freelance/interim) |
+| 54 | 2026-04-23 | Undisclosed | [CDI] Head of Projects Managers (Neuchâtel) | 3.5/5 | Evaluated | ❌ | [044](reports/044-undisclosed-head-of-projects-neuchatel-2026-04-23.md) | ~150K CHF/an |
+| 55 | 2026-04-23 | BOBST MEX SA | [CDI] Automation & Embedded Software Developer | 2.5/5 | SKIP | ❌ |  | ~110K CHF/an |
+| 57 | 2026-04-23 | AXEPTA SA | [CDI] Chef de projet Infrastructure GMP medtech | — | Discarded | ❌ |  | — |
+| 59 | 2026-04-23 | Cremo SA | [CDI] Chef-fe de team Automation | 3.2/5 | Evaluated | ❌ |  | ~105K CHF/an |
+| 60 | 2026-04-23 | Careerplus | [CDI] Ingénieur automation | 3.3/5 | Evaluated | ❌ |  | ~115K CHF/an |
+| 61 | 2026-04-23 | Undisclosed | [CDI] Project Manager — Automation / Microtechniques | 3.0/5 | Evaluated | ❌ |  | ~130K CHF/an |
 | 42 | 2026-04-14 | agap2 Switzerland | [CDI] Automation Engineer — Machines Spéciales | 3.0/5 | evalue | CDI ~95K | ❌ |  | Lausanne, PLC Siemens/Rockwell/Beckhoff, 4 ans requis, CDI non-exécutif, pas pharma/GMP |
 | 44 | 2026-04-15 | Takeda | [CDI] Automation Data Engineer (Neuchâtel) | 3.7/5 | evalue | CDI ~130K | ❌ |  | Neuchâtel, data engineering + SCADA/MES/OT, GMP pharma, CDI non-exécutif — tracker uniquement |
 | 45 | 2026-04-16 | UCB-Pharma SA | [CDI] Head Qualification, Validation, Digital & Data Integrity | 3.3/5 | evalue | CDI ~160K | ❌ |  | Bulle VD, HEAD level mais QA/compliance focus (10 ans QA requis), pas automation — CDI non-actionnable |
