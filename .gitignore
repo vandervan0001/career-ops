@@ -38,3 +38,4 @@ node_modules/
 career-dashboard
 config/smtp.yml
 config/hunter.yml
+.worktrees/
