@@ -125,19 +125,20 @@ async function stepEnrich() {
       const domain = row.linkedin
         ? new URL(row.linkedin).hostname.replace('www.', '')
         : `${row.company.toLowerCase().replace(/[^a-z]/g, '')}.com`;
-      const result = execFileSync('node', ['find-email.mjs', '--domain', domain, '--json'], {
+      const raw = execFileSync('node', ['find-email.mjs', '--domain', domain, '--json'], {
         cwd: ROOT, encoding: 'utf-8',
       });
-      const data = JSON.parse(result.trim());
-      if (data?.email) {
-        row.email = data.email;
-        if (data.first_name && data.last_name) row.contact = `${data.first_name} ${data.last_name}`;
-        log(`Email trouvé pour ${row.company} : ${row.email}`);
+      const jsonStart = raw.indexOf('{');
+      const data = jsonStart >= 0 ? JSON.parse(raw.slice(jsonStart)) : null;
+      const first = data?.emails?.[0];
+      if (first?.value) {
+        row.email = first.value;
+        if (first.first_name && first.last_name) row.contact = `${first.first_name} ${first.last_name}`;
+        log(`Email trouvé pour ${row.company} : ${row.email} (${first.confidence}%)`);
       }
     } catch { /* quota dépassé ou domaine introuvable */ }
   }
   if (!DRY_RUN) saveProspectionTsv(PROSPECTION_FILE, rows);
-  runNode('enrich-context.mjs', ['--file', 'data/prospection.tsv', '--status', 'identifie', '--limit', '20']);
 }
 
 async function stepPrepAgent() {
