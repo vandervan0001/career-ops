@@ -28,12 +28,11 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const PROSPECTS_FILE = join(ROOT, 'data', 'prospects.tsv');
 
 // --- Prospect loading ---
 function loadProspects() {
-  if (!existsSync(PROSPECTS_FILE)) return [];
-  const raw = readFileSync(PROSPECTS_FILE, 'utf-8');
+  if (!existsSync(TARGET_FILE)) return [];
+  const raw = readFileSync(TARGET_FILE, 'utf-8');
   return raw.split('\n').filter(l => l.trim() && !l.startsWith('#')).map(line => {
     const cols = line.split('\t');
     return {
@@ -53,7 +52,7 @@ function saveProspects(prospects) {
   const lines = prospects.map(p =>
     [p.id, p.date, p.entreprise, p.contact, p.email, p.segment, p.ville, p.pays, p.statut, p.campagne, p.dernier_envoi, p.notes].join('\t')
   );
-  writeFileSync(PROSPECTS_FILE, header + '\n' + lines.join('\n') + '\n');
+  writeFileSync(TARGET_FILE, header + '\n' + lines.join('\n') + '\n');
 }
 
 // --- Website fetching ---
@@ -305,6 +304,8 @@ const getArg = (name) => {
   const idx = args.indexOf(name);
   return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : null;
 };
+
+const TARGET_FILE = getArg('--file') ? join(ROOT, getArg('--file')) : join(ROOT, 'data', 'prospects.tsv');
 
 if (args.includes('--stats')) {
   showStats();

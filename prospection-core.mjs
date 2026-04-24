@@ -98,6 +98,22 @@ const DEFAULT_SERVICES = [
     trigger_signals: ['digital', 'ia', 'ai', 'industry 4.0', 'reporting', 'power bi', 'rpa', 'mes', 'historian', 'data'],
     preferred_sectors: ['agroalimentaire', 'pharma', 'chimie', 'manufacturing', 'logistique'],
   },
+  {
+    id: 'renfort_miseenservice',
+    label: 'un renfort mise en service',
+    subject: 'mise en service / automatisme',
+    pitch: 'intervenir rapidement sur chantier pour débloquer une mise en service ou absorber un pic de charge',
+    trigger_signals: ['mise en service', 'commissioning', 'chantier', 'démarrage', 'recrutement automaticien', 'automaticien', 'automation engineer'],
+    preferred_sectors: ['intégrateur', 'OEM', 'bureau d\'études', 'manufacturing'],
+  },
+  {
+    id: 'renfort_retrofit',
+    label: 'un renfort retrofit / migration',
+    subject: 'migration / retrofit automation',
+    pitch: 'prendre en charge une migration PLC/SCADA ou un retrofit machine sans mobiliser l\'équipe interne',
+    trigger_signals: ['retrofit', 'migration', 'upgrade', 'modernisation', 'remplacement', 'obsolescence', 'simatic', 's5', 'pcs7'],
+    preferred_sectors: ['intégrateur', 'industriel', 'OEM', 'manufacturing', 'agroalimentaire'],
+  },
 ];
 
 const RECRUITER_KEYWORDS = [

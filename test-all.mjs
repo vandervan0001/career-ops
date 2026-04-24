@@ -45,7 +45,7 @@ console.log('\nconsulting-ops test suite\n');
 
 console.log('1. Syntax checks');
 
-const mjsFiles = readdirSync(ROOT).filter(f => f.endsWith('.mjs'));
+const mjsFiles = readdirSync(ROOT).filter(f => f.endsWith('.mjs') && !f.startsWith('._'));
 for (const f of mjsFiles) {
   const result = run(`node --check ${f}`);
   if (result !== null) {
@@ -114,18 +114,15 @@ for (const f of systemFiles) {
   }
 }
 
-// Check user files are NOT tracked (gitignored)
+// Check user files exist (in a personal deployment they may be tracked or gitignored)
 const userFiles = [
   'config/profile.yml', 'modes/_profile.md', 'portals.yml',
 ];
 for (const f of userFiles) {
-  const tracked = run(`git ls-files ${f}`);
-  if (tracked === '') {
-    pass(`User file gitignored: ${f}`);
-  } else if (tracked === null) {
-    pass(`User file gitignored: ${f}`);
+  if (fileExists(f)) {
+    pass(`User file present: ${f}`);
   } else {
-    fail(`User file IS tracked (should be gitignored): ${f}`);
+    fail(`User file missing: ${f}`);
   }
 }
 

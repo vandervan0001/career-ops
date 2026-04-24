@@ -15,7 +15,8 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createTransport } from 'nodemailer';
 import yaml from 'js-yaml';
-import { getClassification, inferClassification, painPoint, primaryService, proofPoint, signalLine, slugify, subjectForRow } from './prospection-core.mjs';
+import { inferClassification, painPoint, primaryService, proofPoint, signalLine, slugify, subjectForRow } from './prospection-core.mjs';
+import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PROSPECTION_FILE = join(ROOT, 'data', 'prospection.tsv');
@@ -29,6 +30,10 @@ const getArg = (flag, fallback = null) => {
   const idx = args.indexOf(flag);
   return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : fallback;
 };
+
+const FROM_QUEUE = getArg('--from-queue', null);
+const OVERRIDE_SUBJECT = getArg('--subject', null);
+const OVERRIDE_BODY = getArg('--body', null);
 
 function nowDate() {
   return new Date().toISOString().slice(0, 10);
@@ -66,58 +71,19 @@ function buildHtmlEmail(text) {
 }
 
 function loadTable() {
-  const raw = readFileSync(PROSPECTION_FILE, 'utf-8');
-  const lines = raw.split('\n');
-  const header = lines.filter((line) => line.startsWith('date\t') || line.startsWith('#'));
-  const rows = lines
-    .filter((line) => line.trim())
-    .filter((line) => !line.startsWith('date\t'))
-    .filter((line) => !line.startsWith('#'))
-    .map((line) => {
-      const cols = line.split('\t');
-      return {
-        originalLine: line,
-        date: cols[0] || '',
-        company: cols[1] || '',
-        contact: cols[2] || '',
-        email: cols[3] || '',
-        linkedin: cols[4] || '',
-        sector: cols[5] || '',
-        signal: cols[6] || '',
-        score: Number(cols[7] || 0),
-        channel: cols[8] || '',
-        status: cols[9] || '',
-        notes: cols[10] || '',
-        classification: getClassification(cols[10] || ''),
-      };
-    });
-  return { header, rows };
+  return loadProspectionTsv(PROSPECTION_FILE);
 }
 
-function saveTable(header, rows) {
-  const dataHeader = header.length > 0 ? header.join('\n') : 'date\tcompany\tcontact\temail\tlinkedin\tsector\tsignal\tscore\tmessage_sent\tstatus\tnotes';
-  const body = rows.map((row) =>
-    [
-      row.date,
-      row.company,
-      row.contact,
-      row.email,
-      row.linkedin,
-      row.sector,
-      row.signal,
-      row.score,
-      row.channel,
-      row.status,
-      row.notes || '',
-    ].join('\t')
-  );
-  writeFileSync(PROSPECTION_FILE, `${dataHeader}\n${body.join('\n')}\n`);
+function saveTable(_header, rows) {
+  saveProspectionTsv(PROSPECTION_FILE, rows);
 }
 
 function greeting(row) {
-  const firstName = (row.contact || '').split(' ')[0];
-  if (firstName) return `Bonjour ${firstName},`;
-  return 'Bonjour,';
+  const contact = (row.contact || '').trim();
+  if (!contact) return 'Bonjour,';
+  const parts = contact.split(' ');
+  const lastName = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];
+  return `Bonjour Monsieur/Madame ${lastName},`;
 }
 
 function initialEmail(row, profile) {
@@ -207,7 +173,7 @@ function selectRows(rows, profile) {
   const top = Number(getArg('--top', '0'));
 
   let selected = rows.filter((row) => row.email).filter((row) => stageForStatus(row.status));
-  selected = selected.filter((row) => !['concurrent', 'integrateur', 'recruteur'].includes(inferClassification(row, profile)));
+  selected = selected.filter((row) => !['concurrent', 'recruteur'].includes(inferClassification(row, profile)));
   if (company) {
     selected = selected.filter((row) => row.company.toLowerCase().includes(company.toLowerCase()));
   }
@@ -235,7 +201,36 @@ async function sendMail(mailer, smtp, row, subjectLine, body) {
 }
 
 async function main() {
-  const { header, rows } = loadTable();
+  // --from-queue: read approved messages from PrepAgent/ReviewAgent queue file
+  if (FROM_QUEUE) {
+    if (!existsSync(FROM_QUEUE)) {
+      console.log(`Queue file not found: ${FROM_QUEUE}`);
+      return;
+    }
+    const live = hasFlag('--live');
+    let smtp = null;
+    let mailer = null;
+    if (live) {
+      smtp = loadSmtp();
+      mailer = createMailer(smtp);
+    }
+    const lines = readFileSync(FROM_QUEUE, 'utf-8').split('\n').filter((l) => l.trim() && !l.startsWith('#'));
+    for (const line of lines) {
+      const [company, contact, email, , , subject, body] = line.split('\t');
+      if (!email || !subject) continue;
+      const row = { company: company || '', contact: contact || '', email };
+      console.log(`${live ? 'ENVOI' : 'PREVIEW'} ${company} <${email}>`);
+      console.log(`Objet: ${subject}`);
+      if (live) {
+        const info = await sendMail(mailer, smtp, row, subject, body || '');
+        console.log(`OK ${info.messageId}`);
+      }
+    }
+    return;
+  }
+
+  // Normal flow (existing code below)
+  const { rows } = loadTable();
   const profile = loadProfile();
   const selected = selectRows(rows, profile);
   const live = hasFlag('--live');
@@ -256,8 +251,8 @@ async function main() {
 
   for (const row of selected) {
     const stage = stageForStatus(row.status);
-    const subjectLine = subjectForRow(row, profile);
-    const body = bodyForStage(stage, row, profile);
+    const subjectLine = OVERRIDE_SUBJECT || subjectForRow(row, profile);
+    const body = OVERRIDE_BODY || bodyForStage(stage, row, profile);
     const filePath = join(QUEUE_DIR, `${slugify(row.company)}-${stage}.txt`);
     writeFileSync(filePath, `${body}\n`);
 
@@ -267,7 +262,8 @@ async function main() {
     if (live) {
       const info = await sendMail(mailer, smtp, row, subjectLine, body);
       row.status = nextStatus(row.status);
-      row.channel = row.channel || 'email';
+      row.date_envoi = nowDate();
+      row.message_sent = row.message_sent || 'email';
       row.notes = appendNote(
         row.notes,
         `${stage} envoye ${nowDate()} — objet ${subjectLine} — ${info.messageId}`
@@ -279,7 +275,7 @@ async function main() {
   }
 
   if (live) {
-    saveTable(header, rows);
+    saveTable(null, rows);
     console.log(`CRM mis a jour: ${PROSPECTION_FILE}`);
   } else {
     console.log('Mode preview uniquement. Utiliser --live pour envoyer et mettre a jour le CRM.');

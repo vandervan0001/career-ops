@@ -1,0 +1,30 @@
+# config/lead-sources.yml -- Sources de leads prospection intégrateurs
+
+# Phase 1 : LinkedIn (Playwright) + Jobup (existant)
+linkedin:
+  queries:
+    - "automaticien Suisse"
+    - "automation engineer Switzerland"
+    - "intégrateur Siemens Suisse"
+    - "bureau d'études automatisme Suisse"
+    - "chef de projet automation Suisse romande"
+  filters:
+    country: CH
+    company_size: "10-500"
+  max_per_run: 50
+  delay_ms: 3000
+
+jobup:
+  searches:
+    - { term: "automation", location: "vaud" }
+    - { term: "automation", location: "genève" }
+    - { term: "automation", location: "fribourg" }
+    - { term: "automaticien", location: "suisse romande" }
+    - { term: "mise en service", location: "vaud" }
+    - { term: "commissioning", location: "suisse romande" }
+    - { term: "intégrateur", location: "suisse romande" }
+  max_per_run: 30
+
+# Phase 2 (futur -- risque CAPTCHA, non implémenté)
+# google_maps: ...
+# kompass: ...

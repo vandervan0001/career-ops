@@ -14,10 +14,11 @@
  *   - Append new rows to data/prospection.tsv with status=identifie
  */
 
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
+import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PROFILE_FILE = join(ROOT, 'config', 'profile.yml');
@@ -32,6 +33,7 @@ const getArg = (flag, fallback = null) => {
 
 const LIMIT = Number(getArg('--limit', '20'));
 const DRY_RUN = hasFlag('--dry-run');
+const SKIP_LINKEDIN = hasFlag('--skip-linkedin');
 const FETCH_TIMEOUT_MS = 12000;
 const MAX_DETAIL_PER_SEARCH = 12;
 
@@ -85,52 +87,6 @@ function getSourcingConfig(profile) {
   };
 }
 
-function ensureFile() {
-  if (!existsSync(PROSPECTION_FILE)) {
-    writeFileSync(
-      PROSPECTION_FILE,
-      'date\tcompany\tcontact\temail\tlinkedin\tsector\tsignal\tscore\tmessage_sent\tstatus\tnotes\n'
-    );
-  }
-}
-
-function loadProspection() {
-  ensureFile();
-  return readFileSync(PROSPECTION_FILE, 'utf-8')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((line) => !line.startsWith('date\t'))
-    .map((line) => {
-      const cols = line.split('\t');
-      return {
-        date: cols[0] || '',
-        company: cols[1] || '',
-        signal: cols[6] || '',
-      };
-    });
-}
-
-function saveProspection(rows) {
-  const header = 'date\tcompany\tcontact\temail\tlinkedin\tsector\tsignal\tscore\tmessage_sent\tstatus\tnotes';
-  const body = rows.map((row) =>
-    [
-      row.date,
-      row.company,
-      row.contact,
-      row.email,
-      row.linkedin,
-      row.sector,
-      row.signal,
-      row.score,
-      row.channel,
-      row.status,
-      row.notes || '',
-    ].join('\t')
-  );
-  writeFileSync(PROSPECTION_FILE, `${header}\n${body.join('\n')}\n`);
-}
-
 function containsOne(text, needles) {
   const source = String(text || '').toLowerCase();
   return needles.some((needle) => source.includes(needle));
@@ -179,6 +135,58 @@ function geoAllowed(locality, profile) {
   if (rejected.some((value) => city.includes(String(value).toLowerCase()))) return false;
   if (accepted.length === 0) return true;
   return accepted.some((value) => city.includes(String(value).toLowerCase()));
+}
+
+function classifyTarget(company, sector, notes) {
+  const text = `${company} ${sector} ${notes}`.toLowerCase();
+  if (containsOne(text, ['intégrateur', 'integrateur', 'bureau d\'études', 'systèmes', 'engineering', 'si ', ' si,'])) return 'intégrateur';
+  if (containsOne(text, ['oem', 'machine', 'constructeur', 'équipementier'])) return 'OEM';
+  if (containsOne(text, ['industriel', 'production', 'manufacturing', 'pharma', 'medtech', 'chimie', 'horlogerie', 'agroalimentaire'])) return 'industriel';
+  return 'client_final';
+}
+
+function geoIsPriority1(locality) {
+  const city = String(locality || '').toLowerCase();
+  const p1 = ['vaud', 'genève', 'geneve', 'fribourg', 'neuchâtel', 'neuchatel', 'valais', 'jura', 'lausanne', 'yverdon', 'nyon', 'bulle', 'sion', 'sierre', 'delémont'];
+  return p1.some((name) => city.includes(name)) ? 1 : 2;
+}
+
+async function scrapeLinkedIn(queries, maxPerRun = 50) {
+  const { chromium } = await import('playwright');
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+  });
+  const results = [];
+
+  for (const query of queries) {
+    if (results.length >= maxPerRun) break;
+    const page = await context.newPage();
+    try {
+      const url = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(query)}&location=Switzerland&f_TPR=r2592000`;
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(2000);
+
+      const cards = await page.$$eval(
+        '.base-card',
+        (els) => els.map((el) => ({
+          title: el.querySelector('.base-search-card__title')?.textContent?.trim() || '',
+          company: el.querySelector('.base-search-card__subtitle')?.textContent?.trim() || '',
+          location: el.querySelector('.job-search-card__location')?.textContent?.trim() || '',
+          url: el.querySelector('a.base-card__full-link')?.href || '',
+        }))
+      );
+      results.push(...cards.filter((c) => c.company && c.title));
+      await page.waitForTimeout(3000);
+    } catch (e) {
+      console.warn(`LinkedIn scrape warning (${query}): ${e.message}`);
+    } finally {
+      await page.close();
+    }
+  }
+
+  await browser.close();
+  return results.slice(0, maxPerRun);
 }
 
 function scoreJob(job, locality) {
@@ -296,7 +304,7 @@ function inferExpansionSector(company, text) {
 async function main() {
   const profile = loadProfile();
   const sourcingConfig = getSourcingConfig(profile);
-  const existing = loadProspection();
+  const existing = loadProspectionTsv(PROSPECTION_FILE).rows;
   const existingKeys = new Set(existing.map((row) => `${row.company.toLowerCase()}::${row.signal}`));
   const discovered = [];
   const seenUrls = new Set();
@@ -336,9 +344,12 @@ async function main() {
         sector: job.sector,
         signal,
         score: scoreJob({ title: job.title, description: job.description }, job.locality),
-        channel: '',
+        message_sent: '',
         status: 'identifie',
         notes: `source:${job.url} | domain:${job.domain} | locality:${job.locality} | signal_type:hiring | role:${job.title}`,
+        target_type: classifyTarget(job.company, job.sector, job.title),
+        geo_priority: geoIsPriority1(job.locality),
+        date_envoi: '',
       });
 
       if (discovered.length >= LIMIT * 2) break;
@@ -369,11 +380,66 @@ async function main() {
         sector: inferExpansionSector(company, text),
         signal,
         score: scoreExpansion(item, company),
-        channel: '',
+        message_sent: '',
         status: 'identifie',
         notes: `source:${item.link} | article:${item.title} | publisher:${item.source || 'n/a'} | signal_type:expansion`,
+        target_type: classifyTarget(company, inferExpansionSector(company, text), text),
+        geo_priority: geoIsPriority1(company),
+        date_envoi: '',
       });
       break;
+    }
+  }
+
+  // LinkedIn scraping
+  if (!SKIP_LINKEDIN) {
+    let leadSources = {};
+    try {
+      leadSources = yaml.load(readFileSync(join(ROOT, 'config', 'lead-sources.yml'), 'utf-8')) || {};
+    } catch {
+      console.warn('config/lead-sources.yml manquant, LinkedIn skippé');
+    }
+    const linkedInQueries = leadSources.linkedin?.queries || [];
+    const linkedInMax = leadSources.linkedin?.max_per_run || 50;
+    if (linkedInQueries.length > 0) {
+      let linkedInCards = [];
+      try {
+        linkedInCards = await scrapeLinkedIn(linkedInQueries, linkedInMax);
+      } catch (e) {
+        console.warn(`LinkedIn scraping échoué: ${e.message}`);
+      }
+      console.log(`LinkedIn: ${linkedInCards.length} offres trouvées`);
+
+      for (const card of linkedInCards) {
+        if (!card.company) continue;
+        const locality = card.location || '';
+        const company = card.company.trim();
+        const signal = `recrutement ${card.title} LinkedIn`.trim();
+        const key = `${company.toLowerCase()}::${signal}`;
+        if (existingKeys.has(key)) continue;
+        if (companyExcluded(company, sourcingConfig)) continue;
+
+        existingKeys.add(key);
+        const sector = detectSector(`${card.title} ${company}`);
+        discovered.push({
+          date: nowDate(),
+          company,
+          contact: '',
+          email: '',
+          linkedin: card.url || '',
+          sector,
+          signal,
+          score: 6,
+          message_sent: '',
+          status: 'identifie',
+          notes: `source:linkedin | role:${card.title} | locality:${locality} | signal_type:hiring`,
+          target_type: classifyTarget(company, sector, card.title),
+          geo_priority: geoIsPriority1(locality),
+          date_envoi: '',
+        });
+
+        if (discovered.length >= LIMIT * 2) break;
+      }
     }
   }
 
@@ -382,28 +448,8 @@ async function main() {
   ranked.forEach((row) => console.log(`${row.score}/10 ${row.company} — ${row.signal} — ${row.sector}`));
 
   if (!DRY_RUN && ranked.length > 0) {
-    const fullRows = readFileSync(PROSPECTION_FILE, 'utf-8')
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .filter((line) => !line.startsWith('date\t'))
-      .map((line) => {
-        const cols = line.split('\t');
-        return {
-          date: cols[0] || '',
-          company: cols[1] || '',
-          contact: cols[2] || '',
-          email: cols[3] || '',
-          linkedin: cols[4] || '',
-          sector: cols[5] || '',
-          signal: cols[6] || '',
-          score: cols[7] || '',
-          channel: cols[8] || '',
-          status: cols[9] || '',
-          notes: cols[10] || '',
-        };
-      });
-    saveProspection([...fullRows, ...ranked]);
+    const fullRows = loadProspectionTsv(PROSPECTION_FILE).rows;
+    saveProspectionTsv(PROSPECTION_FILE, [...fullRows, ...ranked]);
     console.log(`Ajoutés à ${PROSPECTION_FILE}`);
   }
 }

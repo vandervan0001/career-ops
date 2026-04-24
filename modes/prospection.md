@@ -18,6 +18,89 @@ Regle de communication :
 - Le discours externe reste simple : Vanguard prend en charge, cadre, execute et apporte de la continuite
 - La logique d'organisation interne reste interne
 
+## Templates email
+
+### Template A : Signal fort (embauche automaticien détectée)
+**Objet :** Renfort automatisme dispo -- [Company]
+**Corps :**
+Bonjour Monsieur/Madame [NOM],
+
+J'ai vu que [Company] recrute un automaticien en ce moment.
+
+Automaticien freelance basé en Suisse, j'interviens en renfort sur mise en service et automatisme quand les équipes sont en charge ou en recrutement.
+
+Autonome sur Siemens TIA Portal et Rockwell. Références industrielles disponibles.
+
+Disponible rapidement si le besoin est immédiat.
+
+[Prénom]
+[Téléphone]
+
+### Template B : Signal moyen (expansion, nouveau projet détecté)
+**Objet :** Automaticien freelance -- renfort disponible
+**Corps :**
+Bonjour Monsieur/Madame [NOM],
+
+J'ai suivi l'actualité de [Company] -- [SIGNAL DÉTECTÉ].
+
+Automaticien freelance, j'interviens en renfort sur ce type de projets : mise en service, automatisme, retrofit. Siemens / Rockwell.
+
+Dispo rapidement si vous anticipez une surcharge.
+
+[Prénom]
+[Téléphone]
+
+### Template C : Cold (aucun signal)
+**Objet :** Automaticien freelance dispo -- renfort Siemens / Rockwell
+**Corps :**
+Bonjour Monsieur/Madame [NOM],
+
+Automaticien freelance basé en Suisse romande.
+
+J'interviens en renfort sur :
+- mise en service
+- automatisme / support OT
+- retrofit machines
+
+Autonome sur Siemens TIA Portal et Rockwell Studio 5000. Dispo rapidement si surcharge ou besoin ponctuel.
+
+[Prénom]
+[Téléphone]
+
+## Règles de rédaction (STRICTES)
+
+- Vouvoiement obligatoire ("vous", jamais "tu")
+- Salutation : "Bonjour Monsieur/Madame [NOM]" -- jamais le prénom seul
+- Français avec accents (é, è, ê, à, ù, ç) -- jamais d'anglicismes sans justification
+- Aucun tiret long (-- ou —) -- virgules ou parenthèses à la place
+- Ton pair-à-pair, jamais commercial ni exclamatif
+- Corps : maximum 120 mots
+- Objet : maximum 8 mots
+- Pas de : "je me permets de", "je serais ravi", "synergie", "innovant", "robuste", "passionné par"
+
+## Score confiance PrepAgent (1-5)
+
+- **5** : signal fort + contact nominatif + proof point exact au secteur
+- **4** : signal moyen OU contact générique (pas de nom)
+- **3** : cold, message standard mais conforme aux règles
+- **< 3** : quarantaine directe sans passage ReviewAgent
+
+## ReviewAgent -- Checklist 9 critères
+
+| # | Critère | Règle |
+|---|---|---|
+| 1 | Vouvoiement | "vous" partout, jamais "tu" |
+| 2 | Salutation | "Bonjour Monsieur/Madame NOM" -- jamais prénom seul |
+| 3 | Langue | accents FR corrects, zéro anglicisme non justifié |
+| 4 | Em-dash | aucun -- ou — dans le corps (autorisé en objet court) |
+| 5 | Ton | peer-to-peer, pas d'exclamation, pas de formules creuses |
+| 6 | Signal cohérent | message correspond exactement au signal détecté |
+| 7 | Géo | romande = ok, nationwide = mention "missions sur toute la Suisse" explicite |
+| 8 | Longueur | max 120 mots corps, objet < 8 mots |
+| 9 | Doublons | email absent de prospection.tsv sauf si statut=archive |
+
+Si un critère échoue : réécriture partielle (une tentative). Si toujours KO : quarantaine + rejection_reason.
+
 ## Strategie de ciblage
 
 ### Signaux d'achat (comment detecter qu'une entreprise a besoin de nous)
