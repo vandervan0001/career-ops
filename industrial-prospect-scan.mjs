@@ -33,6 +33,7 @@ const getArg = (flag, fallback = null) => {
 
 const LIMIT = Number(getArg('--limit', '20'));
 const DRY_RUN = hasFlag('--dry-run');
+const SKIP_LINKEDIN = hasFlag('--skip-linkedin');
 const FETCH_TIMEOUT_MS = 12000;
 const MAX_DETAIL_PER_SEARCH = 12;
 
@@ -148,6 +149,44 @@ function geoIsPriority1(locality) {
   const city = String(locality || '').toLowerCase();
   const p1 = ['vaud', 'genève', 'geneve', 'fribourg', 'neuchâtel', 'neuchatel', 'valais', 'jura', 'lausanne', 'yverdon', 'nyon', 'bulle', 'sion', 'sierre', 'delémont'];
   return p1.some((name) => city.includes(name)) ? 1 : 2;
+}
+
+async function scrapeLinkedIn(queries, maxPerRun = 50) {
+  const { chromium } = await import('playwright');
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+  });
+  const results = [];
+
+  for (const query of queries) {
+    if (results.length >= maxPerRun) break;
+    const page = await context.newPage();
+    try {
+      const url = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(query)}&location=Switzerland&f_TPR=r2592000`;
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(2000);
+
+      const cards = await page.$$eval(
+        '.base-card',
+        (els) => els.map((el) => ({
+          title: el.querySelector('.base-search-card__title')?.textContent?.trim() || '',
+          company: el.querySelector('.base-search-card__subtitle')?.textContent?.trim() || '',
+          location: el.querySelector('.job-search-card__location')?.textContent?.trim() || '',
+          url: el.querySelector('a.base-card__full-link')?.href || '',
+        }))
+      );
+      results.push(...cards.filter((c) => c.company && c.title));
+      await page.waitForTimeout(3000);
+    } catch (e) {
+      console.warn(`LinkedIn scrape warning (${query}): ${e.message}`);
+    } finally {
+      await page.close();
+    }
+  }
+
+  await browser.close();
+  return results.slice(0, maxPerRun);
 }
 
 function scoreJob(job, locality) {
@@ -349,6 +388,58 @@ async function main() {
         date_envoi: '',
       });
       break;
+    }
+  }
+
+  // LinkedIn scraping
+  if (!SKIP_LINKEDIN) {
+    let leadSources = {};
+    try {
+      leadSources = yaml.load(readFileSync(join(ROOT, 'config', 'lead-sources.yml'), 'utf-8')) || {};
+    } catch {
+      console.warn('config/lead-sources.yml manquant, LinkedIn skippé');
+    }
+    const linkedInQueries = leadSources.linkedin?.queries || [];
+    const linkedInMax = leadSources.linkedin?.max_per_run || 50;
+    if (linkedInQueries.length > 0) {
+      let linkedInCards = [];
+      try {
+        linkedInCards = await scrapeLinkedIn(linkedInQueries, linkedInMax);
+      } catch (e) {
+        console.warn(`LinkedIn scraping échoué: ${e.message}`);
+      }
+      console.log(`LinkedIn: ${linkedInCards.length} offres trouvées`);
+
+      for (const card of linkedInCards) {
+        if (!card.company) continue;
+        const locality = card.location || '';
+        const company = card.company.trim();
+        const signal = `recrutement ${card.title} LinkedIn`.trim();
+        const key = `${company.toLowerCase()}::${signal}`;
+        if (existingKeys.has(key)) continue;
+        if (companyExcluded(company, sourcingConfig)) continue;
+
+        existingKeys.add(key);
+        const sector = detectSector(`${card.title} ${company}`);
+        discovered.push({
+          date: nowDate(),
+          company,
+          contact: '',
+          email: '',
+          linkedin: card.url || '',
+          sector,
+          signal,
+          score: 6,
+          message_sent: '',
+          status: 'identifie',
+          notes: `source:linkedin | role:${card.title} | locality:${locality} | signal_type:hiring`,
+          target_type: classifyTarget(company, sector, card.title),
+          geo_priority: geoIsPriority1(locality),
+          date_envoi: '',
+        });
+
+        if (discovered.length >= LIMIT * 2) break;
+      }
     }
   }
 
