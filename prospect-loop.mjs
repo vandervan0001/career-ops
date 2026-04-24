@@ -17,10 +17,6 @@ import { fileURLToPath } from 'url';
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const hasFlag = (flag) => args.includes(flag);
-const getArg = (flag, fallback = null) => {
-  const idx = args.indexOf(flag);
-  return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : fallback;
-};
 
 const MODE = (() => {
   const m = args.find((a) => a.startsWith('--mode='));

@@ -207,7 +207,6 @@ async function main() {
       console.log(`Queue file not found: ${FROM_QUEUE}`);
       return;
     }
-    const profile = loadProfile();
     const live = hasFlag('--live');
     let smtp = null;
     let mailer = null;

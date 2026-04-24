@@ -7,7 +7,7 @@
  *   node relance-scheduler.mjs --dry-run  # affiche sans envoyer
  */
 import { execFileSync } from 'child_process';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
