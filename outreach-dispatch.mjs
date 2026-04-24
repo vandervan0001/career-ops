@@ -15,7 +15,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createTransport } from 'nodemailer';
 import yaml from 'js-yaml';
-import { getClassification, inferClassification, painPoint, primaryService, proofPoint, signalLine, slugify, subjectForRow } from './prospection-core.mjs';
+import { inferClassification, painPoint, primaryService, proofPoint, signalLine, slugify, subjectForRow } from './prospection-core.mjs';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
