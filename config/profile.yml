@@ -1,6 +1,15 @@
 # Consulting-Ops Profile Configuration
 # Single source of truth for Vanguard Systems consulting data across all modes.
 
+positioning:
+  primary: "Automaticien freelance -- renfort rapide intégrateurs et industriels"
+  tagline: "Dispo rapide. Autonome sur Siemens / TIA / Rockwell. Mise en service, retrofit, renfort projet."
+  angle:
+    - mise en service
+    - renfort projet
+    - retrofit
+    - dispo rapide
+
 consultant:
   full_name: "Tai Van"
   company_name: "Vanguard Systems"
@@ -143,6 +152,43 @@ pricing:
   # [PRESTA] → TJM en CHF/jour (ex: "1300")
   # [CDI] → Salaire annuel en K CHF (ex: "150K")
   # Ne JAMAIS mettre un TJM pour un CDI
+
+geo:
+  strict_geo: false
+  priority_1:
+    - Vaud
+    - Genève
+    - Fribourg
+    - Neuchâtel
+    - Valais
+    - Jura
+  priority_2:
+    - Zurich
+    - Berne
+    - Bâle
+  excluded:
+    - France
+    - Allemagne
+    - Italie
+
+targets:
+  priority_1:
+    - intégrateur automation
+    - bureau d'études
+    - société d'ingénierie
+  priority_2:
+    - OEM machine
+    - constructeur
+  priority_3:
+    - industriel
+    - maintenance
+    - production
+
+outreach:
+  daily_email_limit: 20
+  daily_linkedin_limit: 15
+  relance_j: 7
+  relance_max: 2
 
 location:
   country: "Suisse"
