@@ -32,6 +32,8 @@ const getArg = (flag, fallback = null) => {
 };
 
 const FROM_QUEUE = getArg('--from-queue', null);
+const OVERRIDE_SUBJECT = getArg('--subject', null);
+const OVERRIDE_BODY = getArg('--body', null);
 
 function nowDate() {
   return new Date().toISOString().slice(0, 10);
@@ -250,8 +252,8 @@ async function main() {
 
   for (const row of selected) {
     const stage = stageForStatus(row.status);
-    const subjectLine = subjectForRow(row, profile);
-    const body = bodyForStage(stage, row, profile);
+    const subjectLine = OVERRIDE_SUBJECT || subjectForRow(row, profile);
+    const body = OVERRIDE_BODY || bodyForStage(stage, row, profile);
     const filePath = join(QUEUE_DIR, `${slugify(row.company)}-${stage}.txt`);
     writeFileSync(filePath, `${body}\n`);
 
