@@ -6,6 +6,10 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-04-24
+- [x] https://www.jobs.ch/en/vacancies/detail/d8ff03e6-b3bd-48c9-805c-5ef68126d093/ | HYDRO Exploitation SA | Ingénieur en Automation (Sion) → #62 Evaluated 3.3/5 CDI tracker uniquement
+- [x] https://careers.ima.it/job/Switzerland-SOFTWARE-AUTOMATION-ENGINEER-(CONTROLS-ENGINEER)-Othe-2300/816547902/ | IMA Automation Switzerland SA | Software Automation Engineer → #63 Evaluated 3.0/5 CDI tracker uniquement
+
 ### 2026-04-23
 - [x] https://www.jobup.ch/en/jobs/detail/9c89e3f1-bf66-48a1-97b5-543c3bb6c81b/ | BOBST MEX SA | Automation & Embedded Software Developer → #55 SKIP 2.5/5
 - [x] https://www.jobup.ch/en/jobs/detail/a785c4b3-7547-431b-8aee-65b3112e54ed/ | EPFL Lausanne/Sion | Automation Engineer → DUP (#37 déjà évalué)

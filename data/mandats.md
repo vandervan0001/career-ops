@@ -2,6 +2,8 @@
 
 | # | Date | Client | Mandat | Score | Statut | PDF | Report | TJM | Notes |
 |---|------|--------|--------|-------|--------|-----|--------|-----|-------|
+| 62 | 2026-04-24 | HYDRO Exploitation SA | [CDI] Ingénieur en Automation (Sion) | 3.3/5 | Evaluated | ❌ |  | CDI, Sion (Valais), PLC Siemens+Schneider, utilities/hydro, allemand requis — tracker uniquement |
+| 63 | 2026-04-24 | IMA Automation Switzerland SA | [CDI] Software Automation Engineer (Neuchâtel) | 3.0/5 | Evaluated | ❌ |  | CDI, Neuchâtel (La Chaux-de-Fonds/Boudry), Rockwell+Siemens+CodeSys, pharma packaging, niveau technicien — tracker uniquement |
 | 53 | 2026-04-23 | Recrutis Agency | [CDI] Ingénieur-e en Automation industrielle (Monthey) | 4.0/5 | Evaluated | ❌ |  | ~130K CHF/an (vérifier si freelance/interim) |
 | 54 | 2026-04-23 | Undisclosed | [CDI] Head of Projects Managers (Neuchâtel) | 3.5/5 | Evaluated | ❌ | [044](reports/044-undisclosed-head-of-projects-neuchatel-2026-04-23.md) | ~150K CHF/an |
 | 55 | 2026-04-23 | BOBST MEX SA | [CDI] Automation & Embedded Software Developer | 2.5/5 | SKIP | ❌ |  | ~110K CHF/an |
