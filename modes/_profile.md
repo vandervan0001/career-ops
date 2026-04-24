@@ -46,6 +46,40 @@ Positionnement : le consultant qui comprend le process ET la reglementation. Pas
 
 **Proposition de valeur en 1 phrase :** "De la specification a la mise en service, en conformite reglementaire, sans surprises."
 
+## Modele de croissance
+
+Objectif : ouvrir des comptes en direct avec Tai, prouver la valeur, puis transferer progressivement l'execution a un collaborateur sans perdre la relation client.
+
+Principe commercial :
+- Le client n'achete pas seulement Tai, il achete Vanguard Systems
+- Tai ouvre, cadre, arbitre et garde la confiance
+- Le delivery recurrent doit devenir delegable et documente
+- Les projets AO / premium restent sous pilotage direct Tai
+
+Regle de discours client :
+- Ne pas verbaliser une logique "Tai puis quelqu'un d'autre"
+- Le message externe doit rester centre sur Vanguard Systems, la prise en charge et la continuite de service
+
+Offres d'entree a privilegier :
+- Referent automation externalise
+- Responsable OT / automation a temps partage
+- Cellule externe automation & OT
+- Maintenance evolutive + backlog
+- Audit OT / cyber + feuille de route
+
+Comptes a rechercher :
+- Agroalimentaire industriel avec lignes automatisees, conditionnement, utilites, froid, CIP/SIP, tracabilite
+- Chimie / chimie fine / ingredients / arômes avec besoins process, batch, OT, cyber et modernisation
+- Sites industriels avec besoin recurrent mais pas assez pour recruter un senior a plein temps
+- Clients avec obsolescence, backlog ou dette documentaire
+- Environnements ou un runbook, une gouvernance et une passation sont possibles
+
+Comptes a eviter :
+- Missions ou le client exige uniquement Tai a long terme
+- Regie pure sans potentiel de standardisation ni extension
+- Contextes trop politiques ou impossibles a transferer
+- Concurrents, bureaux d'etude, integrateurs et societes de recrutement
+
 ## Strategie TJM
 
 <!-- Adapter a VOTRE marche et positionnement. -->

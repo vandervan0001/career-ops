@@ -13,6 +13,15 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
+| `npm run accounts` | `account-growth.mjs` | Prioritize delegation-ready consulting accounts |
+| `npm run outreach` | `outreach-sequence.mjs` | Generate email + follow-up + LinkedIn sequences per target account |
+| `npm run outreach:prepare` | `outreach-runner.mjs` | Prepare the next email send step and ready-to-run SMTP commands |
+| `npm run outreach:dispatch` | `outreach-dispatch.mjs` | Preview or send the next outbound step and update the prospection CRM |
+| `npm run prospects:scan` | `industrial-prospect-scan.mjs` | Find new industrial prospects in Romandie from high-signal searches |
+| `npm run prospects:enrich` | `industrial-prospect-enrich.mjs` | Enrich identified prospects with domain, decision-maker, and email when possible |
+| `npm run prospects:loop` | `industrial-prospect-loop.mjs` | Run the sourcing loop end-to-end: scan, enrich, then rank accounts |
+| `npm run prospects:classify` | `prospect-classification.mjs` | Persist account classes such as client_final, concurrent, integrateur, recruteur |
+| `npm run prospects:review` | `prospects-review.mjs` | Review dynamic target accounts and the best Vanguard services to pitch next |
 | `npm run update:check` | `update-system.mjs check` | Check for upstream updates |
 | `npm run update` | `update-system.mjs apply` | Apply upstream update |
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
@@ -114,6 +123,159 @@ npm run sync-check
 ```
 
 **Exit codes:** `0` no errors (warnings allowed), `1` errors found.
+
+---
+
+## accounts
+
+Builds a delegation-first account report from `data/prospection.tsv`. It ranks companies by entry potential, delegation potential, expansion potential, and current momentum, then recommends the right offer to land the account as Vanguard rather than as generic staff augmentation.
+
+```bash
+npm run accounts
+npm run accounts -- --top 8
+npm run accounts -- --stdout-only
+```
+
+By default it writes `reports/account-growth-YYYY-MM-DD.md` and also prints the report to stdout.
+
+**Exit codes:** `0` success, `1` only if Node fails before report generation.
+
+---
+
+## outreach
+
+Generates a ready-to-send outreach sequence for consulting targets in `data/prospection.tsv`: subject line, initial email, follow-up 1, follow-up 2, and a short LinkedIn note. The sequence stays client-facing and does not mention any internal staffing transition.
+
+```bash
+npm run outreach -- --company "Straumann Group"
+npm run outreach -- --company "OM Pharma" --write
+npm run outreach -- --top 5
+npm run outreach -- --status relance_1 --write
+```
+
+With `--write`, files are saved under `output/prospection/`.
+
+**Exit codes:** `0` success, `1` no matching account or Node failure.
+
+---
+
+## outreach:prepare
+
+Prepares the next outbound email step from `data/prospection.tsv` based on CRM status:
+- `nouveau` -> initial email
+- `envoye` -> follow-up 1
+- `relance_1` -> follow-up 2
+
+It prints the email body and the exact `send-email.mjs` command to run. With `--write`, it saves the draft files under `output/prospection/queue/` and creates a `send-commands.sh` batch file.
+
+```bash
+npm run outreach:prepare -- --status envoye --top 5
+npm run outreach:prepare -- --status relance_1 --top 10 --write
+npm run outreach:prepare -- --company "Straumann Group" --write
+```
+
+**Exit codes:** `0` success, `1` no matching email-ready account or Node failure.
+
+---
+
+## outreach:dispatch
+
+Runs the outbound loop against `data/prospection.tsv`.
+
+- Preview mode by default: selects eligible rows, writes the message body to `output/prospection/queue/`, and shows what would be sent.
+- Live mode with `--live`: sends the email through SMTP and updates the row status plus notes in `data/prospection.tsv`.
+
+Status transitions:
+- `nouveau` -> sends initial email -> `envoye`
+- `envoye` -> sends follow-up 1 -> `relance_1`
+- `relance_1` -> sends follow-up 2 -> `relance_2`
+
+```bash
+npm run outreach:dispatch -- --status nouveau --top 5
+npm run outreach:dispatch -- --status envoye --top 5 --live
+npm run outreach:dispatch -- --company "Straumann Group"
+```
+
+Use `--live` only when you are ready to send and persist CRM updates.
+
+**Exit codes:** `0` success, `1` no eligible account or send/runtime failure.
+
+---
+
+## prospects:scan
+
+Searches for new Romandie industrial prospects using high-signal queries around:
+- automation / OT hiring
+- manufacturing expansion / investment
+- OT / cyber / IEC 62443 / NIS2
+
+It filters out staffing firms and irrelevant geographies, scores the hits, and appends new rows to `data/prospection.tsv` with `status=identifie`.
+
+```bash
+npm run prospects:scan
+npm run prospects:scan -- --limit 20
+npm run prospects:scan -- --dry-run
+```
+
+---
+
+## prospects:enrich
+
+Takes identified or partially enriched prospects from `data/prospection.tsv` and tries to add:
+- official website domain
+- likely decision-maker via search results
+- email via Hunter when `config/hunter.yml` is present
+
+```bash
+npm run prospects:enrich
+npm run prospects:enrich -- --top 10
+npm run prospects:enrich -- --company "Straumann Group"
+```
+
+---
+
+## prospects:loop
+
+Runs the acquisition loop end-to-end:
+1. `prospects:scan`
+2. `prospects:enrich`
+3. `accounts`
+4. `prospects:review`
+
+```bash
+npm run prospects:loop
+npm run prospects:loop -- --scan-limit 20 --enrich-top 12
+npm run prospects:loop -- --dry-run
+```
+
+Use this as the autonomous sourcing pass for Vanguard.
+
+---
+
+## prospects:classify
+
+Stores persistent account classification directly in the `notes` field of `data/prospection.tsv` using a `class:<type>` tag. The rest of the pipeline filters out `concurrent`, `integrateur`, and `recruteur`.
+
+```bash
+npm run prospects:classify -- --auto
+npm run prospects:classify -- --company "Hydro Exploitation" --class concurrent
+npm run prospects:classify -- --company "Takeda" --class client_final
+npm run prospects:classify -- --list
+```
+
+---
+
+## prospects:review
+
+Builds a dynamic review from `data/prospection.tsv` and recommends the best Vanguard services for each target account based on the current signal, sector, and CRM notes. This is the command to use when you want the machine to say not just `who`, but also `what to sell`.
+
+```bash
+npm run prospects:review
+npm run prospects:review -- --top 12
+npm run prospects:review -- --stdout-only
+```
+
+By default it writes `reports/prospect-review-YYYY-MM-DD.md` and also prints the review to stdout.
 
 ---
 

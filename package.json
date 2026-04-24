@@ -10,6 +10,15 @@
     "merge": "node merge-tracker.mjs",
     "pdf": "node generate-pdf.mjs",
     "sync-check": "node cv-sync-check.mjs",
+    "accounts": "node account-growth.mjs",
+    "outreach": "node outreach-sequence.mjs",
+    "outreach:prepare": "node outreach-runner.mjs",
+    "outreach:dispatch": "node outreach-dispatch.mjs",
+    "prospects:scan": "node industrial-prospect-scan.mjs",
+    "prospects:enrich": "node industrial-prospect-enrich.mjs",
+    "prospects:loop": "node industrial-prospect-loop.mjs",
+    "prospects:classify": "node prospect-classification.mjs",
+    "prospects:review": "node prospects-review.mjs",
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
@@ -31,8 +40,13 @@
   },
   "license": "MIT",
   "dependencies": {
+    "imapflow": "^1.3.1",
     "js-yaml": "^4.1.1",
+    "mailparser": "^3.9.8",
     "nodemailer": "^8.0.5",
     "playwright": "^1.58.1"
+  },
+  "devDependencies": {
+    "docx": "^9.6.1"
   }
 }

@@ -1,13 +1,29 @@
 # Mode : prospection — Machine a leads outbound
 
-Prospection froide automatisee : identifier des entreprises qui ont besoin de services automation/OT, trouver les decideurs, et envoyer des messages personnalises.
+Prospection froide automatisee : identifier des entreprises qui ont besoin de services automation/OT, trouver les decideurs, et ouvrir des comptes que Vanguard pourra ensuite industrialiser et deleguer.
+
+## Principe directeur
+
+Le but n'est pas de vendre "Tai en regie". Le but est d'ouvrir un compte avec Tai, prouver la valeur, structurer un besoin recurrent, puis faire intervenir un collaborateur sous pilotage Vanguard.
+
+Les offres d'entree a privilegier :
+- Referent automation externalise
+- Responsable OT/automation a temps partage
+- Cellule externe automation & OT
+- Maintenance evolutive + backlog
+- Audit OT/cyber + plan d'action
+
+Regle de communication :
+- Ne jamais parler au client d'un futur transfert vers "quelqu'un d'autre"
+- Le discours externe reste simple : Vanguard prend en charge, cadre, execute et apporte de la continuite
+- La logique d'organisation interne reste interne
 
 ## Strategie de ciblage
 
 ### Signaux d'achat (comment detecter qu'une entreprise a besoin de nous)
 
-1. **Offres d'emploi ouvertes en automation** — Si une boite cherche un "Automation Engineer" ou "Chef de projet automation", c'est qu'elle a un gap. On peut proposer nos services en attendant qu'elle recrute (ou a la place).
-2. **Projets d'expansion / investissement** — Nouvelles lignes, nouveaux batiments, acquisitions. WebSearch : "{company} expansion investment site Suisse"
+1. **Offres d'emploi ouvertes en automation** — Si une boite cherche un "Automation Engineer" ou "Chef de projet automation", c'est qu'elle a un gap. On peut proposer une entree immediate, puis transformer ce gap en dispositif externe recurrent.
+2. **Projets d'expansion / investissement** — Nouvelles lignes, nouveaux batiments, acquisitions. WebSearch : "{company} expansion investment site Suisse". Bon signal si cela peut ensuite generer support, run, standardisation et maintenance evolutive.
 3. **Vieillissement des systemes** — Entreprises qui tournent encore sur PCS7 v7, S5, vieilles versions de WinCC. Signal : offres mentionnant "migration", "upgrade", "modernisation"
 4. **Reglementation / compliance** — NIS2, IEC 62443, nouvelles annexes GMP. Les entreprises doivent se mettre en conformite.
 5. **Incidents / recalls** — Si une entreprise a eu des problemes de qualite, des rappels de produits, des deviations FDA — elle a besoin d'aide.
@@ -53,6 +69,8 @@ Pour chaque entreprise trouvee, evaluer :
 | Probabilite de besoin automation/OT | |
 | Budget probable (industrie, taille) | |
 | Accessibilite (a-t-on un angle d'approche ?) | |
+| Delegabilite (le besoin peut-il etre transfere a un collaborateur ?) | |
+| Potentiel d'expansion (run + backlog + petits projets) | |
 
 Score >= 3.5 = cible qualifiee.
 
@@ -97,9 +115,9 @@ Objet : {poste} chez {company}
 
 Bonjour,
 
-J'ai vu que vous cherchez un(e) {poste}. Le recrutement prend souvent 3 à 6 mois en automation. En attendant, je peux intervenir en délégation senior.
+J'ai vu que vous cherchez un(e) {poste}. Le recrutement prend souvent 3 a 6 mois en automation. On peut intervenir rapidement pour reprendre le sujet et stabiliser le besoin.
 
-J'ai accompagné {client_reference} sur un projet similaire : {proof_point_pertinent}.
+L'approche que je propose n'est pas juste du renfort ponctuel : on cadre, on documente, puis on met en place une continuite de service cote Vanguard.
 
 Seriez-vous disponible pour un échange de 15 minutes ?
 
@@ -118,7 +136,7 @@ Bonjour,
 
 J'ai lu que {company} {détail_expansion}. Ce type de projet génère souvent des besoins en {type_expertise}.
 
-J'ai accompagné {client_référence} sur un projet similaire : {proof_point}.
+J'interviens souvent d'abord sur le cadrage et les points critiques, puis on industrialise le support et l'execution avec mon equipe.
 
 Seriez-vous ouvert à un échange de 15 minutes ?
 
@@ -137,9 +155,9 @@ Bonjour,
 
 Je me permets de vous contacter car {company} évolue dans un secteur où l'automation et la fiabilité des systèmes sont critiques.
 
-Je suis consultant senior en automation industrielle, basé en Suisse romande. J'ai accompagné Merck, Novartis, Roche et Takeda sur des projets de {type_besoin_secteur}.
+Je dirige Vanguard Systems en Suisse romande. Nous intervenons sur des sujets d'automation industrielle, OT et support d'installations critiques.
 
-Si {company} a des projets de migration, modernisation ou qualification, je serais disponible pour en discuter.
+Si {company} a des sujets de migration, modernisation, support ou backlog automation, cela vaut peut-etre une discussion.
 
 Bien cordialement,
 Tai Van

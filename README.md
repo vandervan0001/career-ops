@@ -127,6 +127,8 @@ Career-ops is a single slash command with multiple modes:
 /career-ops deep           → Deep company research
 /career-ops training       → Evaluate a course/cert
 /career-ops project        → Evaluate a portfolio project
+npm run accounts           → Rank delegation-ready consulting accounts from prospection data
+npm run outreach           → Generate client-facing outreach sequences from prospection data
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
