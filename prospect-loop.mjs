@@ -128,8 +128,9 @@ async function stepEnrich() {
       const raw = execFileSync('node', ['find-email.mjs', '--domain', domain, '--json'], {
         cwd: ROOT, encoding: 'utf-8',
       });
-      const jsonStart = raw.indexOf('{');
-      const data = jsonStart >= 0 ? JSON.parse(raw.slice(jsonStart)) : null;
+      const lines = raw.split('\n');
+      const jsonIdx = lines.findIndex((l) => l.trim() === '{');
+      const data = jsonIdx >= 0 ? JSON.parse(lines.slice(jsonIdx).join('\n')) : null;
       const first = data?.emails?.[0];
       if (first?.value) {
         row.email = first.value;
