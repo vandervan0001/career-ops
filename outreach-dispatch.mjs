@@ -217,12 +217,13 @@ async function main() {
     const lines = readFileSync(FROM_QUEUE, 'utf-8').split('\n').filter((l) => l.trim() && !l.startsWith('#'));
     for (const line of lines) {
       const [company, contact, email, , , subject, body] = line.split('\t');
-      if (!email || !subject) continue;
+      if (!email || !subject || email === 'email') continue;
+      const bodyDecoded = (body || '').replace(/\\n/g, '\n');
       const row = { company: company || '', contact: contact || '', email };
       console.log(`${live ? 'ENVOI' : 'PREVIEW'} ${company} <${email}>`);
       console.log(`Objet: ${subject}`);
       if (live) {
-        const info = await sendMail(mailer, smtp, row, subject, body || '');
+        const info = await sendMail(mailer, smtp, row, subject, bodyDecoded);
         console.log(`OK ${info.messageId}`);
       }
     }
