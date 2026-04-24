@@ -53,6 +53,30 @@ Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML c
 - `teamtailor`: RSS items → `title`, `link`
 - `workday`: `jobPostings[]`/`jobPostings` (según tenant) → `title`, `externalPath` o URL construida desde el host
 
+### Niveau 1b — LinkedIn Jobs (Playwright) — OBLIGATOIRE
+
+LinkedIn est la source la plus riche pour les offres récentes (moins de 24h) et les offres de payrolling/freelance. Les résultats WebSearch de LinkedIn sont trop souvent en cache — seul Playwright voit la réalité.
+
+**Queries à exécuter avec Playwright (browser_navigate + browser_scroll + browser_snapshot) :**
+
+```
+https://www.linkedin.com/jobs/search/?keywords=automation+engineer+pharma&location=Suisse+romande&f_TPR=r604800
+https://www.linkedin.com/jobs/search/?keywords=ingenieur+automation&location=Lausanne%2C+Vaud%2C+Suisse&f_TPR=r604800
+https://www.linkedin.com/jobs/search/?keywords=chef+de+projet+automation+pharma&location=Geneve%2C+Suisse&f_TPR=r604800
+https://www.linkedin.com/jobs/search/?keywords=PLC+SCADA+engineer&location=Neuchatel%2C+Suisse&f_TPR=r604800
+https://www.linkedin.com/jobs/search/?keywords=automation+freelance+payrolling&location=Suisse+romande&f_TPR=r604800
+```
+
+(`f_TPR=r604800` = 7 derniers jours, `f_TPR=r86400` = 24h seulement)
+
+**Pour chaque carte de job visible :**
+1. Extraire : titre, nom de l'entreprise affichée, lieu, date de publication
+2. Scroller jusqu'en bas de la page pour charger tous les résultats
+3. Appliquer le `title_filter` normal (positive/negative keywords)
+4. **Identifier le type d'entreprise** (voir section Remontée de filons ci-dessous)
+
+**NB :** LinkedIn rate-limite agressivement. Max 3 pages par recherche avant de passer à la suivante. Si rate limit détecté → noter et continuer.
+
 ### Nivel 3 — WebSearch queries (DESCUBRIMIENTO AMPLIO)
 
 Los `search_queries` con `site:` filters cubren portales de forma transversal (todos los Ashby, todos los Greenhouse, etc.). Útil para descubrir empresas NUEVAS que aún no están en `tracked_companies`, pero los resultados pueden estar desfasados.
@@ -112,6 +136,45 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    - `applications.md` → empresa + rol normalizado ya evaluado
    - `pipeline.md` → URL exacta ya en pendientes o procesadas
 
+7.5b. **Remontée de filons (identification du client final)** — POUR CHAQUE nouvelle offre :
+
+**Étape 1 — Détecter le type d'émetteur :**
+
+| Signal dans l'offre | Type | Action |
+|---------------------|------|--------|
+| Nom de l'entreprise = cabinet/agence ("Randstad", "Hays", "Adecco", "agap2", "Akkodis", "Proclinical", etc.) | Intermédiaire | → voir ci-dessous |
+| JD dit "pour l'un de nos clients", "nous recrutons pour", "notre client", "a client" | Intermédiaire | → voir ci-dessous |
+| JD mentionne "payrolling", "TJM", "tarif journalier", "portage", "contrat de prestation" | Agence payrolling | → évaluer comme mandat freelance (score + TJM) |
+| Entreprise directe (pharma, manufacturing, etc.) | Employeur direct | → pipeline normal |
+
+**Étape 2 — Pour les intermédiaires SANS payrolling :**
+
+Si le JD contient des indices sur le client final :
+- Secteur + localisation + technologie + taille
+- Ex : "grande entreprise pharmaceutique à Neuchâtel", "site de production pharma, 500 personnes, DeltaV"
+
+Faire 2-3 recherches pour identifier le client :
+```
+WebSearch: "pharma" "Neuchâtel" "DeltaV" site:linkedin.com/company
+WebSearch: "{secteur}" "{technologie}" "{localisation}" entreprise production
+```
+Croiser avec `tracked_companies` de portals.yml (même secteur + même ville).
+
+**Étape 3 — Si client identifié avec confiance :**
+- NE PAS postuler via l'agence
+- Ajouter le client réel dans `data/prospection.tsv` avec `signal = offre_agence`
+- Note : source agency, URL originale, technologie mentionnée dans le JD
+- Contacter le client directement via workflow `prospection` (signal fort = ils ont un besoin ouvert)
+
+**Étape 4 — Si client non identifiable :**
+- Si l'agence fait du payrolling → contacter l'agence pour proposer un arrangement TJM
+- Sinon → `skipped_intermediaire` dans scan-history, on ne postule pas
+
+**Exemples de remontée réussie :**
+- "Grande pharma Neuchâtel, DeltaV, 600 personnes" → Takeda Neuchâtel (650 employees, DeltaV)
+- "Client biotech Bulle, Fribourg, Syncade MES" → UCB-Pharma Bulle (Syncade/DeltaV)
+- "Entreprise agroalimentaire Fribourg, migration SCADA" → Cremo SA Villars-sur-Glâne
+
 7.5. **Verificar liveness de resultados de WebSearch (Nivel 3)** — ANTES de añadir a pipeline:
 
    Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas, verificar con Playwright cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
@@ -167,22 +230,27 @@ https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
 https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 ```
 
-## Resumen de salida
+## Résumé de sortie
 
 ```
 Portal Scan — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-Queries ejecutados: N
-Ofertas encontradas: N total
-Filtradas por título: N relevantes
-Duplicadas: N (ya evaluadas o en pipeline)
-Expiradas descartadas: N (links muertos, Nivel 3)
-Nuevas añadidas a pipeline.md: N
+Sources: jobs.ch, jobup.ch, LinkedIn, + {N} autres portails
+Offres trouvées: N total
+Filtrées par titre/dup/geo: N
+Nouvelles ajoutées au pipeline: N
 
-  + {company} | {title} | {query_name}
+  + {company} | {title} | {source}
   ...
 
-→ Ejecuta /career-ops pipeline para evaluar las nuevas ofertas.
+Filons remontés: N (intermédiaires → clients finaux identifiés)
+  → {client_identifié} | signal: {agence} cherche {role} ({source_url})
+
+Agences payrolling détectées: N
+  → {agence} | {role} | TJM: {tjm} → à évaluer comme mandat freelance
+
+→ Lancer /consulting-ops pipeline pour évaluer les nouvelles offres.
+→ Lancer /consulting-ops prospection pour contacter les clients identifiés.
 ```
 
 ## Gestión de careers_url
