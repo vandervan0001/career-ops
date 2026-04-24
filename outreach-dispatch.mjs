@@ -31,6 +31,8 @@ const getArg = (flag, fallback = null) => {
   return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : fallback;
 };
 
+const FROM_QUEUE = getArg('--from-queue', null);
+
 function nowDate() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -197,6 +199,36 @@ async function sendMail(mailer, smtp, row, subjectLine, body) {
 }
 
 async function main() {
+  // --from-queue: read approved messages from PrepAgent/ReviewAgent queue file
+  if (FROM_QUEUE) {
+    if (!existsSync(FROM_QUEUE)) {
+      console.log(`Queue file not found: ${FROM_QUEUE}`);
+      return;
+    }
+    const profile = loadProfile();
+    const live = hasFlag('--live');
+    let smtp = null;
+    let mailer = null;
+    if (live) {
+      smtp = loadSmtp();
+      mailer = createMailer(smtp);
+    }
+    const lines = readFileSync(FROM_QUEUE, 'utf-8').split('\n').filter((l) => l.trim() && !l.startsWith('#'));
+    for (const line of lines) {
+      const [company, contact, email, , , subject, body] = line.split('\t');
+      if (!email || !subject) continue;
+      const row = { company: company || '', contact: contact || '', email };
+      console.log(`${live ? 'ENVOI' : 'PREVIEW'} ${company} <${email}>`);
+      console.log(`Objet: ${subject}`);
+      if (live) {
+        const info = await sendMail(mailer, smtp, row, subject, body || '');
+        console.log(`OK ${info.messageId}`);
+      }
+    }
+    return;
+  }
+
+  // Normal flow (existing code below)
   const { rows } = loadTable();
   const profile = loadProfile();
   const selected = selectRows(rows, profile);
