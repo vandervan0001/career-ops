@@ -6,6 +6,18 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-04-27
+- [x] https://www.jobup.ch/en/jobs/detail/4d248196-987b-483c-83b1-04a196647ee1/ | SICPA | Automation Technician (Prilly) → #64 Evaluated 3.0/5 CDI tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/1df562e4-cc40-4051-996a-d81b210901a2/ | CONDIS SA | Automation Technician/Engineer (Rossens FR) → #65 SKIP 2.8/5
+- [x] https://www.jobup.ch/en/jobs/detail/abc6d95f-78a6-4658-85e2-f0d6694e6685/ | Groupe Micarna | Spécialiste en automation (Courtepin) → #66 Evaluated 3.2/5 CDI tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/225978c7-2f90-4a44-8565-2ebd21db181d/ | Recrutis | Chef de Projet EIA Pharma (Vevey) → #67 Evaluated 3.5/5 CDI tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/df78b544-7587-4ffa-ab84-cc6fe4533a70/ | ALBEDIS | Ingénieur Robotique ABB Senior (Montreux) → #68 SKIP 2.8/5
+- [x] https://www.jobs.ch/en/vacancies/detail/0843a523-d0ec-4d93-a385-9c67776fbf58/ | Teoxane SA | Ingénieur Qualification Validation (Genève) → #69 SKIP 2.7/5
+- [x] https://www.linkedin.com/jobs/view/4406397201/ | CLEEVEN | Ingénieur Automation (Vaud) → #70 SKIP 2.8/5
+- [x] https://www.linkedin.com/jobs/view/4406384892/ | CLEEVEN | Ingénieur automaticien (Vaud) → #71 SKIP 2.5/5
+- [x] https://www.linkedin.com/jobs/view/4404596905/ | Destinus | Automation Engineer (Payerne) → #72 Evaluated 3.0/5 CDI tracker uniquement
+- [x] https://www.linkedin.com/jobs/view/4405737149/ | Bausch Health | Systems/Controls Engineer II (Mex) → #73 Evaluated 3.7/5 CDI tracker uniquement
+
 ### 2026-04-24
 - [x] https://www.jobs.ch/en/vacancies/detail/d8ff03e6-b3bd-48c9-805c-5ef68126d093/ | HYDRO Exploitation SA | Ingénieur en Automation (Sion) → #62 Evaluated 3.3/5 CDI tracker uniquement
 - [x] https://careers.ima.it/job/Switzerland-SOFTWARE-AUTOMATION-ENGINEER-(CONTROLS-ENGINEER)-Othe-2300/816547902/ | IMA Automation Switzerland SA | Software Automation Engineer → #63 Evaluated 3.0/5 CDI tracker uniquement
