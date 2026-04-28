@@ -6,6 +6,16 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-04-28
+- [x] https://www.jobup.ch/en/jobs/detail/505ee8f0-d141-458a-8924-48128c218ce1/ | Manpower | Ingénieur Automation (Villeneuve VD) → #74 Evaluated 3.0/5 CDI tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/7c92c430-0f95-49f0-a529-659e1066a9cd/ | OK Job SA | Ingénieur Automation (Morat FR) → #75 Evaluated 3.5/5 CDI tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/c39a70a5-7109-426a-80ac-2af1198db3b1/ | OK Job SA | Ingénieur Automation (Neuchâtel) → #76 Evaluated 3.5/5 CDI tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/86fac95e-0a62-4de9-b41b-bc93b76d252e/ | Careerplus | Responsable Automation & Électricité (Neuchâtel) → #77 Evaluated 3.7/5 CDI tracker uniquement
+- [x] https://www.linkedin.com/jobs/view/4406233989/ | Ingersoll Rand / ILC Dover | Automation Project Manager (Rossens FR) → #78 Evaluated 3.8/5 CDI tracker uniquement
+- [x] https://www.linkedin.com/jobs/view/4407412833/ | SCC | Automation Engineer Freelance B2B (Rüschlikon ZH) → SKIP DevOps IT hors scope
+- [x] https://www.linkedin.com/jobs/view/4407179287/ | B-Hive Engineering | Automaticien F/H (Sarreguemines FR) → SKIP géo + junior
+- [x] https://www.linkedin.com/jobs/view/4405994440/ | Multi Personnel | Chef de Projet Programmation Domotique → SKIP domotique hors scope
+
 ### 2026-04-27
 - [x] https://www.jobup.ch/en/jobs/detail/4d248196-987b-483c-83b1-04a196647ee1/ | SICPA | Automation Technician (Prilly) → #64 Evaluated 3.0/5 CDI tracker uniquement
 - [x] https://www.jobup.ch/en/jobs/detail/1df562e4-cc40-4051-996a-d81b210901a2/ | CONDIS SA | Automation Technician/Engineer (Rossens FR) → #65 SKIP 2.8/5

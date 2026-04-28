@@ -2,6 +2,8 @@
 
 | # | Date | Client | Mandat | Score | Statut | PDF | Report | TJM | Notes |
 |---|------|--------|--------|-------|--------|-----|--------|-----|-------|
+| 74 | 2026-04-28 | Manpower | [CDI] Ingénieur Automation (Villeneuve VD) | 3.0/5 | Evaluated | ❌ | [074](reports/074-manpower-ingenieur-automation-villeneuve-2026-04-28.md) | Agence intérim, client masqué, peu de détails techniques. CDI standard tracker uniquement. |
+| 78 | 2026-04-28 | Ingersoll Rand / ILC Dover | [CDI] Automation Project Manager Rossens FR | 3.8/5 | Evaluated | ❌ | [078](reports/078-ingersoll-rand-automation-pm-rossens-2026-04-28.md) | Biopharma/medtech/aérospatial single-use, Siemens TIA + Rockwell bonus, FAT/SAT, 5 ans exp, anglais C1. Très bon fit technique mais CDI senior PM non-executive tracker uniquement. |
 | 64 | 2026-04-27 | SICPA | [CDI] Automation Technician (Prilly) | 3.0/5 | Evaluated | ❌ |  | CDI Prilly VD, niveau technicien CFC + 5 ans installations régulées, Siemens/SAIA + Honeywell PCvue building automation, OIBT 15 requis — sous-niveau (technicien), tracker uniquement |
 | 65 | 2026-04-27 | CONDIS SA | [CDI] Automation Technician/Engineer (Rossens FR) | 2.8/5 | SKIP | ❌ |  | CDI Rossens (Fribourg), Beckhoff/TwinCAT focus + OPC-UA/Ethernet IP, pas de pharma — fit technique limité (Beckhoff non-cœur), SKIP |
 | 66 | 2026-04-27 | Groupe Micarna | [CDI] Spécialiste en automation (Courtepin) | 3.2/5 | Evaluated | ❌ |  | CDI Courtepin (Fribourg), Siemens S7/TIA + AVEVA SCADA, agroalimentaire (watchlist), 3-5 ans, allemand "bonnes connaissances" requis — tracker uniquement (CDI non-exécutif + langue) |
@@ -19,7 +21,7 @@
 | 55 | 2026-04-23 | BOBST MEX SA | [CDI] Automation & Embedded Software Developer | 2.5/5 | SKIP | ❌ |  | ~110K CHF/an |
 | 57 | 2026-04-23 | AXEPTA SA | [CDI] Chef de projet Infrastructure GMP medtech | — | Discarded | ❌ |  | — |
 | 59 | 2026-04-23 | Cremo SA | [CDI] Chef-fe de team Automation | 3.2/5 | Evaluated | ❌ |  | ~105K CHF/an |
-| 60 | 2026-04-23 | Careerplus | [CDI] Ingénieur automation | 3.3/5 | Evaluated | ❌ |  | ~115K CHF/an |
+| 60 | 2026-04-28 | Careerplus | [CDI] Responsable Automation & Électricité Neuchâtel | 3.7/5 | Evaluated | ❌ | [077](reports/077-careerplus-responsable-automation-electricite-neuchatel-2026-04-28.md) | Re-eval 2026-04-28 (3.3→3.7). Agence pour groupe industriel international, poste manager équipe technique multi-sites. Maintenance prédictive + vision + énergie. CDI middle-mgr non-executive tracker uniquement. |
 | 61 | 2026-04-23 | Undisclosed | [CDI] Project Manager — Automation / Microtechniques | 3.0/5 | Evaluated | ❌ |  | ~130K CHF/an |
 | 42 | 2026-04-14 | agap2 Switzerland | [CDI] Automation Engineer — Machines Spéciales | 3.0/5 | evalue | CDI ~95K | ❌ |  | Lausanne, PLC Siemens/Rockwell/Beckhoff, 4 ans requis, CDI non-exécutif, pas pharma/GMP |
 | 44 | 2026-04-15 | Takeda | [CDI] Automation Data Engineer (Neuchâtel) | 3.7/5 | evalue | CDI ~130K | ❌ |  | Neuchâtel, data engineering + SCADA/MES/OT, GMP pharma, CDI non-exécutif — tracker uniquement |
@@ -27,7 +29,7 @@
 | 46 | 2026-04-16 | UCB-Pharma SA | [CDI] DCS Engineer | 3.2/5 | evalue | CDI ~120K | ❌ |  | Bulle VD, DeltaV 5+ ans, pharma/biotech GMP, CDI non-exécutif — tracker uniquement |
 | 47 | 2026-04-16 | UCB-Pharma SA | [CDI] MES Engineer | 3.0/5 | evalue | CDI ~115K | ❌ |  | Bulle VD, Syncade/DeltaV MES, 5+ ans, pharma/biotech, CDI non-exécutif — tracker uniquement |
 | 48 | 2026-04-16 | Randstad (Schweiz) AG | [CDI] Automation Engineer - Software & Commissioning | 3.0/5 | evalue | CDI ~110K | ❌ |  | Neuchâtel, Rockwell/AB + C++/SQL, machines spéciales industrie, 20-25% travel, CDI non-exécutif |
-| 49 | 2026-04-16 | OK Job SA | [CDI] Ingénieur Automation et Systèmes Industriels | 3.0/5 | evalue | CDI ~110K | ❌ |  | Neuchâtel, Siemens TIA Portal/WinCC/SCADA, 5 ans requis, CDI non-exécutif |
+| 49 | 2026-04-28 | OK Job SA | [CDI] Ingénieur Automation Morat FR | 3.5/5 | evalue | CDI ~110K | [075](reports/075-okjob-ingenieur-automation-morat-2026-04-28.md) | Re-eval 2026-04-28 (3→3.5). Agence, Siemens TIA + Profinet + WinCC + EPLAN, Industrie 4.0. Stack OK mais agence opaque. CDI tracker uniquement. |
 | 52 | 2026-04-16 | Amaris Consulting | [CDI] Automation Engineer F/H/X | 3.3/5 | evalue | CDI ~110K | ❌ |  | Biel/Bienne, IQ/OQ/PQ FAT/SAT, Siemens/Rockwell/Beckhoff, 3+ ans, CDI non-exécutif |
 | 38 | 2026-04-13 | agap2 Switzerland | [CDI] CAPEX Project Manager Pharma/Biotech | 3.6/5 | evalue | CDI ~115K | ❌ | [038](reports/038-agap2-capex-pm-lausanne-2026-04-13.md) | Lausanne Bel-Air, PM CAPEX 2-50MCHF, salaire opaque, CDI integrateur |
 | 34 | 2026-04-10 | Dietrich Engineering Consultants (DEC Group) | [CDI] Services Automation & Software Engineer | 3.9/5 | evalue | CDI ~115k | ❌ | [034](reports/034-dec-group-automation-software-engineer-ecublens-2026-04-10.md) | Ecublens VD, GAMP5/21CFR, Siemens TIA Portal — excellent fit tech, CDI avec 40% travel |
