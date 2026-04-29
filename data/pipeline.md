@@ -6,6 +6,10 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-04-29
+- [x] https://www.linkedin.com/jobs/view/4407819230/ | OK JOB SA | Chef de projet Machine spéciale (Neuchâtel) → #79 Evaluated 3.7/5 CDI tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/bd53d1d3-d946-4b0e-a589-839f02333694/ | Bechtle Suisse SA | Expert Systèmes IT/Automatisation Senior (Grand-Lancy) → SKIP IT/sysadmin hors scope OT
+
 ### 2026-04-28
 - [x] https://www.jobup.ch/en/jobs/detail/505ee8f0-d141-458a-8924-48128c218ce1/ | Manpower | Ingénieur Automation (Villeneuve VD) → #74 Evaluated 3.0/5 CDI tracker uniquement
 - [x] https://www.jobup.ch/en/jobs/detail/7c92c430-0f95-49f0-a529-659e1066a9cd/ | OK Job SA | Ingénieur Automation (Morat FR) → #75 Evaluated 3.5/5 CDI tracker uniquement
