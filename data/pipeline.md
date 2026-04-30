@@ -6,6 +6,17 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-04-30
+- [x] https://www.jobup.ch/en/jobs/detail/d7080519-3f71-414d-8b74-ffda149a07e8/ | Randstad / Client Biotech | Ingénieur Automation 36 mois (Aubonne VD) → #080 Evaluated 4.2/5 MANDAT FREELANCE — contacter Randstad pour qualifier TJM
+- [x] https://www.jobs.ch/en/vacancies/detail/e93db5fe-f872-4f4e-b246-4eecac616251/ | UCB-Pharma SA | CSV & Automation Qualification Specialist (Bulle) → #081 Evaluated 3.2/5 CDI tracker uniquement
+- [x] https://www.jobs.ch/en/vacancies/detail/10e5efd4-56a0-4ad4-ae3c-1316989ec8d4/ | Climat Gestion SA | Chef de Projet Systèmes Énergétiques (St-Pierre-de-Clages) → SKIP réfrigération + allemand requis hors scope
+- [x] https://www.jobs.ch/en/vacancies/detail/3def8591-738f-4bc8-9d2e-71e372edc79c/ | ETAVIS Romandie SA | Chef de projet électricité (Fribourg) → SKIP construction électrique non OT/PLC
+- [x] https://www.jobup.ch/en/jobs/detail/914567d0-c373-45f3-9e54-397b435b99c4/ | Careerplus | Technicien ES en automation (Yverdon) → SKIP niveau technicien
+- [x] https://www.jobup.ch/en/jobs/detail/f2a7cb09-1add-4094-8e35-edf781d6ad77/ | BTG Eclepens SA | Manager amélioration continue (Eclépens) → SKIP Lean/SAP pas automation industrielle
+- [x] https://www.jobs.ch/en/vacancies/detail/61b9854b-131b-4cd7-97b9-29ec9238d079/ | Undisclosed | Chef de Projets Tableaux électriques (Fribourg) → SKIP armoires électriques hors scope OT
+- [x] https://www.jobup.ch/en/jobs/detail/243ebbd8-0063-4bf3-b7dd-dcec9cec5c42/ | Careerplus | Ingénieur de vente automation (Yverdon) → SKIP commercial/vente
+- [x] https://www.jobs.ch/en/vacancies/detail/960a0064-f34c-42a2-89ba-853ca888cd31/ | Undisclosed | Ingénieur vision industrielle (Neuchâtel) → SKIP vision machine hors scope automation OT
+
 ### 2026-04-29
 - [x] https://www.linkedin.com/jobs/view/4407819230/ | OK JOB SA | Chef de projet Machine spéciale (Neuchâtel) → #79 Evaluated 3.7/5 CDI tracker uniquement
 - [x] https://www.jobup.ch/en/jobs/detail/bd53d1d3-d946-4b0e-a589-839f02333694/ | Bechtle Suisse SA | Expert Systèmes IT/Automatisation Senior (Grand-Lancy) → SKIP IT/sysadmin hors scope OT

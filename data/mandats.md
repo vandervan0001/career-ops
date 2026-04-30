@@ -2,6 +2,7 @@
 
 | # | Date | Client | Mandat | Score | Statut | PDF | Report | TJM | Notes |
 |---|------|--------|--------|-------|--------|-----|--------|-----|-------|
+| 80 | 2026-04-30 | Randstad / Client Biotech | [PRESTA] Ingénieur Automation Biotech (Aubonne VD) | 4.2/5 | Evaluated | ❌ | [080](reports/080-randstad-ingenieur-automation-biotech-aubonne-2026-04-30.md) | Mandat 36 mois Siemens+GMP, Aubonne VD — contacter Randstad pour qualifier TJM |
 | 79 | 2026-04-29 | OK JOB SA | [CDI] Chef de projet Machine spéciale (Neuchâtel) | 3.7/5 | Evaluated | ❌ | [079](reports/079-okjob-chef-projet-machine-speciale-neuchatel-2026-04-29.md) | Intermédiaire OK JOB. Microtechniques/Electronique/Mécanique/Automation. IPMA atout (PMP équivalent). 3-5 ans exp. CDI non-executive tracker uniquement. Filon NE machines spéciales à explorer. |
 | 74 | 2026-04-28 | Manpower | [CDI] Ingénieur Automation (Villeneuve VD) | 3.0/5 | Evaluated | ❌ | [074](reports/074-manpower-ingenieur-automation-villeneuve-2026-04-28.md) | Agence intérim, client masqué, peu de détails techniques. CDI standard tracker uniquement. |
 | 78 | 2026-04-28 | Ingersoll Rand / ILC Dover | [CDI] Automation Project Manager Rossens FR | 3.8/5 | Evaluated | ❌ | [078](reports/078-ingersoll-rand-automation-pm-rossens-2026-04-28.md) | Biopharma/medtech/aérospatial single-use, Siemens TIA + Rockwell bonus, FAT/SAT, 5 ans exp, anglais C1. Très bon fit technique mais CDI senior PM non-executive tracker uniquement. |
