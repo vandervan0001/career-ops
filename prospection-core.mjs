@@ -231,43 +231,121 @@ export function primaryService(row, profile = {}) {
   };
 }
 
+// Élision "que" devant voyelle ou h muet : "qu'Actemium", "qu'AISA", "que Prodima".
+function que(text) {
+  if (!text) return 'que ';
+  return /^[aeiouhéèêàâAEIOUHÉÈÊÀÂ]/.test(String(text).trim()) ? `qu'${text}` : `que ${text}`;
+}
+
+// Génère une phrase d'ouverture contextuelle naturelle, ou retourne null si pas de contexte exploitable.
+// Convention: si `row.signal` commence par une minuscule et un verbe ("vous recrutez", "votre fusion"),
+// on utilise tel quel. Sinon on tente de reformuler depuis les mots-clés.
+export function contextLine(row) {
+  const sig = String(row.signal || '').trim();
+  if (!sig) return null;
+  const lower = sig.toLowerCase();
+
+  // Si le signal est déjà une phrase humaine ("vous recrutez...", "votre projet...")
+  if (/^(vous|votre|vos)\s/i.test(sig)) {
+    return `J'ai vu ${que(sig)}.`;
+  }
+
+  // Détection de motifs courants pour reformulation
+  const recruitMatch = sig.match(/recrutement\s+([^,(|]+?)(?:\s+(?:LinkedIn|jobup|via|sur|sources?)\b|$)/i);
+  if (recruitMatch) {
+    const poste = recruitMatch[1].trim().replace(/^un[e]?\s+/i, '');
+    const article = /^[aeiouhéèê]/i.test(poste) ? "un" : "un";
+    return `J'ai vu que vous recrutez actuellement ${article} ${poste} chez ${row.company}.`;
+  }
+  if (containsOne(lower, ['recrutement', 'hiring'])) {
+    return `J'ai vu ${que(row.company)} recrute actuellement sur des sujets d'automation.`;
+  }
+  if (containsOne(lower, ['expansion', 'nouvelle ligne', 'nouveau site', 'investissement', 'scale-up'])) {
+    return `J'ai vu ${que(row.company)} est en phase d'expansion.`;
+  }
+  if (containsOne(lower, ['fusion', 'acquisition', 'rapprochement'])) {
+    return `J'ai suivi le rapprochement récent autour de ${row.company}.`;
+  }
+  if (containsOne(lower, ['migration', 'upgrade', 'modernisation', 'obsolescence'])) {
+    return `J'ai vu ${que(row.company)} est probablement confronté à des sujets de migration ou de modernisation.`;
+  }
+  if (containsOne(lower, ['nouveau projet', 'contrat', 'projet remporté', 'gagne', 'remporte'])) {
+    return `J'ai vu ${que(row.company)} remporte régulièrement des projets industriels en Suisse romande.`;
+  }
+  if (containsOne(lower, ['oem', 'machine spéciale', 'machines spéciales', 'constructeur'])) {
+    return `J'ai vu ${que(row.company)} conçoit et fabrique des machines spéciales pour ses clients.`;
+  }
+  if (containsOne(lower, ['intégrateur', 'integrateur', 'epcm'])) {
+    return `J'ai vu ${que(row.company)} est un intégrateur actif sur des projets industriels en Suisse romande.`;
+  }
+  return null;
+}
+
+// Présentation Vanguard adaptée au type de cible (OEM / intégrateur / industriel).
+export function presentationLine(row) {
+  const text = `${row.target_type || ''} ${row.sector || ''} ${row.signal || ''} ${row.notes || ''}`.toLowerCase();
+  if (containsOne(text, ['oem', 'machine spéciale', 'machines spéciales', 'constructeur', 'équipementier'])) {
+    return "Je dirige Vanguard Systems, basée en Suisse romande. J'accompagne les fabricants de machines sur la programmation des automates, la mise en service en atelier (FAT) puis sur site client (SAT).";
+  }
+  if (containsOne(text, ['intégrateur', 'integrateur', 'epcm', 'engineering services', 'bureau d\'études', 'partenaire'])) {
+    return "Je dirige Vanguard Systems, basée en Suisse romande. J'accompagne les intégrateurs sur leurs phases de mise en service, FAT et SAT chez leurs clients finaux, en renfort ou en sous-traitance.";
+  }
+  if (containsOne(text, ['pharma', 'biotech', 'medtech'])) {
+    return "Je dirige Vanguard Systems, basée en Suisse romande. J'accompagne des sites pharmaceutiques sur leurs sujets d'automation, qualification et migration des installations.";
+  }
+  if (containsOne(text, ['énergie', 'energie', 'utilities'])) {
+    return "Je dirige Vanguard Systems, basée en Suisse romande. J'accompagne des sites industriels et utilities sur leurs sujets d'automation, supervision et migration des installations.";
+  }
+  return "Je dirige Vanguard Systems, basée en Suisse romande. J'accompagne des sites industriels sur leurs sujets d'automation, migration et support des installations.";
+}
+
+// Phrase de proposition concrète, adaptée au signal.
+export function propositionLine(row) {
+  const text = `${row.signal || ''} ${row.notes || ''}`.toLowerCase();
+  if (containsOne(text, ['recrutement', 'hiring'])) {
+    return "Je suis disponible en renfort, le temps que votre recrutement aboutisse, ou ponctuellement sur projet.";
+  }
+  if (containsOne(text, ['expansion', 'nouvelle ligne', 'nouveau site', 'investissement', 'scale-up'])) {
+    return "Je suis disponible pour vous appuyer sur la montée en charge, en programmation des automates ou en mise en service.";
+  }
+  if (containsOne(text, ['migration', 'upgrade', 'modernisation', 'obsolescence', 'pcs7', 'wincc', 's5'])) {
+    return "Je suis disponible pour prendre en charge une phase de migration ou de modernisation des automates et de la supervision, sans mobiliser votre équipe interne.";
+  }
+  if (containsOne(text, ['fat', 'sat', 'mise en service', 'commissioning', 'démarrage'])) {
+    return "Je suis disponible pour vous renforcer sur les phases de FAT en atelier et SAT chez le client final.";
+  }
+  if (containsOne(text, ['gmp', 'csv', 'qualification', 'iq', 'oq'])) {
+    return "Je suis disponible pour intervenir sur la qualification, le CSV ou les phases FAT et SAT en environnement régulé.";
+  }
+  return "Je suis disponible en renfort ponctuel ou sur projet : programmation automate, supervision, mise en service, FAT et SAT.";
+}
+
+// CTA fixe, ton humain et ouvert.
+export function ctaLine() {
+  return "Je suis volontiers disponible pour un échange si vous y voyez un intérêt aujourd'hui ou dans le futur.";
+}
+
+// --- Conserve l'ancien API pour compat (relance_1, relance_2) ---
 export function painPoint(row) {
   const text = `${row.signal} ${row.notes} ${row.sector}`.toLowerCase();
-  if (containsOne(text, ['recrutement', 'hiring'])) return 'absorber rapidement la charge pendant que le besoin se structure';
-  if (containsOne(text, ['expansion', 'investissement', 'scale-up'])) return 'sécuriser la montée en charge sans créer de dette de mise en service';
-  if (containsOne(text, ['nis2', '62443', 'cyber'])) return 'clarifier les priorités OT/cyber sans lancer un chantier disproportionné';
-  if (containsOne(text, ['qualification', 'csv', 'gmp'])) return 'sécuriser qualification et conformité sans freiner l’exécution';
-  if (containsOne(text, ['migration', 'upgrade', 'modernisation'])) return 'sortir d’une dette technique qui finit toujours par devenir un risque opérationnel';
-  if (containsOne(text, ['manufacturing', 'production', 'site'])) return 'reprendre les irritants automation avant qu’ils ne deviennent du run subi';
-  return 'reprendre le backlog automation de façon structurée';
+  if (containsOne(text, ['recrutement', 'hiring'])) return 'avancer le temps que votre recrutement aboutisse';
+  if (containsOne(text, ['expansion', 'investissement', 'scale-up'])) return 'sécuriser la montée en charge';
+  if (containsOne(text, ['nis2', '62443', 'cyber'])) return 'avancer sur les sujets de cybersécurité industrielle';
+  if (containsOne(text, ['qualification', 'csv', 'gmp'])) return 'sécuriser la qualification sans ralentir vos projets';
+  if (containsOne(text, ['migration', 'upgrade', 'modernisation'])) return 'avancer sur la migration ou la modernisation des installations';
+  if (containsOne(text, ['fat', 'sat', 'mise en service'])) return 'avancer sur les phases de FAT et SAT';
+  if (containsOne(text, ['manufacturing', 'production', 'site'])) return 'reprendre proprement le backlog automation';
+  return 'avancer sur vos sujets d\'automation';
 }
 
 export function proofPoint(row) {
-  const text = `${row.sector} ${row.signal} ${row.notes}`.toLowerCase();
-  if (containsOne(text, ['oem', 'machine spéciale', 'machines spéciales', 'constructeur', 'équipementier'])) {
-    return "J'interviens régulièrement avec des OEM en Suisse romande sur la partie SW automation et mise en service, en sous-traitance pour absorber les pics de charge ou les projets qui glissent.";
-  }
-  if (containsOne(text, ['intégrateur', 'integrateur', 'epcm', 'engineering services', 'sous-traitance', 'partenaire fat', 'partenaire sat'])) {
-    return "Je travaille en partenariat avec des intégrateurs en Suisse romande sur les phases FAT, SAT et mise en service chez leurs clients. Approche pair-à-pair, pas de surcharge admin.";
-  }
-  if (containsOne(text, ['pharma', 'biotech', 'medtech'])) {
-    return "J'interviens sur ce type d'environnement en Suisse romande, avec des contextes régulés où la continuité d'exploitation compte autant que le projet.";
-  }
-  if (containsOne(text, ['horlogerie', 'luxe', 'manufacturing', 'agroalimentaire'])) {
-    return "Le sujet revient souvent dans les sites de production où la qualité, la cadence et la traçabilité se jouent aussi dans l'automation.";
-  }
-  if (containsOne(text, ['énergie', 'energie', 'utilities'])) {
-    return "Sur les environnements critiques, l'enjeu est souvent de reprendre l'existant proprement avant d'empiler de nouvelles couches.";
-  }
-  if (containsOne(text, ['chimie', 'chemical'])) {
-    return "Dans les procédés continus ou semi-continus, l'enjeu est souvent de remettre de la robustesse et de la visibilité sans perturber la production.";
-  }
-  return "Je travaille sur des sujets similaires en Suisse romande, avec une logique très terrain: reprendre, fiabiliser, puis faire tourner proprement.";
+  return presentationLine(row);
 }
 
 export function signalLine(row) {
-  if (!row.signal) return `Je vous contacte car ${row.company} évolue dans un contexte où l'automation et la fiabilité des systèmes ont un impact direct sur l'opérationnel.`;
-  return `J'ai vu le signal suivant chez ${row.company}: ${row.signal}.`;
+  const ctx = contextLine(row);
+  if (ctx) return ctx;
+  return `Je vous contacte au sujet de ${row.company} et de ses sujets d'automation industrielle.`;
 }
 
 export function subjectForRow(row, profile = {}) {

@@ -15,7 +15,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createTransport } from 'nodemailer';
 import yaml from 'js-yaml';
-import { inferClassification, painPoint, primaryService, proofPoint, signalLine, slugify, subjectForRow } from './prospection-core.mjs';
+import { contextLine, ctaLine, inferClassification, painPoint, presentationLine, primaryService, propositionLine, slugify, subjectForRow } from './prospection-core.mjs';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -83,7 +83,7 @@ function buildHtmlEmail(text) {
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean)
-    .map((p) => `<p style="margin:0 0 16px;font-family:Tahoma,Arial,sans-serif;font-size:14px;line-height:1.65;color:#1a1a2e;">${p.replace(/\n/g, '<br>')}</p>`)
+    .map((p) => `<p style="margin:0 0 22px;font-family:Tahoma,Arial,sans-serif;font-size:14.5px;line-height:1.75;color:#1a1a2e;">${p.replace(/\n/g, '<br>')}</p>`)
     .join('');
 
   const signatureHtml = loadSignatureHtml();
@@ -101,7 +101,7 @@ function buildHtmlEmail(text) {
       <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background-color:#ffffff;border:1px solid #e2e4e8;border-radius:8px;border-top:4px solid rgb(0,21,163);box-shadow:0 1px 3px rgba(0,0,0,0.04);">
         <tr><td style="padding:36px 40px 8px;">
           ${paragraphs}
-          <p style="margin:24px 0 0;font-family:Tahoma,Arial,sans-serif;font-size:14px;line-height:1.65;color:#1a1a2e;">${closure}</p>
+          <p style="margin:32px 0 0;font-family:Tahoma,Arial,sans-serif;font-size:14.5px;line-height:1.75;color:#1a1a2e;">${closure}</p>
         </td></tr>
         <tr><td style="padding:24px 40px 36px;">
           ${signatureHtml}
@@ -135,25 +135,15 @@ function greeting(row) {
 }
 
 function initialEmail(row, profile) {
-  const service = primaryService(row, profile);
-  const companyName = profile.consultant?.company_name || 'Vanguard Systems';
-  return [
-    greeting(row),
-    '',
-    signalLine(row),
-    '',
-    `Dans ce type de situation, le plus utile est souvent de mettre en place ${service.label} pour ${painPoint(row)}.`,
-    '',
-    proofPoint(row),
-    '',
-    `Si le sujet est d'actualité chez ${row.company}, je peux vous proposer un échange de 20 minutes pour voir s'il y a un angle utile et concret.`,
-    '',
-    'Bien cordialement,',
-    profile.consultant?.full_name || 'Tai Van',
-    companyName,
-    profile.consultant?.phone || '',
-    profile.consultant?.portfolio_url || '',
-  ].filter(Boolean).join('\n');
+  const ctx = contextLine(row);
+  const blocks = [greeting(row)];
+  if (ctx) blocks.push(ctx);
+  blocks.push(presentationLine(row));
+  blocks.push(propositionLine(row));
+  blocks.push(ctaLine());
+  blocks.push('Bien cordialement,');
+  blocks.push(profile.consultant?.full_name || 'Tai Van');
+  return blocks.filter(Boolean).join('\n\n');
 }
 
 function followup1(row) {
