@@ -237,6 +237,14 @@ function que(text) {
   return /^[aeiouhéèêàâAEIOUHÉÈÊÀÂ]/.test(String(text).trim()) ? `qu'${text}` : `que ${text}`;
 }
 
+// Détecte si un libellé de poste correspond à un rôle senior / management.
+// Le pitch "renfort le temps du recrutement" n'a aucun sens pour ces postes
+// (un directeur ne se remplace pas par un freelance).
+function isSeniorRole(label) {
+  if (!label) return false;
+  return /\b(head|director|directeur|directrice|vp|vice[- ]president|chief|c[- ]?level|cto|coo|ceo|cio|cmo|cfo|managing|partner|founder|fondateur|chef de d[ée]partement|responsable de d[ée]partement|responsable d[’']automation|manager industriel|leader|expert principal|principal engineer|architect)\b/i.test(label);
+}
+
 // Génère une phrase d'ouverture contextuelle naturelle, ou retourne null si pas de contexte exploitable.
 // Convention: si `row.signal` commence par une minuscule et un verbe ("vous recrutez", "votre fusion"),
 // on utilise tel quel. Sinon on tente de reformuler depuis les mots-clés.
@@ -252,14 +260,18 @@ export function contextLine(row) {
 
   // Détection de motifs courants pour reformulation
   const recruitMatch = sig.match(/recrutement\s+([^,(|]+?)(?:\s+(?:LinkedIn|jobup|via|sur|sources?)\b|$)/i);
-  if (recruitMatch) {
-    const poste = recruitMatch[1].trim().replace(/^un[e]?\s+/i, '');
-    const article = /^[aeiouhéèê]/i.test(poste) ? "un" : "un";
-    return `J'ai vu que vous recrutez actuellement ${article} ${poste} chez ${row.company}.`;
+  const recruitedTitle = recruitMatch ? recruitMatch[1].trim().replace(/^un[e]?\s+/i, '') : null;
+  const isSeniorRecruit = recruitedTitle && isSeniorRole(recruitedTitle);
+
+  // Recrutement IC (automaticien, ingénieur) : on peut se positionner en renfort cohérent.
+  if (recruitedTitle && !isSeniorRecruit) {
+    return `J'ai vu que vous recrutez actuellement un ${recruitedTitle} chez ${row.company}.`;
   }
-  if (containsOne(lower, ['recrutement', 'hiring'])) {
+  // Recrutement vague non-senior
+  if (!isSeniorRecruit && containsOne(lower, ['recrutement', 'hiring'])) {
     return `J'ai vu ${que(row.company)} recrute actuellement sur des sujets d'automation.`;
   }
+  // Recrutement senior : on saute l'angle "renfort recrutement" et on bascule sur fallback ci-dessous.
   if (containsOne(lower, ['expansion', 'nouvelle ligne', 'nouveau site', 'investissement', 'scale-up'])) {
     return `J'ai vu ${que(row.company)} est en phase d'expansion.`;
   }
@@ -278,7 +290,17 @@ export function contextLine(row) {
   if (containsOne(lower, ['intégrateur', 'integrateur', 'epcm'])) {
     return `J'ai vu ${que(row.company)} est un intégrateur actif sur des projets industriels en Suisse romande.`;
   }
-  return null;
+
+  // Fallback générique selon le type de cible (OEM / intégrateur / site industriel)
+  const targetText = `${row.target_type || ''} ${row.sector || ''}`.toLowerCase();
+  if (containsOne(targetText, ['oem', 'machine spéciale', 'machines spéciales', 'constructeur'])) {
+    return `J'ai vu ${que(row.company)} conçoit et fabrique des machines pour ses clients industriels.`;
+  }
+  if (containsOne(targetText, ['intégrateur', 'integrateur', 'epcm'])) {
+    return `J'ai vu ${que(row.company)} opère en Suisse romande comme intégrateur sur des projets industriels.`;
+  }
+  // Pas de catégorie claire : phrase neutre régionale.
+  return `J'ai vu ${que(row.company)} opère en Suisse romande sur des sujets industriels.`;
 }
 
 // Présentation Vanguard adaptée au type de cible (OEM / intégrateur / industriel).
@@ -302,7 +324,11 @@ export function presentationLine(row) {
 // Phrase de proposition concrète, adaptée au signal.
 export function propositionLine(row) {
   const text = `${row.signal || ''} ${row.notes || ''}`.toLowerCase();
-  if (containsOne(text, ['recrutement', 'hiring'])) {
+  // Recrutement IC (automaticien, ingénieur, technicien) → on est cohérent comme renfort
+  // Recrutement senior (directeur, head, VP) → on ne se positionne pas en remplaçant
+  const isRecruit = containsOne(text, ['recrutement', 'hiring']);
+  const recruitedSenior = isRecruit && isSeniorRole(row.signal || '');
+  if (isRecruit && !recruitedSenior) {
     return "Je suis disponible en renfort, le temps que votre recrutement aboutisse, ou ponctuellement sur projet.";
   }
   if (containsOne(text, ['expansion', 'nouvelle ligne', 'nouveau site', 'investissement', 'scale-up'])) {

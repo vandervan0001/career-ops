@@ -31,7 +31,13 @@ Charge la skill consulting-ops mode prospection. Suis exactement ce workflow :
    a. Détermine le domaine (extrait du nom d'entreprise ou via WebFetch sur le site web)
    b. node find-email.mjs --domain {domain} et choisis le meilleur contact (priorité management/engineering/executive, > 85%% confidence)
    c. Si rien trouvé, tente WebFetch sur le site /contact ou /equipe pour identifier un nom, puis node find-email.mjs --domain {domain} --name '{Prenom Nom}'
-   d. Mets à jour la row : contact, email, linkedin (si trouvé), notes (Hunter %% + role), status=nouveau
+   d. **Re-écris le champ 'signal' en phrase humaine concrète et personnalisée** (pas une description sèche). Exemples :
+      - mauvais : 'recrutement Director of Industrial Automation'
+      - bon : 'vous renforcez votre équipe automation avec un nouveau directeur'
+      - mauvais : 'OEM emballage Ecublens, automation team leader'
+      - bon : 'vous concevez des machines d'emballage haute précision pour vos clients pharma'
+      Si le contact recruté est senior (Head, Director, VP, C-level), ne formule PAS le pitch en mode 'remplacer pendant le recrutement', utilise un angle générique cohérent (renfort sur projet, partenariat FAT/SAT, etc.).
+   e. Mets à jour la row : contact, email, linkedin (si trouvé), notes (Hunter %% + role), status=nouveau
 4. Si pipeline status=identifie épuisé avant d'atteindre $QUOTA, scanne 5 nouvelles cibles via WebSearch sur OEM machines spéciales / intégrateurs FAT-SAT en Suisse romande (Vaud Genève Fribourg Neuchâtel Valais Jura), ajoute-les en status=identifie, puis recommence l'enrichissement.
 5. Lance node outreach-dispatch.mjs --status nouveau --top $QUOTA --live et capture la sortie.
 6. Vérifie que les envois sont OK. Pour chaque ENVOI confirmé, le statut bascule en envoye automatiquement.
