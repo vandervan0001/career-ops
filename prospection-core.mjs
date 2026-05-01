@@ -243,7 +243,13 @@ export function painPoint(row) {
 }
 
 export function proofPoint(row) {
-  const text = `${row.sector} ${row.signal}`.toLowerCase();
+  const text = `${row.sector} ${row.signal} ${row.notes}`.toLowerCase();
+  if (containsOne(text, ['oem', 'machine spéciale', 'machines spéciales', 'constructeur', 'équipementier'])) {
+    return "J'interviens régulièrement avec des OEM en Suisse romande sur la partie SW automation et mise en service, en sous-traitance pour absorber les pics de charge ou les projets qui glissent.";
+  }
+  if (containsOne(text, ['intégrateur', 'integrateur', 'epcm', 'engineering services', 'sous-traitance', 'partenaire fat', 'partenaire sat'])) {
+    return "Je travaille en partenariat avec des intégrateurs en Suisse romande sur les phases FAT, SAT et mise en service chez leurs clients. Approche pair-à-pair, pas de surcharge admin.";
+  }
   if (containsOne(text, ['pharma', 'biotech', 'medtech'])) {
     return "J'interviens sur ce type d'environnement en Suisse romande, avec des contextes régulés où la continuité d'exploitation compte autant que le projet.";
   }
