@@ -13,6 +13,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import { createTransport } from 'nodemailer';
 import yaml from 'js-yaml';
 import { contextLine, ctaLine, inferClassification, painPoint, presentationLine, primaryService, propositionLine, slugify, subjectForRow } from './prospection-core.mjs';
@@ -340,6 +341,12 @@ async function main() {
   if (live) {
     saveTable(null, rows);
     console.log(`CRM mis a jour: ${PROSPECTION_FILE}`);
+    // Régénère le dashboard sent/index.html après chaque envoi.
+    try {
+      execSync(`node ${join(ROOT, 'show-sent.mjs')}`, { stdio: 'inherit' });
+    } catch (err) {
+      console.warn('Dashboard refresh failed:', err.message);
+    }
   } else {
     console.log('Mode preview uniquement. Utiliser --live pour envoyer et mettre a jour le CRM.');
   }
