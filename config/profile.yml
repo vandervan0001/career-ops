@@ -183,6 +183,48 @@ service_offering:
         - "chimie"
         - "manufacturing"
         - "logistique"
+    - id: "renfort_miseenservice"
+      label: "un renfort mise en service / FAT-SAT"
+      subject: "mise en service / automatisme"
+      pitch: "intervenir rapidement sur chantier pour absorber un pic de charge FAT, SAT ou démarrage client"
+      trigger_signals:
+        - "mise en service"
+        - "commissioning"
+        - "chantier"
+        - "démarrage"
+        - "fat"
+        - "sat"
+        - "machine spéciale"
+        - "machines spéciales"
+        - "automaticien"
+        - "automation engineer"
+        - "recrutement automaticien"
+      preferred_sectors:
+        - "intégrateur"
+        - "OEM"
+        - "bureau d'études"
+        - "manufacturing"
+        - "machine spéciale"
+    - id: "renfort_retrofit"
+      label: "un renfort retrofit / migration machine"
+      subject: "migration / retrofit automation"
+      pitch: "prendre en charge une migration PLC/SCADA ou un retrofit machine sans mobiliser l'équipe interne"
+      trigger_signals:
+        - "retrofit"
+        - "migration"
+        - "upgrade"
+        - "modernisation"
+        - "remplacement"
+        - "obsolescence"
+        - "simatic"
+        - "s5"
+        - "pcs7"
+      preferred_sectors:
+        - "intégrateur"
+        - "industriel"
+        - "OEM"
+        - "manufacturing"
+        - "agroalimentaire"
 
   # Postes CDI executive ciblés
   executive_roles:
@@ -315,24 +357,14 @@ sourcing:
     - "Baxalta Manufacturing"
     - "BMS"
 
-  # A exclure du sourcing direct : concurrents, integrateurs, bureaux d'etude, recruteurs
+  # A exclure : recruteurs et concurrents directs uniquement.
+  # Les OEM/intégrateurs/bureaux d'études sont AUTORISÉS comme cibles outbound
+  # (focus segment courant : OEM machines spéciales + intégrateurs FAT/SAT).
   excluded_companies:
     - "Hydro Exploitation"
-    - "ALPS Automation"
-    - "Automation 3000"
-    - "APCO Technologies"
-    - "Mikron Automation"
-    - "Jacobs"
-    - "Exyte"
-    - "Boccard"
     - "Techfirm"
 
   excluded_patterns:
-    - "bureau d'étude"
-    - "bureau d’etude"
-    - "integrateur"
-    - "intégrateur"
-    - "engineering services"
     - "recruitment"
     - "staffing"
     - "interim"
@@ -381,10 +413,53 @@ targets:
     - production
 
 outreach:
-  daily_email_limit: 20
+  # Cible 30 cold mails/jour (Google Workspace migré sur vanguard-systems.ch)
+  # Ramp-up obligatoire pour ne pas griller la réputation SPF/DKIM/DMARC :
+  #   J1: 10, J2-3: 15, J4-7: 20, semaine 2+: 30
+  daily_email_limit: 30
   daily_linkedin_limit: 15
   relance_j: 7
   relance_max: 2
+  warmup:
+    enabled: true
+    schedule:
+      day_1: 10
+      day_2_3: 15
+      day_4_7: 20
+      week_2_plus: 30
+  # Segment focus 2026-05-01 : OEM machines spéciales + intégrateurs FAT/SAT
+  target_segments:
+    - id: "oem_machine_speciale"
+      label: "OEM machine spéciale"
+      description: "Constructeur de machines sur mesure (pharma, packaging, microtechnique, BTP, agro). Sous-traite l'automation et la mise en service."
+      examples:
+        - "Prodima (bétonnières VD)"
+        - "Mecanex (Yverdon)"
+        - "Polytype (Fribourg)"
+        - "Sapal Bosch Packaging (Ecublens)"
+        - "Mikron Boudry"
+        - "Schleuniger"
+        - "Komax"
+        - "Sylvac"
+        - "AISA Automation Industrielle"
+      pitch_angle: "renfort SW automation + mise en service/FAT/SAT chez vos clients"
+      preferred_service: "renfort_miseenservice"
+    - id: "integrateur_fat_sat"
+      label: "Intégrateur grand compte FAT/SAT"
+      description: "Intégrateur EPCM qui gagne des appels d'offres et cherche des partenaires régionaux pour mise en service, FAT et SAT sur site client."
+      examples:
+        - "Actemium (Vinci)"
+        - "SPIE Suisse"
+        - "Equans"
+        - "Axians"
+        - "Boccard"
+        - "Jacobs"
+        - "Exyte"
+        - "ATS Life Sciences"
+        - "DEC Group"
+        - "ABB"
+      pitch_angle: "partenaire FAT/SAT régional, dispo Siemens et Rockwell"
+      preferred_service: "renfort_miseenservice"
 
 location:
   country: "Suisse"

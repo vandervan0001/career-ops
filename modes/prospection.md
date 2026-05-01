@@ -67,6 +67,34 @@ Autonome sur Siemens TIA Portal et Rockwell Studio 5000. Dispo rapidement si sur
 [Prénom]
 [Téléphone]
 
+### Template D : OEM machine spéciale (Prodima style)
+**Objet :** Renfort SW automation pour vos machines spéciales
+**Corps :**
+Bonjour Monsieur/Madame [NOM],
+
+[Company] conçoit et fabrique [TYPE_MACHINE] sur mesure. Ce type de projet a souvent un goulot côté SW automation et mise en service.
+
+Automaticien freelance basé en Suisse romande, j'interviens en sous-traitance pour les OEM : SW PLC/SCADA, FAT atelier, SAT chez le client final. Autonome sur Siemens TIA et Rockwell Studio 5000.
+
+Si vous avez un pic de charge ou un projet qui glisse, ça peut valoir un échange court.
+
+[Prénom]
+[Téléphone]
+
+### Template E : Intégrateur grand compte (Actemium style)
+**Objet :** Partenaire FAT/SAT régional -- Suisse romande
+**Corps :**
+Bonjour Monsieur/Madame [NOM],
+
+[Company] gagne régulièrement des projets industriels en Suisse romande qui nécessitent ensuite mise en service et qualification chez le client final.
+
+Automaticien freelance basé près de Lausanne, je travaille en partenariat avec les intégrateurs sur la phase FAT/SAT : SW PLC, supervision, mise en route, support démarrage. Siemens TIA + Rockwell.
+
+Si vous avez besoin d'un appui régional sur un mandat en cours ou à venir, je suis dispo pour en parler.
+
+[Prénom]
+[Téléphone]
+
 ## Règles de rédaction (STRICTES)
 
 - Vouvoiement obligatoire ("vous", jamais "tu")
@@ -123,6 +151,21 @@ Toute industrie avec des systemes automatises et un budget >= 1000 CHF/jour :
 - Cleantech
 - Logistique avancee
 - Batiment industriel
+
+### FOCUS COURANT (mai 2026) : OEM machines spéciales + intégrateurs FAT/SAT
+
+Segment prioritaire :
+1. **OEM machine spéciale** (style Prodima) : petite/moyenne entreprise romande qui conçoit des machines sur mesure (BTP, packaging, microtechnique, pharma OEM, agro). Sous-traite l'automation et la mise en service. Cible le bureau d'études, le responsable SW automation, ou le directeur technique.
+2. **Intégrateur grand compte** (style Actemium) : remporte des appels d'offres industriels en Suisse romande, cherche des partenaires régionaux pour exécuter FAT, SAT et démarrage chez le client final. Cible le directeur d'agence, le responsable mise en service, le responsable bureau d'études.
+
+Signaux de priorité pour ces segments :
+- Recrutement automaticien ou chef de projet automation ouvert
+- Annonce d'un contrat gagné récemment (LinkedIn, communiqué)
+- Expansion atelier ou nouveau site
+- Migration produit (nouvelle gamme de machines)
+- Marché public adjugé sur simap.ch
+
+Templates à utiliser : D (OEM machine spéciale) et E (intégrateur partenariat FAT/SAT).
 
 ## Workflow
 
