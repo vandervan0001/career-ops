@@ -341,11 +341,16 @@ async function main() {
   if (live) {
     saveTable(null, rows);
     console.log(`CRM mis a jour: ${PROSPECTION_FILE}`);
-    // Régénère le dashboard sent/index.html après chaque envoi.
+    // Régénère les deux dashboards après chaque envoi (sent/ et pipeline global).
     try {
       execSync(`node ${join(ROOT, 'show-sent.mjs')}`, { stdio: 'inherit' });
     } catch (err) {
-      console.warn('Dashboard refresh failed:', err.message);
+      console.warn('Sent dashboard refresh failed:', err.message);
+    }
+    try {
+      execSync(`node ${join(ROOT, 'generate-dashboard.mjs')}`, { stdio: 'inherit' });
+    } catch (err) {
+      console.warn('Pipeline dashboard refresh failed:', err.message);
     }
   } else {
     console.log('Mode preview uniquement. Utiliser --live pour envoyer et mettre a jour le CRM.');
