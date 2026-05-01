@@ -13,12 +13,17 @@ LOG_FILE="$LOG_DIR/daily-outreach-$(date +%Y-%m-%d).log"
 mkdir -p "$LOG_DIR"
 cd "$PROJECT_DIR" || exit 1
 
-# Calcule le quota du jour selon le ramp-up
+# Calcule le quota du jour selon le ramp-up depuis J1 (vendredi 2026-05-01).
+# Cron tourne 7j/7 à 9h00, ramp-up basé sur le delta de jours depuis J1.
 TODAY=$(date +%Y-%m-%d)
-case "$TODAY" in
-  2026-05-04|2026-05-05) QUOTA=15 ;;        # J2-J3
-  2026-05-06|2026-05-07|2026-05-08) QUOTA=20 ;;  # J4-J6
-  *) QUOTA=30 ;;                             # Semaine 2+
+START_TS=$(date -j -f %Y-%m-%d 2026-05-01 +%s)
+TODAY_TS=$(date -j -f %Y-%m-%d "$TODAY" +%s)
+DELTA=$(( (TODAY_TS - START_TS) / 86400 ))   # 0 = J1, 1 = J2, ...
+case "$DELTA" in
+  0)        QUOTA=10 ;;   # J1 (vendredi 2026-05-01, déjà envoyé manuellement)
+  1|2)      QUOTA=15 ;;   # J2-J3
+  3|4|5)    QUOTA=20 ;;   # J4-J6
+  *)        QUOTA=30 ;;   # J7+ (semaine 2+)
 esac
 
 PROMPT="Tu es en mode batch quotidien cold mail. Aujourd'hui $(date +%A\ %Y-%m-%d), quota du jour: $QUOTA envois.
