@@ -39,3 +39,9 @@ career-dashboard
 config/smtp.yml
 config/hunter.yml
 .worktrees/
+
+# macOS AppleDouble metadata (jamais commiter)
+._*
+.DS_Store
+.AppleDouble
+.LSOverride
