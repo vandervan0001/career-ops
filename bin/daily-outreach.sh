@@ -13,6 +13,14 @@ LOG_FILE="$LOG_DIR/daily-outreach-$(date +%Y-%m-%d).log"
 mkdir -p "$LOG_DIR"
 cd "$PROJECT_DIR" || exit 1
 
+# Anti-doublon: si le lock du jour existe, un autre batch a déjà tourné. Abort.
+LOCK_FILE="$PROJECT_DIR/output/prospection/lock-$(date +%Y-%m-%d).txt"
+if [ -f "$LOCK_FILE" ]; then
+  echo "$(date) — ABORT: lock file présent, batch déjà tourné aujourd'hui" >> "$LOG_FILE"
+  cat "$LOCK_FILE" >> "$LOG_FILE"
+  exit 0
+fi
+
 # Calcule le quota du jour selon le ramp-up depuis J1 (vendredi 2026-05-01).
 # Cron tourne 7j/7 à 9h00, ramp-up basé sur le delta de jours depuis J1.
 TODAY=$(date +%Y-%m-%d)

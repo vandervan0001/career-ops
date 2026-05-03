@@ -282,6 +282,20 @@ async function main() {
 
   mkdirSync(QUEUE_DIR, { recursive: true });
 
+  // Anti-doublon: si un lock du jour existe et qu'on tente un nouvel envoi --live, abort.
+  // Bypass possible avec --force (cas exceptionnel après vérification manuelle).
+  if (live && !hasFlag('--force')) {
+    const lockPath = join(ROOT, 'output', 'prospection', `lock-${nowDate()}.txt`);
+    if (existsSync(lockPath)) {
+      const lockContent = readFileSync(lockPath, 'utf-8').trim();
+      console.error(`\n⛔ ENVOI BLOQUÉ — un batch a déjà tourné aujourd'hui:`);
+      console.error(`   ${lockContent.split('\n').join('\n   ')}`);
+      console.error(`   Pour forcer (anti-doublon désactivé): --force`);
+      console.error(`   Pour reset: rm ${lockPath}\n`);
+      process.exit(2);
+    }
+  }
+
   let smtp = null;
   let mailer = null;
   if (live) {
@@ -341,6 +355,9 @@ async function main() {
   if (live) {
     saveTable(null, rows);
     console.log(`CRM mis a jour: ${PROSPECTION_FILE}`);
+    // Lock file pour empêcher un 2e envoi le même jour (anti-doublon).
+    const lockPath = join(ROOT, 'output', 'prospection', `lock-${nowDate()}.txt`);
+    writeFileSync(lockPath, `${selected.length} envois ${new Date().toISOString()}\n`, { flag: 'a' });
     // Régénère les deux dashboards après chaque envoi (sent/ et pipeline global).
     try {
       execSync(`node ${join(ROOT, 'show-sent.mjs')}`, { stdio: 'inherit' });
