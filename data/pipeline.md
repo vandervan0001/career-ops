@@ -6,6 +6,12 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-04
+- [x] https://www.jobup.ch/en/jobs/detail/a967b2e6-0d6d-4783-a4b5-b72d64ee71c9/ | FOKUS Talent / client Fribourg | Ingénieur Automation PLC Siemens (Matran FR) → #085 Evaluated 3.2/5 CDI tracker uniquement (filon canton FR solutions automation)
+- [x] https://www.linkedin.com/jobs/view/4409165925/ | W Talent / manufacturier équipements industriels | Responsable Support Technique & Service Clients (Vaud) → #086 Evaluated 3.7/5 CDI mid-mgmt tracker uniquement (filon Bobst/Tornos/Schleuniger)
+- [x] https://www.linkedin.com/jobs/view/4407708431/ | qiibee | Head of AI & Automation (remote Suisse) → SKIP automation digitale/blockchain hors scope OT industriel
+- [x] https://www.jobup.ch/en/jobs/detail/2462ed7b-6b37-43ab-b791-d3119b7d3e2b/ | Gi Group SA | Technicien Maintenance Automation (Neuchâtel) → SKIP niveau technicien
+
 ### 2026-04-30
 - [x] https://www.jobup.ch/en/jobs/detail/d7080519-3f71-414d-8b74-ffda149a07e8/ | Randstad / Client Biotech | Ingénieur Automation 36 mois (Aubonne VD) → #080 Evaluated 4.2/5 MANDAT FREELANCE — contacter Randstad pour qualifier TJM
 - [x] https://www.jobs.ch/en/vacancies/detail/e93db5fe-f872-4f4e-b246-4eecac616251/ | UCB-Pharma SA | CSV & Automation Qualification Specialist (Bulle) → #081 Evaluated 3.2/5 CDI tracker uniquement
