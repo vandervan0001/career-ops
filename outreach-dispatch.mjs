@@ -70,10 +70,12 @@ function loadSignatureHtml() {
 }
 
 function buildHtmlEmail(text) {
-  // Sépare le corps principal de la signature texte (avant "Bien cordialement,")
-  const sigIdx = String(text).indexOf('Bien cordialement,');
+  // Sépare le corps principal de la signature texte (FR ou EN selon le marker présent)
+  const idxFr = String(text).indexOf('Bien cordialement,');
+  const idxEn = String(text).indexOf('Best regards,');
+  const sigIdx = idxFr > -1 ? idxFr : idxEn;
+  const closure = idxEn > -1 && (idxFr === -1 || idxEn < idxFr) ? 'Best regards,' : 'Bien cordialement,';
   const mainRaw = sigIdx > -1 ? String(text).slice(0, sigIdx).trimEnd() : String(text);
-  const closure = 'Bien cordialement,';
 
   const escape = (s) => s
     .replace(/&/g, '&amp;')
@@ -129,13 +131,35 @@ function saveTable(_header, rows) {
 
 function greeting(row) {
   const contact = (row.contact || '').trim();
-  if (!contact) return 'Bonjour,';
+  const lang = rowLang(row);
+  if (!contact) return lang === 'en' ? 'Hi,' : 'Bonjour,';
   const parts = contact.split(' ');
-  const lastName = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];
-  return `Bonjour Monsieur/Madame ${lastName},`;
+  const firstName = parts[0];
+  const lastName = parts.length > 1 ? parts.slice(1).join(' ') : firstName;
+  return lang === 'en' ? `Hi ${firstName},` : `Bonjour Monsieur/Madame ${lastName},`;
+}
+
+// Détecte la langue d'envoi: "lang=en" dans notes, ou target_type=siemens_partner.
+function rowLang(row) {
+  const notes = String(row.notes || '').toLowerCase();
+  const target = String(row.target_type || '').toLowerCase();
+  if (/\blang=en\b/.test(notes) || target === 'siemens_partner') return 'en';
+  return 'fr';
+}
+
+// Template anglais pour Siemens Solution Partners alémaniques: angle "francophone partner for Suisse romande projects"
+function initialEmailEn(row, profile) {
+  const blocks = [greeting(row)];
+  blocks.push("I came across your work as a Siemens Solution Partner. When you win projects in Suisse romande, you may need a local French-speaking automation engineer for the on-site phase (FAT, SAT, commissioning, customer handover).");
+  blocks.push("I'm a freelance automation engineer based near Lausanne. I support integrators on the Romandie portion of their projects: TIA Portal, WinCC, PCS 7, on-site commissioning, and customer-facing FAT/SAT. Native French, fluent English, no travel cost from Zurich or Basel.");
+  blocks.push("Happy to be on your radar for the next project that needs a local pair of hands in Romandie.");
+  blocks.push('Best regards,');
+  blocks.push(profile.consultant?.full_name || 'Tai Van');
+  return blocks.filter(Boolean).join('\n\n');
 }
 
 function initialEmail(row, profile) {
+  if (rowLang(row) === 'en') return initialEmailEn(row, profile);
   const ctx = contextLine(row);
   const blocks = [greeting(row)];
   if (ctx) blocks.push(ctx);
@@ -305,7 +329,10 @@ async function main() {
 
   for (const row of selected) {
     const stage = stageForStatus(row.status);
-    const subjectLine = OVERRIDE_SUBJECT || subjectForRow(row, profile);
+    const subjectLine = OVERRIDE_SUBJECT
+      || (rowLang(row) === 'en'
+            ? `Romandie commissioning support — ${row.company}`
+            : subjectForRow(row, profile));
     const body = OVERRIDE_BODY || bodyForStage(stage, row, profile);
     const filePath = join(QUEUE_DIR, `${slugify(row.company)}-${stage}.txt`);
     writeFileSync(filePath, `${body}\n`);
