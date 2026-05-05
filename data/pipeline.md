@@ -6,6 +6,17 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-05
+- [x] https://www.jobup.ch/fr/emplois/detail/c5f97d23-eea6-41cb-a639-6cc0dc21778e/ | Dietrich Engineering Consultants (DEC Group) | Spécialiste de mise en service / Chef de chantier (Cheseaux VD) → #087 Evaluated 3.0/5 CDI tracker uniquement (CFC + 80% travel hors zone, filon DEC Group à exploiter prospection)
+- [x] https://www.jobup.ch/fr/emplois/detail/8d3a80a5-c979-49eb-91f0-31e122b0237b/ | Dietrich Engineering Consultants (DEC Group) | Services Automation & Software Engineer (Ecublens VD) → #088 Evaluated 3.4/5 CDI tracker uniquement (mid 2+ ans, GAMP5 pharma OK)
+- [x] https://www.jobup.ch/fr/emplois/detail/a2856022-9314-48cb-85a2-a4aff4181b20/ | Agap2 - HIQ Consulting AG | Automation Engineer (Lausanne) → #089 Evaluated 4.0/5 CDI tracker + filon partenariat payrolling (Luca Bella Thelliez +41 78 252 21 72)
+- [x] https://jobs.takeda.com/job/neuchatel/automation-data-engineer/1113/93903288864 | Takeda Pharmaceutical | Automation Data Engineer (Neuchâtel) → #090 Evaluated 3.6/5 CDI tracker uniquement (Data Engineering plus que OT, mid)
+- [x] https://www.jobup.ch/fr/emplois/detail/a8bfbe10-adbc-48fb-9568-de4a0de319aa/ | Metalor Marin-Epagnier | Responsable Automation et Electricité → SKIP DUP (#83 déjà évalué 3.4/5)
+- [x] https://www.jobup.ch/fr/emplois/detail/27958d29-c059-40f3-ad67-c103ac00f63c/ | Experis / Family Office Nyon | IT Infrastructure & Automation Specialist → SKIP IT/Cloud Microsoft 365/Power Automate hors scope OT industriel
+- [x] https://www.jobup.ch/fr/emplois/detail/88cec579-d479-4f79-821b-ee1ac839b6a3/ | Randstad Lausanne | Automaticien CFC → SKIP niveau CFC + salaire 47-87K
+- [x] https://www.linkedin.com/jobs/view/4363844706/ | Amazon Augny FRANCE | Automaticien Spécialiste Systèmes → SKIP géo France
+- [x] https://www.linkedin.com/jobs/view/4407234391/ | Venogy Talent | Automation Engineer EU remote → SKIP recruteur générique sans client identifié
+
 ### 2026-05-04
 - [x] https://www.jobup.ch/en/jobs/detail/a967b2e6-0d6d-4783-a4b5-b72d64ee71c9/ | FOKUS Talent / client Fribourg | Ingénieur Automation PLC Siemens (Matran FR) → #085 Evaluated 3.2/5 CDI tracker uniquement (filon canton FR solutions automation)
 - [x] https://www.linkedin.com/jobs/view/4409165925/ | W Talent / manufacturier équipements industriels | Responsable Support Technique & Service Clients (Vaud) → #086 Evaluated 3.7/5 CDI mid-mgmt tracker uniquement (filon Bobst/Tornos/Schleuniger)
