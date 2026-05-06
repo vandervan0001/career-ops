@@ -6,6 +6,9 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-06
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/cb3905b9-aa3e-4c63-9206-e21bc765ce29/ | Undisclosed (cabinet) / client automation Neuchâtel | Project Manager (H/F) → #92 Evaluated 3.2/5 CDI tracker uniquement (mid 3-5 ans + client undisclosed, filon probable ETEL SA déjà contacté 2026-05-04 — ad confirme besoin actif)
+
 ### 2026-05-05
 - [x] https://www.jobup.ch/fr/emplois/detail/c5f97d23-eea6-41cb-a639-6cc0dc21778e/ | Dietrich Engineering Consultants (DEC Group) | Spécialiste de mise en service / Chef de chantier (Cheseaux VD) → #087 Evaluated 3.0/5 CDI tracker uniquement (CFC + 80% travel hors zone, filon DEC Group à exploiter prospection)
 - [x] https://www.jobup.ch/fr/emplois/detail/8d3a80a5-c979-49eb-91f0-31e122b0237b/ | Dietrich Engineering Consultants (DEC Group) | Services Automation & Software Engineer (Ecublens VD) → #088 Evaluated 3.4/5 CDI tracker uniquement (mid 2+ ans, GAMP5 pharma OK)
