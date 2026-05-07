@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Vanguard CRM</title>
+<script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
+<style>
+  :root {
+    --primary: rgb(0, 21, 163);
+    --primary-light: rgb(40, 70, 200);
+    --primary-bg: rgb(240, 244, 255);
+    --bg: #f6f7f9;
+    --card: #fff;
+    --border: #e2e4e8;
+    --fg: #1a1a2e;
+    --muted: #6c7280;
+    --green: #10b981;
+    --orange: #ea580c;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; font-size: 14px; }
+  .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  /* Sidebar */
+  aside { background: var(--primary); color: #fff; padding: 24px 0; position: sticky; top: 0; height: 100vh; }
+  aside h1 { font-size: 16px; font-weight: 700; padding: 0 24px 24px; border-bottom: 1px solid rgba(255,255,255,0.15); letter-spacing: 0.05em; }
+  aside h1 .v { color: #ffd400; }
+  aside nav { padding: 16px 0; }
+  aside nav button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 24px; background: transparent; color: rgba(255,255,255,0.85); border: none; cursor: pointer; font-size: 14px; transition: background 0.15s; text-align: left; }
+  aside nav button:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  aside nav button.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 600; }
+  aside nav button .icon { font-size: 18px; }
+  aside nav button .badge { margin-left: auto; background: var(--orange); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  aside .footer { position: absolute; bottom: 24px; left: 0; right: 0; padding: 0 24px; font-size: 11px; color: rgba(255,255,255,0.5); }
+  /* Main */
+  main { padding: 32px; overflow-x: hidden; }
+  main h2 { font-size: 22px; font-weight: 600; margin-bottom: 24px; }
+  /* KPI cards */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+  .kpi .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .kpi .value { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .kpi.warn .value { color: var(--orange); }
+  .kpi.ok .value { color: var(--green); }
+  /* Sections */
+  .section { background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 24px; overflow: hidden; }
+  .section .head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .section .head h3 { font-size: 14px; font-weight: 600; }
+  .section .head .count { font-size: 13px; color: var(--muted); }
+  .section .head .actions { display: flex; gap: 8px; }
+  .section .body { padding: 0; }
+  .empty { padding: 32px; text-align: center; color: var(--muted); }
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { text-align: left; padding: 10px 12px; background: #fafbfc; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); position: sticky; top: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:hover { background: #fafbfc; cursor: pointer; }
+  tbody tr.selected { background: var(--primary-bg); }
+  tbody td.company { font-weight: 600; color: var(--fg); }
+  tbody td.contact { color: var(--muted); }
+  tbody td.email { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); }
+  /* Status pills */
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .pill-nouveau { background: #fef3c7; color: #92400e; }
+  .pill-envoye { background: #dbeafe; color: #1e40af; }
+  .pill-relance_1 { background: #fed7aa; color: #9a3412; }
+  .pill-relance_2 { background: #fecaca; color: #991b1b; }
+  .pill-reponse { background: #d1fae5; color: #065f46; }
+  .pill-rdv { background: #d1fae5; color: #065f46; }
+  .pill-Discarded { background: #e5e7eb; color: #4b5563; }
+  .pill-discarded { background: #e5e7eb; color: #4b5563; }
+  .pill-identifie { background: #f3e8ff; color: #6b21a8; }
+  .pill-perdu { background: #fee2e2; color: #991b1b; }
+  /* Filters */
+  .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filters input, .filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--card); }
+  .filters input { flex: 1; min-width: 200px; }
+  .filters .toggle { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); cursor: pointer; font-size: 13px; font-weight: 500; }
+  .filters .toggle.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  /* Kanban */
+  .kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .kanban-col { background: #f0f1f3; border-radius: 8px; padding: 12px; min-height: 200px; }
+  .kanban-col h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 12px; display: flex; justify-content: space-between; }
+  .kanban-card { background: var(--card); padding: 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid var(--border); cursor: grab; font-size: 13px; }
+  .kanban-card:hover { border-color: var(--primary); }
+  .kanban-card .company { font-weight: 600; margin-bottom: 4px; }
+  .kanban-card .contact { color: var(--muted); font-size: 12px; }
+  /* Detail panel */
+  .detail-panel { position: fixed; top: 0; right: 0; width: 600px; height: 100vh; background: var(--card); border-left: 1px solid var(--border); box-shadow: -4px 0 16px rgba(0,0,0,0.06); overflow-y: auto; z-index: 100; transform: translateX(100%); transition: transform 0.2s; }
+  .detail-panel.open { transform: translateX(0); }
+  .detail-panel .head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+  .detail-panel .head h3 { font-size: 18px; font-weight: 600; }
+  .detail-panel .head .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .detail-panel .close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); }
+  .detail-panel .body { padding: 20px 24px; }
+  .detail-panel .field { margin-bottom: 16px; }
+  .detail-panel .field label { display: block; font-size: 11px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.05em; }
+  .detail-panel .field input, .detail-panel .field select, .detail-panel .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+  .detail-panel .field textarea { resize: vertical; min-height: 80px; font-family: ui-monospace, monospace; font-size: 12px; }
+  .detail-panel .field .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .detail-panel .actions { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { padding: 8px 14px; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-secondary { background: #f0f1f3; color: var(--fg); }
+  .btn-secondary:hover { background: #e2e4e8; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* Mail rendering */
+  .mail-body { background: #fafbfc; border: 1px solid var(--border); border-radius: 6px; padding: 16px; white-space: pre-wrap; font-family: ui-monospace, 'SF Mono', monospace; font-size: 12.5px; line-height: 1.6; }
+  .mail-meta { display: grid; grid-template-columns: 80px 1fr; gap: 4px 12px; margin-bottom: 12px; font-size: 12px; }
+  .mail-meta dt { font-weight: 600; color: var(--muted); }
+  .mail-meta dd { color: var(--fg); }
+  /* Bar chart */
+  .bar { display: flex; align-items: end; gap: 2px; height: 80px; padding: 8px 0; }
+  .bar-item { flex: 1; background: var(--primary); border-radius: 2px 2px 0 0; min-height: 4px; position: relative; transition: opacity 0.2s; }
+  .bar-item:hover { opacity: 0.8; }
+  .bar-item .label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--muted); white-space: nowrap; }
+  .bar-item .val { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 600; }
+  /* Distribution */
+  .dist { display: flex; height: 24px; border-radius: 4px; overflow: hidden; }
+  .dist-seg { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; transition: opacity 0.2s; }
+  .dist-seg:hover { opacity: 0.85; }
+</style>
+</head>
+<body x-data="crm()" x-init="init()">
+<div class="app">
+  <aside>
+    <h1><span class="v">▲</span> Vanguard CRM</h1>
+    <nav>
+      <button :class="{active: tab==='today'}" @click="tab='today'"><span class="icon">🔥</span> Aujourd'hui <span class="badge" x-show="todayBadge > 0" x-text="todayBadge"></span></button>
+      <button :class="{active: tab==='pipeline'}" @click="tab='pipeline'"><span class="icon">📤</span> Pipeline</button>
+      <button :class="{active: tab==='mails'}" @click="tab='mails'"><span class="icon">📧</span> Mails</button>
+      <button :class="{active: tab==='linkedin'}" @click="tab='linkedin'"><span class="icon">🤝</span> LinkedIn</button>
+      <button :class="{active: tab==='mandats'}" @click="tab='mandats'"><span class="icon">📊</span> Mandats</button>
+      <button :class="{active: tab==='stats'}" @click="tab='stats'"><span class="icon">📈</span> Stats</button>
+    </nav>
+    <div class="footer">
+      <div x-text="'Last sync: ' + lastSync"></div>
+      <div style="margin-top: 4px;">SMTP <span style="color: #4ade80;">●</span> Workspace</div>
+    </div>
+  </aside>
+
+  <main>
+    <!-- TAB: AUJOURD'HUI -->
+    <div x-show="tab==='today'" x-cloak>
+      <h2>🔥 Aujourd'hui — <span x-text="today"></span></h2>
+      <div class="kpis">
+        <div class="kpi"><div class="label">Envoyés aujourd'hui</div><div class="value" x-text="kpis.sentToday || 0"></div></div>
+        <div class="kpi"><div class="label">Cette semaine</div><div class="value" x-text="kpis.sentThisWeek || 0"></div></div>
+        <div class="kpi"><div class="label">Total envoyés</div><div class="value" x-text="kpis.totalSent || 0"></div></div>
+        <div class="kpi ok"><div class="label">Taux réponse</div><div class="value" x-text="kpis.responseRate || '0.0%'"></div></div>
+        <div class="kpi"><div class="label">Drafts en queue</div><div class="value" x-text="kpis.totalDrafts || 0"></div></div>
+        <div class="kpi"><div class="label">Opens trackés</div><div class="value" x-text="kpis.totalOpens || 0"></div></div>
+      </div>
+
+      <div class="section" x-show="actions.responded && actions.responded.length">
+        <div class="head"><h3>🟢 Réponses à traiter en priorité</h3><span class="count" x-text="(actions.responded||[]).length + ' réponse(s)'"></span></div>
+        <div class="body">
+          <table>
+            <thead><tr><th>Boîte</th><th>Contact</th><th>Status</th><th>Date envoi</th><th>Notes</th></tr></thead>
+            <tbody>
+              <template x-for="p in (actions.responded||[])" :key="p.id">
+                <tr @click="openProspect(p)">
+                  <td class="company" x-text="p.company"></td>
+                  <td class="contact" x-text="p.contact || '—'"></td>
+                  <td><span class="pill" :class="'pill-' + p.status" x-text="p.status"></span></td>
+                  <td x-text="p.date_envoi || '—'"></td>
+                  <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" x-text="p.notes"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h3>📤 Drafts à envoyer (status=nouveau)</h3><span class="count" x-text="(actions.drafts||[]).length + ' drafts'"></span></div>
+        <div class="body">
+          <template x-if="(actions.drafts||[]).length === 0">
+            <div class="empty">Pas de drafts. Pipeline vide pour aujourd'hui — peut-être lancer un scan.</div>
+          </template>
+          <table x-show="(actions.drafts||[]).length > 0">
+            <thead><tr><th>Boîte</th><th>Contact</th><th>Email</th><th>Score</th><th>Signal</th></tr></thead>
+            <tbody>
+              <template x-for="p in (actions.drafts||[])" :key="p.id">
+                <tr @click="openProspect(p)">
+                  <td class="company" x-text="p.company"></td>
+                  <td class="contact" x-text="p.contact || '—'"></td>
+                  <td class="email" x-text="p.email"></td>
+                  <td x-text="p.score"></td>
+                  <td style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" x-text="p.signal"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" x-show="(actions.dueFollowups||[]).length > 0">
+        <div class="head"><h3>⏰ Follow-ups dus (J+7+ sans réponse)</h3><span class="count" x-text="(actions.dueFollowups||[]).length"></span></div>
+        <div class="body">
+          <table>
+            <thead><tr><th>Boîte</th><th>Contact</th><th>Status</th><th>Envoyé le</th><th>Jours</th><th>Action</th></tr></thead>
+            <tbody>
+              <template x-for="p in (actions.dueFollowups||[])" :key="p.id">
+                <tr>
+                  <td class="company" x-text="p.company"></td>
+                  <td class="contact" x-text="p.contact || '—'"></td>
+                  <td><span class="pill" :class="'pill-' + p.status" x-text="p.status"></span></td>
+                  <td x-text="p.date_envoi"></td>
+                  <td x-text="daysSince(p.date_envoi) + 'j'"></td>
+                  <td><button class="btn btn-primary" @click="relance(p.id)">Relancer</button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" x-show="(actions.bounces||[]).length > 0">
+        <div class="head"><h3>⚠️ Bounces non traités</h3><span class="count" x-text="(actions.bounces||[]).length"></span></div>
+        <div class="body">
+          <table>
+            <thead><tr><th>Boîte</th><th>Contact</th><th>Notes</th></tr></thead>
+            <tbody>
+              <template x-for="p in (actions.bounces||[])" :key="p.id">
+                <tr @click="openProspect(p)">
+                  <td class="company" x-text="p.company"></td>
+                  <td class="contact" x-text="p.contact || '—'"></td>
+                  <td style="max-width: 500px;" x-text="p.notes"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" x-show="(actions.liAccepted||[]).length > 0">
+        <div class="head"><h3>🤝 LinkedIn acceptés (à messager)</h3><span class="count" x-text="(actions.liAccepted||[]).length"></span></div>
+        <div class="body">
+          <table>
+            <thead><tr><th>Contact</th><th>Boîte</th><th>Lien</th></tr></thead>
+            <tbody>
+              <template x-for="li in (actions.liAccepted||[])" :key="li.linkedin">
+                <tr><td x-text="li.contact"></td><td x-text="li.company"></td><td><a :href="li.linkedin" target="_blank" x-text="li.linkedin"></a></td></tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PIPELINE -->
+    <div x-show="tab==='pipeline'" x-cloak>
+      <h2>📤 Pipeline</h2>
+      <div class="filters">
+        <input type="search" placeholder="Recherche (boîte, contact, email, signal...)" x-model="filter.q">
+        <select x-model="filter.status">
+          <option value="">Tous statuts</option>
+          <template x-for="s in availableStatuses" :key="s"><option :value="s" x-text="s"></option></template>
+        </select>
+        <select x-model="filter.targetType">
+          <option value="">Tous types</option>
+          <template x-for="t in availableTargetTypes" :key="t"><option :value="t" x-text="t"></option></template>
+        </select>
+        <button class="toggle" :class="{active: !kanban}" @click="kanban=false">Tableau</button>
+        <button class="toggle" :class="{active: kanban}" @click="kanban=true">Kanban</button>
+        <span style="margin-left:auto; color:var(--muted); font-size:12px;" x-text="filteredProspects.length + ' / ' + prospects.length"></span>
+      </div>
+
+      <!-- Table view -->
+      <div x-show="!kanban" class="section">
+        <div class="body">
+          <table>
+            <thead>
+              <tr>
+                <th>Boîte</th><th>Contact</th><th>Email</th><th>Status</th><th>Score</th><th>Date envoi</th><th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="p in filteredProspects.slice(0, 200)" :key="p.id">
+                <tr @click="openProspect(p)" :class="{selected: selected && selected.id===p.id}">
+                  <td class="company" x-text="p.company"></td>
+                  <td class="contact" x-text="p.contact || '—'"></td>
+                  <td class="email" x-text="p.email"></td>
+                  <td><span class="pill" :class="'pill-' + p.status" x-text="p.status"></span></td>
+                  <td x-text="p.score"></td>
+                  <td x-text="p.date_envoi || '—'"></td>
+                  <td x-text="p.target_type || '—'"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Kanban view -->
+      <div x-show="kanban" class="kanban">
+        <template x-for="status in kanbanStatuses" :key="status">
+          <div class="kanban-col">
+            <h4><span x-text="status"></span><span x-text="kanbanGroup(status).length"></span></h4>
+            <template x-for="p in kanbanGroup(status).slice(0, 30)" :key="p.id">
+              <div class="kanban-card" @click="openProspect(p)">
+                <div class="company" x-text="p.company"></div>
+                <div class="contact" x-text="p.contact || p.email"></div>
+              </div>
+            </template>
+            <template x-if="kanbanGroup(status).length > 30">
+              <div style="font-size: 11px; color: var(--muted); text-align: center; padding: 8px;" x-text="'+ ' + (kanbanGroup(status).length - 30) + ' autres'"></div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- TAB: MAILS -->
+    <div x-show="tab==='mails'" x-cloak>
+      <h2>📧 Mails envoyés <span style="font-size: 13px; color: var(--muted); font-weight: normal;" x-text="'(' + mails.length + ')'"></span></h2>
+      <div class="filters">
+        <input type="search" placeholder="Recherche (boîte, contact, objet, signal...)" x-model="filter.mailQ">
+        <select x-model="filter.mailDate">
+          <option value="">Toutes les dates</option>
+          <template x-for="d in mailDates" :key="d"><option :value="d" x-text="d"></option></template>
+        </select>
+      </div>
+      <div class="section">
+        <div class="body">
+          <table>
+            <thead><tr><th>Date</th><th>Heure</th><th>Boîte</th><th>Contact</th><th>Objet</th></tr></thead>
+            <tbody>
+              <template x-for="m in filteredMails.slice(0, 200)" :key="m.path">
+                <tr @click="selected = {kind: 'mail', mail: m}; detailOpen = true">
+                  <td x-text="m.date"></td>
+                  <td style="font-variant-numeric: tabular-nums; font-size: 12px;" x-text="(m.timestamp.split('T')[1] || '').slice(0,5)"></td>
+                  <td class="company" x-text="m.company"></td>
+                  <td class="contact" x-text="m.contact"></td>
+                  <td x-text="m.subject"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LINKEDIN -->
+    <div x-show="tab==='linkedin'" x-cloak>
+      <h2>🤝 LinkedIn invitations</h2>
+      <div class="section">
+        <div class="head"><h3>Toutes les invitations</h3><span class="count" x-text="linkedin.length + ' total'"></span></div>
+        <div class="body">
+          <table>
+            <thead><tr><th>Date</th><th>Contact</th><th>Boîte</th><th>Status</th><th>Lien</th></tr></thead>
+            <tbody>
+              <template x-for="li in linkedin" :key="li.linkedin + li.contact">
+                <tr>
+                  <td x-text="li.date"></td>
+                  <td x-text="li.contact"></td>
+                  <td class="company" x-text="li.company"></td>
+                  <td><span class="pill" :class="'pill-' + li.status" x-text="li.status"></span></td>
+                  <td><a :href="li.linkedin.startsWith('http') ? li.linkedin : 'https://' + li.linkedin" target="_blank" style="font-size: 11px;" x-text="li.linkedin.replace('https://www.linkedin.com', '')"></a></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: MANDATS -->
+    <div x-show="tab==='mandats'" x-cloak>
+      <h2>📊 Mandats — opportunités CDI / PRESTA <span style="font-size: 13px; color: var(--muted); font-weight: normal;" x-text="'(' + mandats.length + ')'"></span></h2>
+      <div class="section">
+        <div class="body">
+          <table>
+            <thead><tr><th>#</th><th>Date</th><th>Client</th><th>Mandat</th><th>Score</th><th>Status</th><th>Notes</th></tr></thead>
+            <tbody>
+              <template x-for="m in mandats" :key="m.num">
+                <tr>
+                  <td x-text="m.num"></td>
+                  <td x-text="m.date"></td>
+                  <td class="company" x-text="m.client"></td>
+                  <td x-text="m.mandat"></td>
+                  <td x-text="m.score"></td>
+                  <td><span class="pill" :class="'pill-' + (m.status||'').toLowerCase().replace(/\s+/g, '_')" x-text="m.status"></span></td>
+                  <td style="max-width: 400px; font-size: 12px; color: var(--muted);" x-text="m.notes"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: STATS -->
+    <div x-show="tab==='stats'" x-cloak>
+      <h2>📈 Stats</h2>
+
+      <div class="section">
+        <div class="head"><h3>Envois par jour (30 derniers jours)</h3></div>
+        <div class="body" style="padding: 24px 20px 32px;">
+          <div class="bar">
+            <template x-for="d in stats.dailySends" :key="d.date">
+              <div class="bar-item" :style="'height: ' + (d.count / maxDaily * 100) + '%'" :title="d.date + ': ' + d.count">
+                <span class="val" x-text="d.count"></span>
+                <span class="label" x-text="d.date.slice(5)"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h3>Distribution par status</h3></div>
+        <div class="body" style="padding: 20px;">
+          <div class="dist">
+            <template x-for="[status, count] in statusEntries" :key="status">
+              <div class="dist-seg" :class="'pill-' + status" :style="'flex:' + count" :title="status + ': ' + count" x-text="count"></div>
+            </template>
+          </div>
+          <div style="margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px;">
+            <template x-for="[status, count] in statusEntries" :key="status">
+              <div><span class="pill" :class="'pill-' + status" x-text="status"></span> <strong x-text="count"></strong></div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h3>Par target_type</h3></div>
+        <div class="body" style="padding: 20px;">
+          <table>
+            <thead><tr><th>Type</th><th>Count</th></tr></thead>
+            <tbody>
+              <template x-for="[type, count] in Object.entries(stats.byTargetType||{}).sort((a,b)=>b[1]-a[1])" :key="type">
+                <tr><td x-text="type"></td><td x-text="count"></td></tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Detail panel (slide from right) -->
+<div class="detail-panel" :class="{open: detailOpen}" x-show="detailOpen">
+  <template x-if="selected && selected.kind !== 'mail'">
+    <div>
+      <div class="head">
+        <div>
+          <h3 x-text="selected ? selected.company : ''"></h3>
+          <div class="sub" x-text="selected ? (selected.contact || selected.email) : ''"></div>
+        </div>
+        <button class="close" @click="detailOpen=false">×</button>
+      </div>
+      <div class="body">
+        <div class="field"><label>Status</label>
+          <select x-model="selected.status" @change="saveProspect()">
+            <template x-for="s in availableStatuses" :key="s"><option :value="s" x-text="s"></option></template>
+          </select>
+        </div>
+        <div class="field"><label>Contact</label><input type="text" x-model="selected.contact" @blur="saveProspect()"></div>
+        <div class="field"><label>Email</label><input type="email" x-model="selected.email" @blur="saveProspect()"></div>
+        <div class="field"><label>LinkedIn</label><input type="text" x-model="selected.linkedin" @blur="saveProspect()"></div>
+        <div class="field"><label>Signal</label><textarea x-model="selected.signal" @blur="saveProspect()"></textarea></div>
+        <div class="field"><label>Notes</label><textarea x-model="selected.notes" @blur="saveProspect()"></textarea></div>
+        <div class="field row">
+          <div><label>Date envoi</label><input type="text" :value="selected.date_envoi || '—'" disabled></div>
+          <div><label>Score</label><input type="text" x-model="selected.score" @blur="saveProspect()"></div>
+        </div>
+        <template x-if="prospectMails.length > 0">
+          <div style="margin-top: 24px;">
+            <label style="display:block; font-size:11px; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Mails envoyés à ce contact</label>
+            <template x-for="m in prospectMails" :key="m.path">
+              <div style="background:#fafbfc; border:1px solid var(--border); border-radius:6px; padding:10px 12px; margin-bottom:8px; font-size:12px; cursor:pointer;" @click="selected={kind:'mail', mail:m}">
+                <div style="font-weight:600;" x-text="m.subject"></div>
+                <div style="color:var(--muted);" x-text="m.date + ' • ' + m.stage"></div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+      <div class="actions">
+        <button class="btn btn-success" @click="setStatus('reponse')">✓ Répondu</button>
+        <button class="btn btn-success" @click="setStatus('rdv')">📅 RDV</button>
+        <button class="btn btn-secondary" @click="setStatus('Discarded')">Discard</button>
+        <template x-if="['envoye','relance_1'].includes(selected && selected.status)">
+          <button class="btn btn-primary" @click="relance(selected.id)">Relance</button>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="selected && selected.kind === 'mail'">
+    <div>
+      <div class="head">
+        <div>
+          <h3 x-text="selected.mail.subject"></h3>
+          <div class="sub" x-text="selected.mail.company + ' • ' + selected.mail.date"></div>
+        </div>
+        <button class="close" @click="detailOpen=false; selected=null">×</button>
+      </div>
+      <div class="body">
+        <dl class="mail-meta">
+          <dt>De</dt><dd x-text="selected.mail.to ? 'tai.van@vanguard-systems.ch' : ''"></dd>
+          <dt>À</dt><dd x-text="selected.mail.to"></dd>
+          <dt>Stage</dt><dd x-text="selected.mail.stage"></dd>
+          <dt>Sector</dt><dd x-text="selected.mail.sector"></dd>
+          <dt>Signal</dt><dd x-text="selected.mail.signal"></dd>
+          <dt>Msg-ID</dt><dd style="font-family: ui-monospace, monospace; font-size:11px;" x-text="selected.mail.messageId"></dd>
+        </dl>
+        <div class="mail-body" x-text="selected.mail.body"></div>
+      </div>
+    </div>
+  </template>
+</div>
+
+<script>
+function crm() {
+  return {
+    tab: 'today',
+    today: new Date().toISOString().slice(0, 10),
+    lastSync: '—',
+    prospects: [],
+    mandats: [],
+    linkedin: [],
+    mails: [],
+    kpis: {},
+    actions: {},
+    stats: {},
+    selected: null,
+    detailOpen: false,
+    kanban: false,
+    filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '' },
+    kanbanStatuses: ['nouveau', 'envoye', 'relance_1', 'relance_2', 'reponse', 'Discarded'],
+
+    async init() {
+      await this.refresh();
+      // Auto-refresh every 60s
+      setInterval(() => this.refresh(), 60000);
+    },
+
+    async refresh() {
+      try {
+        const [p, m, li, ml, t, s] = await Promise.all([
+          fetch('/api/prospects').then(r => r.json()),
+          fetch('/api/mandats').then(r => r.json()),
+          fetch('/api/linkedin').then(r => r.json()),
+          fetch('/api/mails').then(r => r.json()),
+          fetch('/api/today').then(r => r.json()),
+          fetch('/api/stats').then(r => r.json()),
+        ]);
+        this.prospects = p;
+        this.mandats = m;
+        this.linkedin = li;
+        this.mails = ml;
+        this.kpis = t.kpis || {};
+        this.actions = t.actions || {};
+        this.stats = s;
+        this.lastSync = new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
+      } catch (err) {
+        console.error('refresh failed', err);
+      }
+    },
+
+    get todayBadge() {
+      return (this.actions.responded || []).length + (this.actions.bounces || []).length + (this.actions.liAccepted || []).length;
+    },
+
+    get availableStatuses() {
+      const set = new Set(this.prospects.map(p => p.status).filter(Boolean));
+      return [...set].sort();
+    },
+
+    get availableTargetTypes() {
+      const set = new Set(this.prospects.map(p => p.target_type).filter(Boolean));
+      return [...set].sort();
+    },
+
+    get filteredProspects() {
+      const q = (this.filter.q || '').toLowerCase().trim();
+      return this.prospects.filter(p => {
+        if (this.filter.status && p.status !== this.filter.status) return false;
+        if (this.filter.targetType && p.target_type !== this.filter.targetType) return false;
+        if (q) {
+          const blob = (p.company + ' ' + (p.contact || '') + ' ' + (p.email || '') + ' ' + (p.signal || '') + ' ' + (p.notes || '')).toLowerCase();
+          if (!blob.includes(q)) return false;
+        }
+        return true;
+      });
+    },
+
+    kanbanGroup(status) {
+      return this.filteredProspects.filter(p => p.status === status);
+    },
+
+    get statusEntries() {
+      return Object.entries(this.stats.byStatus || {}).sort((a, b) => b[1] - a[1]);
+    },
+
+    get maxDaily() {
+      return Math.max(1, ...(this.stats.dailySends || []).map(d => d.count));
+    },
+
+    get mailDates() {
+      return [...new Set(this.mails.map(m => m.date))];
+    },
+
+    get filteredMails() {
+      const q = (this.filter.mailQ || '').toLowerCase().trim();
+      return this.mails.filter(m => {
+        if (this.filter.mailDate && m.date !== this.filter.mailDate) return false;
+        if (q) {
+          const blob = (m.company + ' ' + m.contact + ' ' + m.subject + ' ' + (m.signal || '') + ' ' + m.body).toLowerCase();
+          if (!blob.includes(q)) return false;
+        }
+        return true;
+      });
+    },
+
+    get prospectMails() {
+      if (!this.selected || this.selected.kind === 'mail' || !this.selected.company) return [];
+      return this.mails.filter(m => m.company === this.selected.company);
+    },
+
+    openProspect(p) {
+      this.selected = { ...p };
+      this.detailOpen = true;
+    },
+
+    async saveProspect() {
+      if (!this.selected || !('id' in this.selected)) return;
+      try {
+        const res = await fetch(`/api/prospects/${this.selected.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.selected),
+        });
+        if (res.ok) {
+          // Update local cache
+          const updated = await res.json();
+          const idx = this.prospects.findIndex(p => p.id === this.selected.id);
+          if (idx >= 0) this.prospects[idx] = { ...updated, id: this.selected.id };
+        }
+      } catch (err) { console.error('saveProspect failed', err); }
+    },
+
+    async setStatus(status) {
+      if (!this.selected) return;
+      this.selected.status = status;
+      await this.saveProspect();
+      await this.refresh();
+    },
+
+    daysSince(dateStr) {
+      if (!dateStr) return 0;
+      const d = new Date(dateStr);
+      return Math.floor((new Date() - d) / (1000 * 60 * 60 * 24));
+    },
+
+    async relance(id) {
+      if (!confirm('Lancer une relance pour cette cible ?')) return;
+      try {
+        const res = await fetch(`/api/relance/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          alert('Relance envoyée.');
+          await this.refresh();
+        } else {
+          alert('Erreur: ' + (data.error || 'unknown'));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    },
+  };
+}
+</script>
+</body>
+</html>

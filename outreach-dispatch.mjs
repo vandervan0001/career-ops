@@ -69,7 +69,43 @@ function loadSignatureHtml() {
   return readFileSync(path, 'utf-8');
 }
 
-function buildHtmlEmail(text) {
+function loadTrackingConfig() {
+  const path = join(ROOT, 'config', 'tracking.yml');
+  if (!existsSync(path)) return { enabled: false };
+  try {
+    const cfg = yaml.load(readFileSync(path, 'utf-8')) || {};
+    return cfg.enabled && cfg.base_url ? cfg : { enabled: false };
+  } catch { return { enabled: false }; }
+}
+
+// Génère un msgId opaque pour chaque mail (utilisé par les liens tracker)
+function generateMsgId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// Réécrit le HTML pour:
+// 1. Wrapper chaque <a href="..."> par {base_url}/c/{msgId}?u={encoded}
+// 2. Ajouter un pixel <img> 1x1 à la fin du <body>
+function injectTracking(html, msgId) {
+  const cfg = loadTrackingConfig();
+  if (!cfg.enabled) return html;
+  const base = cfg.base_url.replace(/\/$/, '');
+
+  // Wrap links (mais pas les mailto:, tel:, # ni cid:)
+  let wrapped = html.replace(/(<a\s+[^>]*href=)["']([^"']+)["']/gi, (m, prefix, url) => {
+    if (/^(mailto:|tel:|#|cid:)/i.test(url)) return m;
+    if (url.startsWith(base)) return m; // déjà tracké
+    return `${prefix}"${base}/c/${msgId}?u=${encodeURIComponent(url)}"`;
+  });
+
+  // Pixel à la fin du body
+  const pixel = `<img src="${base}/t/${msgId}.png" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />`;
+  wrapped = wrapped.replace(/<\/body>/i, `${pixel}\n</body>`);
+
+  return wrapped;
+}
+
+function buildHtmlEmail(text, msgId) {
   // Sépare le corps principal de la signature texte (FR ou EN selon le marker présent)
   const idxFr = String(text).indexOf('Bien cordialement,');
   const idxEn = String(text).indexOf('Best regards,');
@@ -91,7 +127,7 @@ function buildHtmlEmail(text) {
 
   const signatureHtml = loadSignatureHtml();
 
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -119,6 +155,7 @@ function buildHtmlEmail(text) {
   </table>
 </body>
 </html>`;
+  return msgId ? injectTracking(html, msgId) : html;
 }
 
 function loadTable() {
@@ -254,12 +291,14 @@ function appendNote(existing, note) {
 }
 
 async function sendMail(mailer, smtp, row, subjectLine, body) {
+  const trackingMsgId = generateMsgId();
   return mailer.sendMail({
     from: `"${smtp.from.name}" <${smtp.from.address}>`,
     to: row.email,
     subject: subjectLine,
     text: body,
-    html: buildHtmlEmail(body),
+    html: buildHtmlEmail(body, trackingMsgId),
+    headers: { 'X-Vanguard-Track-Id': trackingMsgId },
   });
 }
 

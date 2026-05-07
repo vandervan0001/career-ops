@@ -1,0 +1,8 @@
+name = "vanguard-tracker"
+main = "cloudflare-worker.js"
+compatibility_date = "2026-05-07"
+
+# Replace with your CRM webhook URL after Cloudflare Tunnel setup
+# (see README.md for full setup instructions)
+[vars]
+CRM_WEBHOOK = "https://crm.vanguard-systems.ch"
