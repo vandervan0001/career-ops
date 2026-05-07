@@ -30,6 +30,7 @@ import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import yaml from 'js-yaml';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
+import { recordRdv } from './rdv-detector.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SMTP_FILE = join(ROOT, 'config', 'smtp.yml');
@@ -119,7 +120,19 @@ function saveReplyBody(prospect, parsed, classification) {
     `Prospect: ${prospect.company} (${prospect.contact || prospect.email})`,
   ].join('\n');
   writeFileSync(path, `${headers}\n--- BODY ---\n${body}\n`);
-  return fname;
+
+  // Sauvegarde l'ICS attaché (text/calendar) si présent → utilisé par rdv-detector
+  let icsContent = null;
+  for (const att of (parsed.attachments || [])) {
+    if (/text\/calendar/i.test(att.contentType || '')) {
+      const icsPath = join(REPLIES_DIR, `${ts}-${slug}.ics`);
+      const buf = att.content || Buffer.from('');
+      writeFileSync(icsPath, buf);
+      icsContent = buf.toString('utf-8');
+      break;
+    }
+  }
+  return { fname, body, icsContent };
 }
 
 const STATUS_FROM_CLASS = {
@@ -176,32 +189,48 @@ async function checkReplies({ days, dryRun }) {
         stats.matched++;
 
         const { row: prospect, idx } = match;
-        // Update only if prospect was in active outreach
-        if (!['envoye', 'relance_1', 'relance_2', 'nouveau'].includes(prospect.status)) {
-          stats.skipped++;
-          if (!dryRun) markSeen(messageId, fromAddr, idx, 'already-handled');
-          continue;
-        }
-
+        const isActive = ['envoye', 'relance_1', 'relance_2', 'nouveau'].includes(prospect.status);
         const classification = classify(parsed.subject || '', parsed.text || '');
         stats.byClass[classification] = (stats.byClass[classification] || 0) + 1;
 
         const today = new Date().toISOString().slice(0, 10);
         const subject = (parsed.subject || '(sans sujet)').slice(0, 80);
-        console.log(`\n[${classification.toUpperCase()}] ${prospect.company} (${fromAddr})`);
+        console.log(`\n[${classification.toUpperCase()}] ${prospect.company} (${fromAddr})${isActive ? '' : ' [already-handled]'}`);
         console.log(`  Sujet: ${subject}`);
 
         if (dryRun) continue;
 
-        const replyFile = saveReplyBody(prospect, parsed, classification);
-        const newStatus = classification === 'bounce' ? prospect.status : STATUS_FROM_CLASS[classification];
-        prospect.status = newStatus;
-        const noteTag = classification === 'bounce'
-          ? `BOUNCE ${today}: ${subject}`
-          : `Réponse ${today} (${classification}): ${subject} [reply:${replyFile}]`;
-        prospect.notes = prospect.notes ? `${prospect.notes} | ${noteTag}` : noteTag;
-        markSeen(messageId, fromAddr, idx, classification);
-        stats.updated++;
+        // Toujours sauvegarder le reply (pour RDV detection même si déjà classé)
+        const { fname: replyFile, body: replyBody, icsContent } = saveReplyBody(prospect, parsed, classification);
+
+        // Update prospect status uniquement si en outreach actif
+        if (isActive) {
+          const newStatus = classification === 'bounce' ? prospect.status : STATUS_FROM_CLASS[classification];
+          prospect.status = newStatus;
+          const noteTag = classification === 'bounce'
+            ? `BOUNCE ${today}: ${subject}`
+            : `Réponse ${today} (${classification}): ${subject} [reply:${replyFile}]`;
+          prospect.notes = prospect.notes ? `${prospect.notes} | ${noteTag}` : noteTag;
+          stats.updated++;
+        } else {
+          stats.skipped++;
+        }
+        markSeen(messageId, fromAddr, idx, isActive ? classification : 'already-handled');
+
+        // Détection RDV — toujours tentée, indépendante du status
+        try {
+          const rdv = recordRdv({
+            prospect, prospectIdx: idx, replyFile,
+            body: replyBody, ics: icsContent,
+            fallbackSubject: parsed.subject,
+          });
+          if (rdv && !rdv._duplicate) {
+            stats.rdvDetected = (stats.rdvDetected || 0) + 1;
+            console.log(`  -> RDV détecté: ${rdv.platform} ${rdv.dt_start || '(date à confirmer)'}`);
+          }
+        } catch (err) {
+          console.warn(`  -> Erreur détection RDV: ${err.message}`);
+        }
       }
 
       if (!dryRun && stats.updated > 0) {

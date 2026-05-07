@@ -6,6 +6,7 @@ data/drafts.tsv
 data/tracking.tsv
 data/replies-seen.tsv
 data/replies/
+data/rdv.tsv
 reports/*.md
 !reports/.gitkeep
 output/*

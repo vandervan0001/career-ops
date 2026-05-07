@@ -17,6 +17,7 @@ import { fileURLToPath } from 'url';
 import { execSync, spawn } from 'child_process';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 import { checkReplies } from './check-replies.mjs';
+import { loadRdv, saveRdv, backfillFromReplies } from './rdv-detector.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 7777;
@@ -274,6 +275,15 @@ app.get('/api/today', (req, res) => {
   const generating = relanceDrafts.filter(d => d.status === 'generating').length;
   const scheduled = relanceDrafts.filter(d => d.status === 'scheduled').length;
 
+  // RDV à venir (next 30 days, status != done/declined/expired)
+  const allRdv = loadRdv();
+  const horizon = new Date(Date.now() + 30 * 24 * 60 * 60_000);
+  const nowDate = new Date();
+  const upcomingRdv = allRdv
+    .filter(r => !['done', 'declined', 'expired'].includes(r.status))
+    .filter(r => !r.dt_start || (new Date(r.dt_start) >= new Date(nowDate.getTime() - 60 * 60_000) && new Date(r.dt_start) <= horizon))
+    .sort((a, b) => (a.dt_start || '').localeCompare(b.dt_start || ''));
+
   res.json({
     today,
     kpis: {
@@ -288,6 +298,7 @@ app.get('/api/today', (req, res) => {
       pendingReviewDrafts: pendingReview,
       generatingDrafts: generating,
       scheduledDrafts: scheduled,
+      upcomingRdv: upcomingRdv.length,
     },
     actions: {
       responded,
@@ -295,6 +306,7 @@ app.get('/api/today', (req, res) => {
       drafts: drafts.slice(0, 30),
       bounces,
       liAccepted,
+      upcomingRdv,
     },
   });
 });
@@ -594,6 +606,65 @@ app.get('/api/tracking/:msgId', (req, res) => {
 app.get('/api/tracking', (req, res) => {
   res.json(loadTrackingEvents());
 });
+
+// --- RDV ---
+
+function googleCalendarLink(rdv) {
+  // https://calendar.google.com/calendar/render?action=TEMPLATE&text=...&dates=YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS&details=...&location=...
+  const fmt = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+  };
+  const start = fmt(rdv.dt_start);
+  const end = fmt(rdv.dt_end) || (rdv.dt_start ? fmt(new Date(new Date(rdv.dt_start).getTime() + 30 * 60_000).toISOString()) : '');
+  const params = new URLSearchParams();
+  params.set('action', 'TEMPLATE');
+  params.set('text', rdv.summary || `RDV ${rdv.company}`);
+  if (start && end) params.set('dates', `${start}/${end}`);
+  params.set('details', `Contact: ${rdv.contact} (${rdv.email})\nMeeting: ${rdv.meeting_url || rdv.location || ''}\n\nSource: ${rdv.source_reply_file || ''}`);
+  if (rdv.meeting_url) params.set('location', rdv.meeting_url);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+app.get('/api/rdv', (req, res) => {
+  const rows = loadRdv();
+  // Enrichi avec google_cal_link
+  res.json(rows.map(r => ({ ...r, google_cal_link: googleCalendarLink(r) })));
+});
+
+app.patch('/api/rdv/:id', (req, res) => {
+  const rows = loadRdv();
+  const rdv = rows.find(r => r.id === req.params.id);
+  if (!rdv) return res.status(404).json({ error: 'not found' });
+  const allowed = ['status', 'notes', 'dt_start', 'dt_end', 'summary', 'meeting_url'];
+  for (const k of allowed) if (k in req.body) rdv[k] = String(req.body[k]);
+  saveRdv(rows);
+  res.json(rdv);
+});
+
+app.delete('/api/rdv/:id', (req, res) => {
+  const rows = loadRdv().filter(r => r.id !== req.params.id);
+  saveRdv(rows);
+  res.json({ ok: true });
+});
+
+app.post('/api/rdv/backfill', (req, res) => {
+  const { rows: prospects } = loadProspectionTsv(PROSPECTION_FILE);
+  const stats = backfillFromReplies(prospects);
+  res.json({ ok: true, ...stats });
+});
+
+// Backfill une fois au démarrage
+setTimeout(() => {
+  try {
+    const { rows: prospects } = loadProspectionTsv(PROSPECTION_FILE);
+    const stats = backfillFromReplies(prospects);
+    if (stats.created > 0) console.log(`[rdv backfill] ${stats.created} RDV créés depuis ${stats.scanned} replies`);
+  } catch (err) { console.error('[rdv backfill]', err.message); }
+}, 1500);
 
 // --- IMAP replies scraping ---
 let lastImapCheck = null;

@@ -140,6 +140,19 @@
   .pill-scheduled { background: #fef3c7; color: #92400e; }
   .pill-sent { background: #d1fae5; color: #065f46; }
   .pill-error { background: #fee2e2; color: #991b1b; }
+  /* RDV pills */
+  .pill-pending { background: #fef3c7; color: #92400e; }
+  .pill-confirmed { background: #d1fae5; color: #065f46; }
+  .pill-done { background: #e5e7eb; color: #4b5563; }
+  .pill-declined { background: #fee2e2; color: #991b1b; }
+  .pill-expired { background: #e5e7eb; color: #4b5563; }
+  .pill-teams { background: #ede9fe; color: #5b21b6; }
+  .pill-meet { background: #d1fae5; color: #065f46; }
+  .pill-zoom { background: #dbeafe; color: #1e40af; }
+  .pill-calendly { background: #fed7aa; color: #9a3412; }
+  .pill-webex { background: #fef3c7; color: #92400e; }
+  .pill-whereby { background: #fce7f3; color: #831843; }
+  .pill-unknown { background: #e5e7eb; color: #4b5563; }
   .draft-bulk-bar { background: var(--primary-bg); border: 1px solid var(--primary-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
   .draft-bulk-bar .count { font-weight: 600; color: var(--primary); }
 </style>
@@ -150,6 +163,7 @@
     <h1><span class="v">▲</span> Vanguard CRM</h1>
     <nav>
       <button :class="{active: tab==='today'}" @click="tab='today'"><span class="icon">🔥</span> Aujourd'hui <span class="badge" x-show="todayBadge > 0" x-text="todayBadge"></span></button>
+      <button :class="{active: tab==='rdv'}" @click="tab='rdv'; loadRdv()"><span class="icon">🗓</span> RDV <span class="badge" x-show="rdvBadge > 0" x-text="rdvBadge"></span></button>
       <button :class="{active: tab==='pipeline'}" @click="tab='pipeline'"><span class="icon">📤</span> Pipeline</button>
       <button :class="{active: tab==='drafts'}" @click="tab='drafts'; loadDrafts()"><span class="icon">📝</span> Drafts <span class="badge" x-show="draftsBadge > 0" x-text="draftsBadge"></span></button>
       <button :class="{active: tab==='mails'}" @click="tab='mails'"><span class="icon">📧</span> Mails</button>
@@ -174,6 +188,38 @@
         <div class="kpi ok"><div class="label">Taux réponse</div><div class="value" x-text="kpis.responseRate || '0.0%'"></div></div>
         <div class="kpi"><div class="label">Drafts en queue</div><div class="value" x-text="kpis.totalDrafts || 0"></div></div>
         <div class="kpi"><div class="label">Opens trackés</div><div class="value" x-text="kpis.totalOpens || 0"></div></div>
+      </div>
+
+      <div class="section" x-show="(actions.upcomingRdv||[]).length > 0">
+        <div class="head">
+          <h3>🗓 RDV à venir</h3>
+          <span class="count" x-text="(actions.upcomingRdv||[]).length + ' RDV'"></span>
+        </div>
+        <div class="body">
+          <table>
+            <thead><tr><th>Quand</th><th>Boîte</th><th>Contact</th><th>Plateforme</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <template x-for="r in (actions.upcomingRdv||[])" :key="r.id">
+                <tr>
+                  <td style="font-variant-numeric: tabular-nums; white-space: nowrap;">
+                    <strong x-text="formatRdvDate(r.dt_start)"></strong>
+                    <div style="font-size:11px; color:var(--muted);" x-text="r.dt_start ? rdvCountdown(r.dt_start) : 'date à confirmer'"></div>
+                  </td>
+                  <td class="company" x-text="r.company"></td>
+                  <td class="contact" x-text="r.contact || '—'"></td>
+                  <td><span class="pill" :class="'pill-' + r.platform" x-text="r.platform"></span></td>
+                  <td><span class="pill" :class="'pill-' + r.status" x-text="r.status"></span></td>
+                  <td>
+                    <a x-show="r.meeting_url" :href="r.meeting_url" target="_blank" class="btn btn-success" style="text-decoration:none; font-size:12px;">▶ Rejoindre</a>
+                    <a x-show="r.dt_start" :href="r.google_cal_link" target="_blank" class="btn btn-secondary" style="text-decoration:none; font-size:12px;">📅 Cal</a>
+                    <button class="btn btn-secondary" style="font-size:12px;" @click="setRdvStatus(r, 'confirmed')" x-show="r.status === 'pending'">✓ Confirmé</button>
+                    <button class="btn btn-secondary" style="font-size:12px;" @click="setRdvStatus(r, 'done')" x-show="r.status === 'confirmed'">Fait</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="section" x-show="actions.responded && actions.responded.length">
@@ -285,6 +331,77 @@
           </table>
         </div>
       </div>
+    </div>
+
+    <!-- TAB: RDV -->
+    <div x-show="tab==='rdv'" x-cloak>
+      <h2>🗓 RDV <span style="font-size: 13px; color: var(--muted); font-weight: normal;" x-text="'(' + rdv.length + ')'"></span></h2>
+
+      <div class="kpis">
+        <div class="kpi warn"><div class="label">À confirmer</div><div class="value" x-text="rdv.filter(r=>r.status==='pending').length"></div></div>
+        <div class="kpi ok"><div class="label">Confirmés</div><div class="value" x-text="rdv.filter(r=>r.status==='confirmed').length"></div></div>
+        <div class="kpi"><div class="label">Faits</div><div class="value" x-text="rdv.filter(r=>r.status==='done').length"></div></div>
+        <div class="kpi"><div class="label">Annulés</div><div class="value" x-text="rdv.filter(r=>r.status==='declined').length"></div></div>
+      </div>
+
+      <div class="filters">
+        <select x-model="filter.rdvStatus">
+          <option value="active">À venir (pending + confirmed)</option>
+          <option value="">Tous</option>
+          <option value="pending">À confirmer</option>
+          <option value="confirmed">Confirmés</option>
+          <option value="done">Faits</option>
+          <option value="declined">Annulés</option>
+        </select>
+        <button class="btn btn-secondary" @click="backfillRdv()">🔄 Re-scan replies</button>
+        <span style="margin-left:auto; color:var(--muted); font-size:12px;" x-text="filteredRdv.length + ' RDV'"></span>
+      </div>
+
+      <template x-if="filteredRdv.length === 0">
+        <div class="empty">Aucun RDV. Quand un prospect répond avec une invite Teams/Meet/Zoom, ça apparaît ici automatiquement.</div>
+      </template>
+
+      <template x-for="r in filteredRdv" :key="r.id">
+        <div class="section" style="margin-bottom: 16px;">
+          <div class="head">
+            <div>
+              <h3 x-text="r.summary || ('RDV ' + r.company)"></h3>
+              <div style="font-size:12px; color:var(--muted); margin-top:4px;">
+                <span x-text="r.contact"></span><span x-show="r.contact"> · </span><span x-text="r.email"></span>
+              </div>
+            </div>
+            <div class="actions">
+              <span class="pill" :class="'pill-' + r.platform" x-text="r.platform"></span>
+              <span class="pill" :class="'pill-' + r.status" x-text="r.status"></span>
+            </div>
+          </div>
+          <div class="body" style="padding: 16px 20px;">
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px 12px; font-size: 13px;">
+              <div style="color:var(--muted);">Quand</div>
+              <div><strong x-text="formatRdvDate(r.dt_start)"></strong> <span style="color:var(--muted);" x-text="r.dt_start ? '— ' + rdvCountdown(r.dt_start) : '(date à confirmer)'"></span></div>
+              <div style="color:var(--muted);">Boîte</div>
+              <div class="company" x-text="r.company"></div>
+              <div style="color:var(--muted);" x-show="r.meeting_url">Lien</div>
+              <div x-show="r.meeting_url" style="font-family: ui-monospace, monospace; font-size: 11px; word-break: break-all;"><a :href="r.meeting_url" target="_blank" x-text="r.meeting_url"></a></div>
+              <div style="color:var(--muted);" x-show="r.source_reply_file">Source</div>
+              <div x-show="r.source_reply_file" style="font-size: 12px; cursor: pointer; color: var(--primary);" @click="loadReply(r.source_reply_file); rdvReplyId = r.id">📧 <span x-text="r.source_reply_file"></span></div>
+            </div>
+
+            <template x-if="rdvReplyId === r.id && replyBody">
+              <div class="mail-body" style="margin-top: 12px;" x-text="replyBody"></div>
+            </template>
+
+            <div style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;">
+              <a x-show="r.meeting_url" :href="r.meeting_url" target="_blank" class="btn btn-success" style="text-decoration:none;">▶ Rejoindre</a>
+              <a x-show="r.dt_start" :href="r.google_cal_link" target="_blank" class="btn btn-primary" style="text-decoration:none;">📅 Ajouter à Google Calendar</a>
+              <button class="btn btn-secondary" @click="setRdvStatus(r, 'confirmed')" x-show="r.status === 'pending'">✓ Marquer confirmé</button>
+              <button class="btn btn-secondary" @click="setRdvStatus(r, 'done')" x-show="r.status !== 'done'">✓ Marquer fait</button>
+              <button class="btn btn-secondary" @click="setRdvStatus(r, 'declined')" x-show="r.status !== 'declined' && r.status !== 'done'">✕ Annuler</button>
+              <button class="btn btn-danger" @click="deleteRdv(r)" style="margin-left:auto;">🗑</button>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- TAB: PIPELINE -->
@@ -668,17 +785,21 @@ function crm() {
     drafts: [],
     draftSelection: [],
     followupSelection: [],
+    rdv: [],
+    rdvReplyId: null,
     imapStatus: { lastImapCheck: null, running: false, lastImapStats: null },
     replyBody: '',
-    filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '', draftStatus: 'pending' },
+    filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '', draftStatus: 'pending', rdvStatus: 'active' },
     kanbanStatuses: ['nouveau', 'envoye', 'relance_1', 'relance_2', 'reponse', 'Discarded'],
 
     async init() {
       await this.refresh();
       await this.loadDrafts();
+      await this.loadRdv();
       // Auto-refresh every 60s
       setInterval(() => {
         this.refresh();
+        this.loadRdv();
         // Si on est sur l'onglet drafts ou des drafts sont generating, on les refresh aussi
         if (this.tab === 'drafts' || this.drafts.some(d => d.status === 'generating')) {
           this.refreshDrafts();
@@ -744,6 +865,17 @@ function crm() {
 
     get draftsBadge() {
       return this.drafts.filter(d => d.status === 'pending_review').length;
+    },
+
+    get rdvBadge() {
+      return this.rdv.filter(r => r.status === 'pending').length;
+    },
+
+    get filteredRdv() {
+      const f = this.filter.rdvStatus;
+      if (!f) return this.rdv;
+      if (f === 'active') return this.rdv.filter(r => ['pending', 'confirmed'].includes(r.status));
+      return this.rdv.filter(r => r.status === f);
     },
 
     get filteredDrafts() {
@@ -1033,6 +1165,67 @@ function crm() {
       if (isNaN(d.getTime())) return '';
       const pad = n => String(n).padStart(2, '0');
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    },
+
+    // --- RDV ---
+    async loadRdv() {
+      try {
+        this.rdv = await fetch('/api/rdv').then(r => r.json());
+      } catch (err) { console.error('loadRdv failed', err); }
+    },
+
+    async setRdvStatus(r, newStatus) {
+      const old = r.status;
+      r.status = newStatus;
+      try {
+        await fetch(`/api/rdv/${r.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        await this.refresh();
+        await this.loadRdv();
+      } catch (err) {
+        r.status = old;
+        alert('Erreur: ' + err.message);
+      }
+    },
+
+    async deleteRdv(r) {
+      if (!confirm(`Supprimer le RDV ${r.summary || r.company} ?`)) return;
+      await fetch(`/api/rdv/${r.id}`, { method: 'DELETE' });
+      await this.loadRdv();
+      await this.refresh();
+    },
+
+    async backfillRdv() {
+      try {
+        const data = await fetch('/api/rdv/backfill', { method: 'POST' }).then(r => r.json());
+        alert(`Re-scan: ${data.scanned} replies parcourus, ${data.created} nouveaux RDV détectés.`);
+        await this.loadRdv();
+        await this.refresh();
+      } catch (err) {
+        alert('Erreur: ' + err.message);
+      }
+    },
+
+    formatRdvDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleString('fr-CH', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    },
+
+    rdvCountdown(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const diffMs = d.getTime() - Date.now();
+      const diffH = Math.round(diffMs / (1000 * 60 * 60));
+      if (diffH < 0) return `il y a ${Math.abs(diffH)}h`;
+      if (diffH < 24) return `dans ${diffH}h`;
+      const diffD = Math.round(diffH / 24);
+      return `dans ${diffD}j`;
     },
   };
 }
