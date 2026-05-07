@@ -18,6 +18,11 @@ import { execSync, spawn } from 'child_process';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 import { checkReplies } from './check-replies.mjs';
 import { loadRdv, saveRdv, backfillFromReplies, syncFromCalendarJson } from './rdv-detector.mjs';
+import {
+  loadCarnet, saveCarnet, nextCarnetId, ficheSlug, fichePath,
+  syncFiche, readFiche, writeFicheRaw, appendJournal, recordTouch,
+  buildFromProspect, computeNextTouchDue, CARNET_COLUMNS, CARNET_DIR,
+} from './carnet.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 7777;
@@ -306,6 +311,18 @@ app.get('/api/today', (req, res) => {
 
   const allClients = loadClients();
   const activeClients = allClients.filter(c => ['active', 'signed'].includes(c.status));
+
+  // Carnet : contacts à relancer (next_touch_due dans <=7j ou en retard)
+  const carnetRows = loadCarnet();
+  const carnetActive = carnetRows.filter(c => c.status === 'active');
+  const horizonCarnet = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const carnetToTouch = carnetActive
+    .filter(c => c.next_touch_due && new Date(c.next_touch_due).getTime() <= horizonCarnet)
+    .map(c => ({
+      ...c,
+      days_until_due: Math.round((new Date(c.next_touch_due).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+    }))
+    .sort((a, b) => a.days_until_due - b.days_until_due);
   const monthlyRecurring = activeClients.reduce((sum, c) => {
     const t = parseFloat(c.tjm_chf) || 0;
     const d = parseFloat(c.days_per_month) || 0;
@@ -343,6 +360,8 @@ app.get('/api/today', (req, res) => {
       upcomingRdv: upcomingRdv.length,
       activeClients: activeClients.length,
       monthlyRecurringChf: Math.round(monthlyRecurring),
+      carnetActive: carnetActive.length,
+      carnetToTouch: carnetToTouch.length,
     },
     actions: {
       responded,
@@ -353,6 +372,7 @@ app.get('/api/today', (req, res) => {
       upcomingRdv,
       activeClients,
       nextEnding,
+      carnetToTouch,
     },
   });
 });
@@ -980,6 +1000,207 @@ app.post('/api/clients/from-prospect/:idx', (req, res) => {
   res.json(newClient);
 });
 
+// --- Carnet d'adresses ---
+
+function carnetEnriched() {
+  const rows = loadCarnet();
+  const now = Date.now();
+  return rows.map(r => {
+    const due = r.next_touch_due ? new Date(r.next_touch_due).getTime() : null;
+    const days = due !== null ? Math.round((due - now) / (1000 * 60 * 60 * 24)) : null;
+    return { ...r, days_until_due: days, fiche_slug: ficheSlug(r) };
+  });
+}
+
+app.get('/api/carnet', (req, res) => {
+  const sortBy = req.query.sortBy || 'next_touch_due';
+  const rows = carnetEnriched();
+  rows.sort((a, b) => {
+    if (sortBy === 'next_touch_due') {
+      // Overdue d'abord (plus négatif = plus en retard), puis chrono
+      const aD = a.days_until_due ?? 99999;
+      const bD = b.days_until_due ?? 99999;
+      return aD - bD;
+    }
+    return (a[sortBy] || '').localeCompare(b[sortBy] || '');
+  });
+  res.json(rows);
+});
+
+app.get('/api/carnet/:id', (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  res.json({ ...c, fiche_slug: ficheSlug(c) });
+});
+
+app.post('/api/carnet', (req, res) => {
+  const rows = loadCarnet();
+  const newRow = { id: String(nextCarnetId()) };
+  for (const k of CARNET_COLUMNS) {
+    if (k === 'id') continue;
+    newRow[k] = String(req.body[k] ?? '');
+  }
+  if (!newRow.full_name) return res.status(400).json({ error: 'full_name required' });
+  if (!newRow.cadence_days) newRow.cadence_days = '60';
+  if (!newRow.status) newRow.status = 'active';
+  if (!newRow.last_touch) newRow.last_touch = new Date().toISOString().slice(0, 10);
+  if (!newRow.next_touch_due) newRow.next_touch_due = computeNextTouchDue(newRow.last_touch, newRow.cadence_days);
+  rows.push(newRow);
+  saveCarnet(rows);
+  syncFiche(newRow); // crée la fiche markdown
+  res.json({ ...newRow, fiche_slug: ficheSlug(newRow) });
+});
+
+app.patch('/api/carnet/:id', (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  for (const k of CARNET_COLUMNS) {
+    if (k === 'id') continue;
+    if (k in req.body) c[k] = String(req.body[k]);
+  }
+  // Recalcule next_touch_due si last_touch ou cadence ont changé
+  if (('last_touch' in req.body || 'cadence_days' in req.body) && c.last_touch) {
+    c.next_touch_due = computeNextTouchDue(c.last_touch, c.cadence_days);
+  }
+  saveCarnet(rows);
+  syncFiche(c); // sync header de la fiche
+  res.json({ ...c, fiche_slug: ficheSlug(c) });
+});
+
+app.delete('/api/carnet/:id', (req, res) => {
+  const rows = loadCarnet().filter(r => r.id !== req.params.id);
+  saveCarnet(rows);
+  // Note: on garde la fiche markdown sur disque (pour archivage / git history)
+  res.json({ ok: true });
+});
+
+// Read fiche markdown (raw)
+app.get('/api/carnet/:id/fiche', (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  res.type('text/plain').send(readFiche(c));
+});
+
+// Overwrite fiche markdown (raw, full content)
+app.put('/api/carnet/:id/fiche', express.text({ type: '*/*', limit: '500kb' }), (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  writeFicheRaw(c, req.body || '');
+  res.json({ ok: true });
+});
+
+// Mark a "touch" — appends journal entry + updates last_touch + next_touch_due
+app.post('/api/carnet/:id/touch', (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  recordTouch(c, { subject: req.body.subject || 'Contact', body: req.body.body || '' });
+  saveCarnet(rows);
+  res.json({ ok: true, last_touch: c.last_touch, next_touch_due: c.next_touch_due });
+});
+
+// Append journal entry without updating last_touch (juste une note)
+app.post('/api/carnet/:id/journal', (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  appendJournal(c, {
+    date: req.body.date || new Date().toISOString().slice(0, 10),
+    subject: req.body.subject || 'Note',
+    body: req.body.body || '',
+  });
+  res.json({ ok: true });
+});
+
+// Link to a mandat
+app.post('/api/carnet/:id/link-mandat', (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  const num = String(req.body.mandat_num || '').trim();
+  if (!num) return res.status(400).json({ error: 'mandat_num required' });
+  const linked = (c.linked_mandats || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!linked.includes(num)) linked.push(num);
+  c.linked_mandats = linked.join(',');
+  saveCarnet(rows);
+  syncFiche(c);
+  res.json({ ok: true, linked_mandats: c.linked_mandats });
+});
+
+app.post('/api/carnet/:id/unlink-mandat', (req, res) => {
+  const rows = loadCarnet();
+  const c = rows.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  const num = String(req.body.mandat_num || '').trim();
+  c.linked_mandats = (c.linked_mandats || '').split(',').map(s => s.trim()).filter(s => s && s !== num).join(',');
+  saveCarnet(rows);
+  syncFiche(c);
+  res.json({ ok: true, linked_mandats: c.linked_mandats });
+});
+
+// Convert prospect → carnet entry (creates a fiche md, marks the prospect)
+app.post('/api/carnet/from-prospect/:idx', (req, res) => {
+  const { rows: prospects } = loadProspectionTsv(PROSPECTION_FILE);
+  const idx = parseInt(req.params.idx, 10);
+  if (idx < 0 || idx >= prospects.length) return res.status(404).json({ error: 'prospect not found' });
+  const p = prospects[idx];
+  const carnet = loadCarnet();
+  const newRow = buildFromProspect(p, idx, req.body || {});
+  carnet.push(newRow);
+  saveCarnet(carnet);
+  syncFiche(newRow);
+  // Optionnel: marque le prospect comme migré
+  if (req.body.markProspectAsMigrated !== false) {
+    p.target_type = 'carnet_migrated';
+    p.notes = `${p.notes || ''} | → carnet #${newRow.id}`.slice(0, 1000);
+    saveProspectionTsv(PROSPECTION_FILE, prospects);
+  }
+  res.json({ ...newRow, fiche_slug: ficheSlug(newRow) });
+});
+
+// Convert carnet → client (status=converted + créer un client lié)
+app.post('/api/carnet/:id/convert-to-client', (req, res) => {
+  const carnet = loadCarnet();
+  const c = carnet.find(r => r.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'not found' });
+  const clients = loadClients();
+  const newClient = {
+    id: String(nextClientId()),
+    client_name: req.body.client_name || c.company,
+    contact_main: c.full_name,
+    email: c.email,
+    site: req.body.site || c.site,
+    contract_type: req.body.contract_type || 'mandat presta',
+    contract_start: req.body.contract_start || new Date().toISOString().slice(0, 10),
+    contract_end: req.body.contract_end || '',
+    tjm_chf: req.body.tjm_chf || '',
+    days_per_month: req.body.days_per_month || '',
+    status: 'signed',
+    project: req.body.project || '',
+    supplier_id: req.body.supplier_id || '',
+    notes: `Issu du carnet #${c.id} (${c.full_name}). ${(c.notes || '').slice(0, 200)}`,
+  };
+  clients.push(newClient);
+  saveClients(clients);
+  // Marque le carnet entry comme converted
+  c.status = 'converted';
+  saveCarnet(carnet);
+  appendJournal(c, {
+    subject: '🎉 Converti en client',
+    body: `Client créé: ${newClient.client_name} (id ${newClient.id})`,
+  });
+  res.json({ ok: true, client: newClient });
+});
+
+// Liste les mandats disponibles depuis data/mandats.md (pour le dropdown link)
+app.get('/api/mandats-list', (req, res) => {
+  res.json(parseMandatsMd().map(m => ({ num: m.num, client: m.client, mandat: m.mandat, status: m.status })));
+});
+
 // --- Chat assistant ---
 
 const chatSessions = new Map(); // sessionId -> { messages: [{role, content, ts}], created_at }
@@ -998,6 +1219,9 @@ CONTEXTE BUSINESS:
 - Status prospects valides: nouveau, identifie, envoye, relance_1, relance_2, reponse, repondu_pass_poli, rdv, Discarded
 - Clients (contrats actifs): data/clients.tsv (schema: id, client_name, contact_main, email, site, contract_type, contract_start, contract_end, tjm_chf, days_per_month, status, project, supplier_id, notes)
 - Status clients valides: signed, active, paused, completed, terminated
+- Carnet d'adresses (contacts qualifiés): data/carnet.tsv (id, full_name, company, role, site, email, phone, linkedin, last_touch, next_touch_due, cadence_days, status, linked_mandats, notes) + fiches markdown carnet/{slug}.md (journal + idées projets)
+- Status carnet valides: active, dormant, muted, converted, lost
+- Le carnet est distinct du cold pipeline: ce sont des contacts rencontrés/qualifiés à entretenir avec une cadence (60j par défaut). Les "touch" enregistrent automatiquement une entry au journal.
 - Mandats (opportunités CDI/PRESTA évaluées): data/mandats.md
 - RDV: data/rdv.tsv (synchro Google Calendar)
 - Mails reçus: data/replies/*.txt
@@ -1013,6 +1237,8 @@ REGLES STRICTES:
 - Si tu modifies un fichier, fais le directement via Edit/Write
 - Si tu ajoutes un prospect, append une ligne TSV à data/prospection.tsv (format exact, séparateur \\t, 14 colonnes)
 - Si tu ajoutes un client / convertis un prospect en client signé, utilise POST /api/clients (curl) ou append directement dans data/clients.tsv (14 colonnes)
+- Si tu ajoutes un contact qualifié au carnet (rencontré, intéressé par collab, à entretenir), utilise POST /api/carnet (curl) — la fiche markdown est créée automatiquement
+- Si tu enregistres un échange avec un contact carnet (call, mail, message LinkedIn), utilise POST /api/carnet/:id/touch — ça met à jour last_touch + journal entry
 - Si tu crées un RDV, ajoute dans data/rdv.tsv via le rdv-detector pattern, OU mieux: utilise le calendar MCP pour créer l'event dans Google Calendar
 - Si tu envoies un mail, NE PAS utiliser outreach-dispatch direct. Utilise le mécanisme drafts: prépare un draft dans data/drafts.tsv avec status=pending_review, et dis-moi de le valider depuis l'UI
 - Pour LinkedIn: il n'y a pas d'envoi auto, tu peux juste mettre à jour le tracker LinkedIn dans data/linkedin-invitations.tsv

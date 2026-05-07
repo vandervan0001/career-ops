@@ -9,6 +9,8 @@ data/replies/
 data/rdv.tsv
 data/calendar-events.json
 data/clients.tsv
+data/carnet.tsv
+carnet/
 reports/*.md
 !reports/.gitkeep
 output/*
