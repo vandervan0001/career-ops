@@ -186,6 +186,102 @@ export function recordRdv({ prospect, prospectIdx, replyFile, body, ics, fallbac
   return newRow;
 }
 
+// Sync depuis un snapshot Google Calendar JSON (data/calendar-events.json)
+// Le snapshot est mis à jour soit par Claude CLI soit par moi (calendar MCP).
+// Idempotent: dédup sur calendar_event_id + meeting_url.
+export function syncFromCalendarJson(jsonPath, prospects) {
+  if (!existsSync(jsonPath)) return { error: 'snapshot absent', synced_at: null, created: 0, updated: 0 };
+  const snapshot = JSON.parse(readFileSync(jsonPath, 'utf-8'));
+  const events = snapshot.events || [];
+  const rows = loadRdv();
+  const byEmail = new Map();
+  prospects.forEach((p, idx) => { if (p.email) byEmail.set(p.email.toLowerCase().trim(), { p, idx }); });
+
+  let created = 0, updated = 0, untracked = 0;
+  for (const ev of events) {
+    // Match ANY attendee against the prospect base
+    const allAddrs = [ev.organizer, ...(ev.attendees || [])].filter(Boolean).map(a => a.toLowerCase());
+    let match = null;
+    for (const addr of allAddrs) {
+      const m = byEmail.get(addr);
+      if (m) { match = m; break; }
+    }
+
+    const startIso = new Date(ev.start).toISOString();
+    const endIso = new Date(ev.end).toISOString();
+
+    // Dédup multi-niveau:
+    //  1. calendar_id déjà présent (re-sync)
+    //  2. même meeting_url exact
+    //  3. même prospect + heure de début proche (±60min)
+    //  4. même prospect + RDV provenant d'un email reply sans dt_start (calendar enrichit)
+    const existing = rows.find(r => {
+      if (r.notes?.includes(`calendar_id:${ev.id}`)) return true;
+      if (ev.meeting_url && r.meeting_url === ev.meeting_url) return true;
+      if (match && r.prospect_idx === String(match.idx)) {
+        if (r.dt_start) {
+          const diff = Math.abs(new Date(r.dt_start).getTime() - new Date(startIso).getTime());
+          if (diff < 60 * 60_000) return true;
+        } else if (r.source_reply_file) {
+          // RDV créé depuis email reply sans date — le calendar fournit les détails
+          return true;
+        }
+      }
+      return false;
+    });
+
+    if (existing) {
+      // Update champs depuis le calendrier (source of truth pour les RDV confirmés)
+      let dirty = false;
+      if (existing.dt_start !== startIso) { existing.dt_start = startIso; dirty = true; }
+      if (existing.dt_end !== endIso) { existing.dt_end = endIso; dirty = true; }
+      if (ev.summary && existing.summary !== ev.summary) { existing.summary = ev.summary; dirty = true; }
+      if (ev.location && existing.location !== ev.location) { existing.location = ev.location; dirty = true; }
+      if (ev.meeting_url && !existing.meeting_url) { existing.meeting_url = ev.meeting_url; dirty = true; }
+      if (existing.platform === 'unknown' && ev.platform) { existing.platform = ev.platform; dirty = true; }
+      if (!existing.notes?.includes(`calendar_id:${ev.id}`)) {
+        existing.notes = (existing.notes ? existing.notes + ' | ' : '') + `calendar_id:${ev.id}`;
+        dirty = true;
+      }
+      // RDV calendar = automatiquement passé à confirmed (le user a accepté)
+      if (existing.status === 'pending') { existing.status = 'confirmed'; dirty = true; }
+      if (dirty) updated++;
+    } else {
+      // Si pas de match prospect: extraire la boîte depuis le domaine de l'organizer
+      const organizerEmail = ev.organizer || (ev.attendees || [])[0] || '';
+      const organizerDomain = organizerEmail.split('@')[1] || '';
+      const fallbackCompany = match?.p.company
+        || (organizerDomain && !organizerDomain.includes('vanguard-systems')
+            ? organizerDomain.replace(/\.(com|ch|fr|io|net|org|eu)$/i, '').replace(/[\.\-]/g, ' ')
+            : null)
+        || ev.summary || '(sans nom)';
+
+      const newRow = {
+        id: String(nextRdvId(rows)),
+        detected_at: new Date().toISOString(),
+        prospect_idx: match ? String(match.idx) : '',
+        company: fallbackCompany,
+        contact: match?.p.contact || (organizerEmail ? organizerEmail.split('@')[0].replace(/\./g, ' ') : ''),
+        email: match?.p.email || organizerEmail || '',
+        dt_start: startIso,
+        dt_end: endIso,
+        summary: ev.summary || `RDV ${fallbackCompany}`,
+        location: ev.location || '',
+        meeting_url: ev.meeting_url || '',
+        platform: ev.platform || 'unknown',
+        source_reply_file: '',
+        status: 'confirmed',
+        notes: `calendar_id:${ev.id}${match ? '' : ' [non-matched]'}`,
+      };
+      rows.push(newRow);
+      created++;
+      if (!match) untracked++;
+    }
+  }
+  saveRdv(rows);
+  return { synced_at: snapshot.synced_at, created, updated, untracked, total_events: events.length };
+}
+
 // Backfill: rescanne data/replies/*.txt et tente d'extraire des RDV pour les mails déjà ingérés
 export function backfillFromReplies(prospects) {
   if (!existsSync(REPLIES_DIR)) return { scanned: 0, created: 0 };

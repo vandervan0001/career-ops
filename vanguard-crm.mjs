@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 import { execSync, spawn } from 'child_process';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 import { checkReplies } from './check-replies.mjs';
-import { loadRdv, saveRdv, backfillFromReplies } from './rdv-detector.mjs';
+import { loadRdv, saveRdv, backfillFromReplies, syncFromCalendarJson } from './rdv-detector.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 7777;
@@ -657,13 +657,41 @@ app.post('/api/rdv/backfill', (req, res) => {
   res.json({ ok: true, ...stats });
 });
 
-// Backfill une fois au démarrage
+const CALENDAR_JSON = join(ROOT, 'data', 'calendar-events.json');
+
+app.post('/api/calendar/sync', (req, res) => {
+  const { rows: prospects } = loadProspectionTsv(PROSPECTION_FILE);
+  const stats = syncFromCalendarJson(CALENDAR_JSON, prospects);
+  res.json({ ok: !stats.error, ...stats });
+});
+
+app.get('/api/calendar/snapshot-status', (req, res) => {
+  if (!existsSync(CALENDAR_JSON)) return res.json({ exists: false });
+  try {
+    const snap = JSON.parse(readFileSync(CALENDAR_JSON, 'utf-8'));
+    res.json({
+      exists: true,
+      synced_at: snap.synced_at,
+      source: snap.source,
+      eventCount: (snap.events || []).length,
+      mtime: statSync(CALENDAR_JSON).mtime.toISOString(),
+    });
+  } catch (err) {
+    res.json({ exists: true, error: err.message });
+  }
+});
+
+// Backfill + sync calendar une fois au démarrage
 setTimeout(() => {
   try {
     const { rows: prospects } = loadProspectionTsv(PROSPECTION_FILE);
-    const stats = backfillFromReplies(prospects);
-    if (stats.created > 0) console.log(`[rdv backfill] ${stats.created} RDV créés depuis ${stats.scanned} replies`);
-  } catch (err) { console.error('[rdv backfill]', err.message); }
+    const replyStats = backfillFromReplies(prospects);
+    if (replyStats.created > 0) console.log(`[rdv backfill] ${replyStats.created} RDV créés depuis ${replyStats.scanned} replies`);
+    const calStats = syncFromCalendarJson(CALENDAR_JSON, prospects);
+    if (!calStats.error) {
+      console.log(`[calendar sync] ${calStats.created} créés, ${calStats.updated} mis à jour (depuis ${calStats.synced_at})`);
+    }
+  } catch (err) { console.error('[rdv boot sync]', err.message); }
 }, 1500);
 
 // --- IMAP replies scraping ---

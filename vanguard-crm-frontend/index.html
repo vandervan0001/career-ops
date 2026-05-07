@@ -352,8 +352,11 @@
           <option value="confirmed">Confirmés</option>
           <option value="done">Faits</option>
           <option value="declined">Annulés</option>
+          <option value="prospect">Liés à un prospect</option>
         </select>
+        <button class="btn btn-primary" @click="syncCalendar()">🗓 Sync agenda</button>
         <button class="btn btn-secondary" @click="backfillRdv()">🔄 Re-scan replies</button>
+        <span x-show="calendarSnapshot.synced_at" style="font-size:11px; color:var(--muted);" x-text="'snapshot: ' + (calendarSnapshot.synced_at ? new Date(calendarSnapshot.synced_at).toLocaleString('fr-CH', {dateStyle:'short', timeStyle:'short'}) : '—') + ' · ' + (calendarSnapshot.eventCount||0) + ' events'"></span>
         <span style="margin-left:auto; color:var(--muted); font-size:12px;" x-text="filteredRdv.length + ' RDV'"></span>
       </div>
 
@@ -787,6 +790,7 @@ function crm() {
     followupSelection: [],
     rdv: [],
     rdvReplyId: null,
+    calendarSnapshot: { exists: false, synced_at: null, eventCount: 0 },
     imapStatus: { lastImapCheck: null, running: false, lastImapStats: null },
     replyBody: '',
     filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '', draftStatus: 'pending', rdvStatus: 'active' },
@@ -875,6 +879,7 @@ function crm() {
       const f = this.filter.rdvStatus;
       if (!f) return this.rdv;
       if (f === 'active') return this.rdv.filter(r => ['pending', 'confirmed'].includes(r.status));
+      if (f === 'prospect') return this.rdv.filter(r => r.prospect_idx);
       return this.rdv.filter(r => r.status === f);
     },
 
@@ -1170,8 +1175,28 @@ function crm() {
     // --- RDV ---
     async loadRdv() {
       try {
-        this.rdv = await fetch('/api/rdv').then(r => r.json());
+        const [rdv, snap] = await Promise.all([
+          fetch('/api/rdv').then(r => r.json()),
+          fetch('/api/calendar/snapshot-status').then(r => r.json()).catch(() => ({})),
+        ]);
+        this.rdv = rdv;
+        this.calendarSnapshot = snap || this.calendarSnapshot;
       } catch (err) { console.error('loadRdv failed', err); }
+    },
+
+    async syncCalendar() {
+      try {
+        const data = await fetch('/api/calendar/sync', { method: 'POST' }).then(r => r.json());
+        if (data.ok) {
+          alert(`Sync agenda: ${data.created} nouveaux RDV, ${data.updated} mis à jour, ${data.untracked || 0} non-matchés à la base prospects.\nSnapshot du ${new Date(data.synced_at).toLocaleString('fr-CH')}`);
+          await this.loadRdv();
+          await this.refresh();
+        } else {
+          alert(`Erreur: ${data.error || 'snapshot calendar absent'}\n\nLe snapshot est dans data/calendar-events.json. Pour le rafraîchir, demande à Claude (cette conversation) de l'updater, ou setup un cron avec claude -p.`);
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
     },
 
     async setRdvStatus(r, newStatus) {

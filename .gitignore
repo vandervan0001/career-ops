@@ -7,6 +7,7 @@ data/tracking.tsv
 data/replies-seen.tsv
 data/replies/
 data/rdv.tsv
+data/calendar-events.json
 reports/*.md
 !reports/.gitkeep
 output/*
