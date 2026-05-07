@@ -237,8 +237,9 @@ export function syncFromCalendarJson(jsonPath, prospects) {
       if (existing.dt_end !== endIso) { existing.dt_end = endIso; dirty = true; }
       if (ev.summary && existing.summary !== ev.summary) { existing.summary = ev.summary; dirty = true; }
       if (ev.location && existing.location !== ev.location) { existing.location = ev.location; dirty = true; }
-      if (ev.meeting_url && !existing.meeting_url) { existing.meeting_url = ev.meeting_url; dirty = true; }
-      if (existing.platform === 'unknown' && ev.platform) { existing.platform = ev.platform; dirty = true; }
+      // Calendar URL prend priorité sur ICS-extrait (source of truth)
+      if (ev.meeting_url && existing.meeting_url !== ev.meeting_url) { existing.meeting_url = ev.meeting_url; dirty = true; }
+      if (ev.platform && existing.platform !== ev.platform && ev.platform !== 'unknown') { existing.platform = ev.platform; dirty = true; }
       if (!existing.notes?.includes(`calendar_id:${ev.id}`)) {
         existing.notes = (existing.notes ? existing.notes + ' | ' : '') + `calendar_id:${ev.id}`;
         dirty = true;

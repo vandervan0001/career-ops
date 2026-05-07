@@ -1185,15 +1185,36 @@ function crm() {
     },
 
     async syncCalendar() {
+      // 1. Lance refresh complet (Claude CLI pulls Google Calendar via MCP)
       try {
-        const data = await fetch('/api/calendar/sync', { method: 'POST' }).then(r => r.json());
-        if (data.ok) {
-          alert(`Sync agenda: ${data.created} nouveaux RDV, ${data.updated} mis à jour, ${data.untracked || 0} non-matchés à la base prospects.\nSnapshot du ${new Date(data.synced_at).toLocaleString('fr-CH')}`);
-          await this.loadRdv();
-          await this.refresh();
-        } else {
-          alert(`Erreur: ${data.error || 'snapshot calendar absent'}\n\nLe snapshot est dans data/calendar-events.json. Pour le rafraîchir, demande à Claude (cette conversation) de l'updater, ou setup un cron avec claude -p.`);
+        const data = await fetch('/api/calendar/refresh', { method: 'POST' }).then(r => r.json());
+        if (!data.ok) {
+          if (data.error === 'refresh déjà en cours') {
+            alert('Refresh déjà en cours — patiente 1-2 min puis re-clique.');
+          } else {
+            alert('Erreur: ' + (data.error || 'inconnue'));
+          }
+          return;
         }
+        alert('🗓 Claude pull ton agenda Google en arrière-plan (1-2 min). Le merge se fait automatiquement, refresh la page dans 2 min ou laisse l\'auto-refresh 60s prendre le relais.');
+        // Poll le statut toutes les 5s pendant 3 min
+        const start = Date.now();
+        const poll = setInterval(async () => {
+          if (Date.now() - start > 180_000) { clearInterval(poll); return; }
+          try {
+            const status = await fetch('/api/calendar/refresh-status').then(r => r.json());
+            if (!status.running && status.lastResult && new Date(status.lastResult.ts).getTime() > start) {
+              clearInterval(poll);
+              if (status.lastResult.error) {
+                alert('Refresh agenda terminé avec erreur: ' + status.lastResult.error);
+              } else {
+                console.log('[calendar refresh] done', status.lastResult);
+                await this.loadRdv();
+                await this.refresh();
+              }
+            }
+          } catch (err) { /* keep polling */ }
+        }, 5000);
       } catch (err) {
         alert('Erreur réseau: ' + err.message);
       }

@@ -665,6 +665,121 @@ app.post('/api/calendar/sync', (req, res) => {
   res.json({ ok: !stats.error, ...stats });
 });
 
+// Refresh complet: spawn Claude CLI qui pull le calendar via MCP et réécrit data/calendar-events.json
+let calendarRefreshRunning = false;
+let lastCalendarRefresh = null;
+let lastCalendarRefreshOk = null;
+
+function buildCalendarRefreshPrompt() {
+  const now = new Date();
+  const horizon = new Date(now.getTime() + 30 * 24 * 60 * 60_000);
+  return `Tu refreshs le snapshot agenda du CRM Vanguard. Pas de réponse texte, juste le boulot.
+
+ÉTAPES:
+1. Appelle l'outil mcp__cf900400-41a3-4ed6-b6bb-8155357ab9e3__list_events avec:
+   startTime="${now.toISOString()}", endTime="${horizon.toISOString()}", orderBy="startTime", pageSize=100, timeZone="Europe/Zurich"
+2. Pour chaque event, extrais le meeting URL depuis conferenceUrl, location, ou description (regex Teams/Meet/Zoom/Calendly/Webex/Whereby).
+3. Détecte la plateforme:
+   - teams.microsoft.com / teams.live.com → "teams"
+   - meet.google.com → "meet"
+   - zoom.us → "zoom"
+   - calendly.com → "calendly"
+   - webex.com → "webex"
+   - whereby.com → "whereby"
+   - sinon si location physique → "in_person"
+   - sinon → "unknown"
+4. Écris UNIQUEMENT (avec l'outil Write) le fichier ${CALENDAR_JSON} avec cette structure JSON exacte:
+
+{
+  "synced_at": "${now.toISOString()}",
+  "source": "google_calendar_mcp",
+  "calendar": "tai.van@vanguard-systems.ch",
+  "horizon_days": 30,
+  "events": [
+    {
+      "id": "<event.id>",
+      "summary": "<event.summary>",
+      "start": "<event.start.dateTime ISO complet>",
+      "end": "<event.end.dateTime ISO complet>",
+      "location": "<event.location ou ''>",
+      "meeting_url": "<URL extraite ou ''>",
+      "platform": "<teams|meet|zoom|...|unknown>",
+      "attendees": ["<email1>", "<email2>"],
+      "organizer": "<organizer.email>",
+      "html_link": "<event.htmlLink>",
+      "description": "<description tronquée à 500 chars>",
+      "status": "<event.status>"
+    }
+  ]
+}
+
+5. Skippe les events all-day sans dateTime (juste date), les anniversaires, et les events de type birthday/workingLocation/focusTime.
+6. NE LANCE PAS d'autres outils. NE RÉPONDS PAS en texte. Le seul output attendu est le fichier JSON écrit.`;
+}
+
+app.post('/api/calendar/refresh', (req, res) => {
+  if (calendarRefreshRunning) {
+    return res.json({ ok: false, error: 'refresh déjà en cours', startedAt: lastCalendarRefresh });
+  }
+  calendarRefreshRunning = true;
+  lastCalendarRefresh = new Date().toISOString();
+
+  const claudeBin = '/Users/tai/.local/bin/claude';
+  const logFile = `/tmp/vanguard-calendar-refresh-${Date.now()}.log`;
+  const prevMtime = existsSync(CALENDAR_JSON) ? statSync(CALENDAR_JSON).mtimeMs : 0;
+
+  try {
+    const child = spawn(claudeBin, ['-p', buildCalendarRefreshPrompt(), '--dangerously-skip-permissions'], {
+      cwd: ROOT, detached: true,
+      stdio: ['ignore', openSync(logFile, 'a'), openSync(logFile, 'a')],
+    });
+    child.unref();
+
+    // Watch le fichier — quand mtime change, on merge automatiquement
+    const watcher = setInterval(() => {
+      if (!existsSync(CALENDAR_JSON)) return;
+      const mt = statSync(CALENDAR_JSON).mtimeMs;
+      if (mt > prevMtime) {
+        clearInterval(watcher);
+        clearTimeout(timeout);
+        try {
+          const { rows: prospects } = loadProspectionTsv(PROSPECTION_FILE);
+          const stats = syncFromCalendarJson(CALENDAR_JSON, prospects);
+          lastCalendarRefreshOk = { ts: new Date().toISOString(), ...stats };
+          console.log(`[calendar refresh] OK ${stats.created} créés, ${stats.updated} mis à jour`);
+        } catch (err) {
+          lastCalendarRefreshOk = { ts: new Date().toISOString(), error: err.message };
+        }
+        calendarRefreshRunning = false;
+      }
+    }, 3000);
+    const timeout = setTimeout(() => {
+      clearInterval(watcher);
+      calendarRefreshRunning = false;
+      lastCalendarRefreshOk = { ts: new Date().toISOString(), error: 'timeout 10 min' };
+      console.error('[calendar refresh] timeout 10 min');
+    }, 10 * 60_000);
+
+    res.json({
+      ok: true,
+      message: 'Claude CLI lance le pull agenda en arrière-plan (1-2 min). Le merge se fait automatiquement quand le snapshot est écrit.',
+      logFile,
+      startedAt: lastCalendarRefresh,
+    });
+  } catch (err) {
+    calendarRefreshRunning = false;
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/calendar/refresh-status', (req, res) => {
+  res.json({
+    running: calendarRefreshRunning,
+    lastStartedAt: lastCalendarRefresh,
+    lastResult: lastCalendarRefreshOk,
+  });
+});
+
 app.get('/api/calendar/snapshot-status', (req, res) => {
   if (!existsSync(CALENDAR_JSON)) return res.json({ exists: false });
   try {
