@@ -14,7 +14,8 @@ import express from 'express';
 import { existsSync, readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
+import { openSync } from 'fs';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -284,14 +285,42 @@ app.post('/api/relance/:id', (req, res) => {
   if (!['envoye', 'relance_1'].includes(row.status)) {
     return res.status(400).json({ error: `Cannot relance row with status=${row.status}` });
   }
+
+  // Lance Claude CLI headless pour rédiger un mail de relance personnalisé
+  // (nouveau angle, lecture du mail précédent, recherche actualité boîte)
+  // puis envoie via outreach-dispatch.mjs --body-file
+  const claudeBin = '/Users/tai/.local/bin/claude';
+  const stage = row.status === 'envoye' ? 'relance_1' : 'relance_2';
+  const safeCompany = row.company.replace(/"/g, '\\"');
+
+  const prompt = `Tu pilotes une relance email pour Vanguard Systems (Tai Van, automaticien freelance Lausanne).
+
+CIBLE: company="${safeCompany}" contact="${row.contact || ''}" email="${row.email}" sector="${row.sector}" status_actuel="${row.status}" date_dernier_envoi="${row.date_envoi || ''}".
+
+SIGNAL initial: ${row.signal || '(aucun)'}.
+NOTES tracker: ${(row.notes || '').slice(0, 300)}.
+
+TÂCHE:
+1. Lis le mail précédent envoyé à cette boîte dans output/prospection/sent/${row.date_envoi || ''}/ (cherche le fichier par slug du nom de boîte). Note l'angle utilisé.
+2. Cherche brièvement une actualité récente de la boîte via WebSearch (2-3 résultats max, ne perds pas de temps si rien). Recrutement, projet annoncé, levée, salon, contrat...
+3. Rédige un mail de relance court (max 100 mots) avec un ANGLE NOUVEAU (pas répétition du précédent). Si actualité trouvée → s'appuyer dessus. Sinon → angle différent (ex. première relance focus "renfort projet immédiat", deuxième relance focus "info-only au cas où").
+4. Règles strictes Vanguard: tutoiement non, vouvoiement oui. Salutation "Bonjour Monsieur/Madame [NOM]" si contact. Sinon "Bonjour,". Ton humain pair-à-pair. Pas d'em-dashes en corps (virgules ou parenthèses). Français avec accents. Signature "Bien cordialement, Tai Van" (la signature HTML est ajoutée auto). Pas de jargon ("OEM" → "constructeurs de machines", "FAT/SAT" OK, "PLC/SCADA" → "automate / supervision").
+5. Écris le body dans /tmp/relance-${id}-${stage}.txt (texte brut, pas HTML). Pas de subject à l'intérieur, juste le corps.
+6. Lance: node outreach-dispatch.mjs --company "${safeCompany}" --status ${row.status} --body-file /tmp/relance-${id}-${stage}.txt --live --force
+7. Reporte en 3 lignes: angle choisi, actualité utilisée si oui, message-id retourné.
+
+Travaille rapide, pas de question.`;
+
+  // Lance en background, retourne immédiatement avec un job id
+  const logFile = `/tmp/vanguard-relance-${id}-${Date.now()}.log`;
   try {
-    const out = execSync(
-      `node ${join(ROOT, 'outreach-dispatch.mjs')} --company "${row.company.replace(/"/g, '')}" --status ${row.status} --live --force`,
-      { cwd: ROOT, stdio: 'pipe', timeout: 30000 }
-    ).toString();
-    res.json({ ok: true, output: out });
+    const child = spawn(claudeBin, ['-p', prompt, '--dangerously-skip-permissions'], {
+      cwd: ROOT, detached: true, stdio: ['ignore', openSync(logFile, 'a'), openSync(logFile, 'a')],
+    });
+    child.unref();
+    res.json({ ok: true, message: `Relance Claude en cours (PID ${child.pid})`, logFile });
   } catch (err) {
-    res.status(500).json({ error: err.message, output: err.stdout?.toString() || '' });
+    res.status(500).json({ error: err.message });
   }
 });
 

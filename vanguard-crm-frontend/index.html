@@ -664,12 +664,12 @@ function crm() {
     },
 
     async relance(id) {
-      if (!confirm('Lancer une relance pour cette cible ?')) return;
+      if (!confirm('Lancer une relance personnalisée par Claude ? (peut prendre 1-3 min en arrière-plan, le mail part automatiquement à la fin)')) return;
       try {
         const res = await fetch(`/api/relance/${id}`, { method: 'POST' });
         const data = await res.json();
         if (data.ok) {
-          alert('Relance envoyée.');
+          alert(`Claude rédige la relance en arrière-plan.\nLog: ${data.logFile || '/tmp/vanguard-relance-*.log'}\nLe statut passera à relance_1 ou relance_2 quand le mail sera parti.\nRefresh dans 2-3 min pour voir le résultat.`);
           await this.refresh();
         } else {
           alert('Erreur: ' + (data.error || 'unknown'));

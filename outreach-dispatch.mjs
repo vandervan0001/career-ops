@@ -35,7 +35,11 @@ const getArg = (flag, fallback = null) => {
 
 const FROM_QUEUE = getArg('--from-queue', null);
 const OVERRIDE_SUBJECT = getArg('--subject', null);
-const OVERRIDE_BODY = getArg('--body', null);
+const OVERRIDE_BODY_RAW = getArg('--body', null);
+const OVERRIDE_BODY_FILE = getArg('--body-file', null);
+const OVERRIDE_BODY = OVERRIDE_BODY_FILE && existsSync(OVERRIDE_BODY_FILE)
+  ? readFileSync(OVERRIDE_BODY_FILE, 'utf-8')
+  : OVERRIDE_BODY_RAW;
 
 function nowDate() {
   return new Date().toISOString().slice(0, 10);
