@@ -27,10 +27,39 @@ const LINKEDIN_FILE = join(ROOT, 'data', 'linkedin-invitations.tsv');
 const SENT_DIR = join(ROOT, 'output', 'prospection', 'sent');
 const TRACKING_FILE = join(ROOT, 'data', 'tracking.tsv');
 const DRAFTS_FILE = join(ROOT, 'data', 'drafts.tsv');
+const CLIENTS_FILE = join(ROOT, 'data', 'clients.tsv');
 const REPLIES_DIR = join(ROOT, 'data', 'replies');
 const FRONTEND_DIR = join(ROOT, 'vanguard-crm-frontend');
 
 const DRAFT_COLUMNS = ['id', 'created_at', 'prospect_id', 'company', 'contact', 'email', 'stage', 'subject', 'body', 'scheduled_at', 'status', 'notes'];
+
+const CLIENT_COLUMNS = ['id', 'client_name', 'contact_main', 'email', 'site', 'contract_type', 'contract_start', 'contract_end', 'tjm_chf', 'days_per_month', 'status', 'project', 'supplier_id', 'notes'];
+
+function loadClients() {
+  if (!existsSync(CLIENTS_FILE)) return [];
+  const lines = readFileSync(CLIENTS_FILE, 'utf-8').split('\n').filter(l => l.length);
+  if (lines.length < 2) return [];
+  const header = lines[0].split('\t');
+  return lines.slice(1).map(ln => {
+    const vals = ln.split('\t');
+    const row = {};
+    header.forEach((k, i) => row[k] = (vals[i] || '').replace(/\\n/g, '\n').replace(/\\t/g, '\t'));
+    return row;
+  });
+}
+
+function saveClients(rows) {
+  const header = CLIENT_COLUMNS.join('\t');
+  const body = rows.map(r =>
+    CLIENT_COLUMNS.map(c => String(r[c] ?? '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\t/g, '\\t')).join('\t')
+  ).join('\n');
+  writeFileSync(CLIENTS_FILE, `${header}\n${body}\n`);
+}
+
+function nextClientId() {
+  const rows = loadClients();
+  return rows.reduce((m, r) => Math.max(m, parseInt(r.id || 0, 10)), 0) + 1;
+}
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -275,6 +304,19 @@ app.get('/api/today', (req, res) => {
   const generating = relanceDrafts.filter(d => d.status === 'generating').length;
   const scheduled = relanceDrafts.filter(d => d.status === 'scheduled').length;
 
+  const allClients = loadClients();
+  const activeClients = allClients.filter(c => ['active', 'signed'].includes(c.status));
+  const monthlyRecurring = activeClients.reduce((sum, c) => {
+    const t = parseFloat(c.tjm_chf) || 0;
+    const d = parseFloat(c.days_per_month) || 0;
+    return sum + (t * d);
+  }, 0);
+  const nextEnding = allClients
+    .filter(c => c.status === 'active' && c.contract_end)
+    .map(c => ({ ...c, daysToEnd: Math.round((new Date(c.contract_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) }))
+    .filter(c => c.daysToEnd >= 0)
+    .sort((a, b) => a.daysToEnd - b.daysToEnd)[0] || null;
+
   // RDV à venir (next 30 days, status != done/declined/expired)
   const allRdv = loadRdv();
   const horizon = new Date(Date.now() + 30 * 24 * 60 * 60_000);
@@ -299,6 +341,8 @@ app.get('/api/today', (req, res) => {
       generatingDrafts: generating,
       scheduledDrafts: scheduled,
       upcomingRdv: upcomingRdv.length,
+      activeClients: activeClients.length,
+      monthlyRecurringChf: Math.round(monthlyRecurring),
     },
     actions: {
       responded,
@@ -307,6 +351,8 @@ app.get('/api/today', (req, res) => {
       bounces,
       liAccepted,
       upcomingRdv,
+      activeClients,
+      nextEnding,
     },
   });
 });
@@ -855,6 +901,85 @@ app.get('/api/replies/:file', (req, res) => {
   res.type('text/plain').send(readFileSync(path, 'utf-8'));
 });
 
+// --- Clients (contrats actifs) ---
+
+app.get('/api/clients', (req, res) => {
+  const rows = loadClients();
+  // Calcule revenu mensuel pour chaque client
+  const enriched = rows.map(r => {
+    const tjm = parseFloat(r.tjm_chf) || 0;
+    const days = parseFloat(r.days_per_month) || 0;
+    const monthlyRevenue = tjm * days;
+    let daysToEnd = null;
+    if (r.contract_end) {
+      const diff = (new Date(r.contract_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+      daysToEnd = isFinite(diff) ? Math.round(diff) : null;
+    }
+    return { ...r, monthly_revenue_chf: monthlyRevenue, days_to_end: daysToEnd };
+  });
+  res.json(enriched);
+});
+
+app.post('/api/clients', (req, res) => {
+  const rows = loadClients();
+  const newRow = { id: String(nextClientId()) };
+  for (const k of CLIENT_COLUMNS) {
+    if (k === 'id') continue;
+    newRow[k] = String(req.body[k] ?? '');
+  }
+  if (!newRow.client_name) return res.status(400).json({ error: 'client_name required' });
+  if (!newRow.status) newRow.status = 'active';
+  rows.push(newRow);
+  saveClients(rows);
+  res.json(newRow);
+});
+
+app.patch('/api/clients/:id', (req, res) => {
+  const rows = loadClients();
+  const client = rows.find(c => c.id === req.params.id);
+  if (!client) return res.status(404).json({ error: 'not found' });
+  for (const k of CLIENT_COLUMNS) {
+    if (k === 'id') continue;
+    if (k in req.body) client[k] = String(req.body[k]);
+  }
+  saveClients(rows);
+  res.json(client);
+});
+
+app.delete('/api/clients/:id', (req, res) => {
+  const rows = loadClients().filter(c => c.id !== req.params.id);
+  saveClients(rows);
+  res.json({ ok: true });
+});
+
+// Convertit un prospect (par index dans prospection.tsv) en client pré-rempli
+app.post('/api/clients/from-prospect/:idx', (req, res) => {
+  const { rows: prospects } = loadProspectionTsv(PROSPECTION_FILE);
+  const idx = parseInt(req.params.idx, 10);
+  if (idx < 0 || idx >= prospects.length) return res.status(404).json({ error: 'prospect not found' });
+  const p = prospects[idx];
+  const clients = loadClients();
+  const newClient = {
+    id: String(nextClientId()),
+    client_name: p.company,
+    contact_main: p.contact || '',
+    email: p.email || '',
+    site: p.geo_priority === '1' ? 'Suisse romande' : '',
+    contract_type: req.body.contract_type || 'mandat presta',
+    contract_start: req.body.contract_start || new Date().toISOString().slice(0, 10),
+    contract_end: req.body.contract_end || '',
+    tjm_chf: req.body.tjm_chf || '',
+    days_per_month: req.body.days_per_month || '',
+    status: 'signed',
+    project: req.body.project || (p.signal || ''),
+    supplier_id: req.body.supplier_id || '',
+    notes: `Issu du prospect prospection.tsv:${idx}. ${(p.notes || '').slice(0, 200)}`,
+  };
+  clients.push(newClient);
+  saveClients(clients);
+  res.json(newClient);
+});
+
 // --- Chat assistant ---
 
 const chatSessions = new Map(); // sessionId -> { messages: [{role, content, ts}], created_at }
@@ -869,12 +994,14 @@ function buildChatPrompt(history, userMessage) {
 Tu opères dans /Volumes/Tai_SSD/dev/Projects/Prospection. Tu as accès à Read/Edit/Write/Bash et tous les MCPs configurés (Google Calendar, Gmail, etc).
 
 CONTEXTE BUSINESS:
-- Base prospects: data/prospection.tsv (schema: date, company, contact, email, linkedin, sector, signal, score, message_sent, status, notes, target_type, geo_priority, date_envoi)
-- Status valides: nouveau, identifie, envoye, relance_1, relance_2, reponse, repondu_pass_poli, rdv, Discarded
-- Mandats: data/mandats.md
+- Base prospects (cold pipeline): data/prospection.tsv (schema: date, company, contact, email, linkedin, sector, signal, score, message_sent, status, notes, target_type, geo_priority, date_envoi)
+- Status prospects valides: nouveau, identifie, envoye, relance_1, relance_2, reponse, repondu_pass_poli, rdv, Discarded
+- Clients (contrats actifs): data/clients.tsv (schema: id, client_name, contact_main, email, site, contract_type, contract_start, contract_end, tjm_chf, days_per_month, status, project, supplier_id, notes)
+- Status clients valides: signed, active, paused, completed, terminated
+- Mandats (opportunités CDI/PRESTA évaluées): data/mandats.md
 - RDV: data/rdv.tsv (synchro Google Calendar)
 - Mails reçus: data/replies/*.txt
-- Drafts: data/drafts.tsv
+- Drafts relances: data/drafts.tsv
 
 REGLES STRICTES:
 - Tutoiement non, vouvoiement oui dans les emails. Réponses au user (Tai) en tutoiement.
@@ -885,6 +1012,7 @@ REGLES STRICTES:
 - Si action ambiguë, demande clarification AVANT d'exécuter
 - Si tu modifies un fichier, fais le directement via Edit/Write
 - Si tu ajoutes un prospect, append une ligne TSV à data/prospection.tsv (format exact, séparateur \\t, 14 colonnes)
+- Si tu ajoutes un client / convertis un prospect en client signé, utilise POST /api/clients (curl) ou append directement dans data/clients.tsv (14 colonnes)
 - Si tu crées un RDV, ajoute dans data/rdv.tsv via le rdv-detector pattern, OU mieux: utilise le calendar MCP pour créer l'event dans Google Calendar
 - Si tu envoies un mail, NE PAS utiliser outreach-dispatch direct. Utilise le mécanisme drafts: prépare un draft dans data/drafts.tsv avec status=pending_review, et dis-moi de le valider depuis l'UI
 - Pour LinkedIn: il n'y a pas d'envoi auto, tu peux juste mettre à jour le tracker LinkedIn dans data/linkedin-invitations.tsv

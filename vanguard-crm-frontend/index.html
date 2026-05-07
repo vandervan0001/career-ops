@@ -146,6 +146,12 @@
   .pill-done { background: #e5e7eb; color: #4b5563; }
   .pill-declined { background: #fee2e2; color: #991b1b; }
   .pill-expired { background: #e5e7eb; color: #4b5563; }
+  /* Client status pills */
+  .pill-active { background: #d1fae5; color: #065f46; }
+  .pill-signed { background: #dbeafe; color: #1e40af; }
+  .pill-paused { background: #fef3c7; color: #92400e; }
+  .pill-completed { background: #e5e7eb; color: #4b5563; }
+  .pill-terminated { background: #fee2e2; color: #991b1b; }
   .pill-teams { background: #ede9fe; color: #5b21b6; }
   .pill-meet { background: #d1fae5; color: #065f46; }
   .pill-zoom { background: #dbeafe; color: #1e40af; }
@@ -182,6 +188,7 @@
       <button :class="{active: tab==='today'}" @click="tab='today'"><span class="icon">🔥</span> Aujourd'hui <span class="badge" x-show="todayBadge > 0" x-text="todayBadge"></span></button>
       <button :class="{active: tab==='chat'}" @click="tab='chat'; $nextTick(() => $refs.chatInput?.focus())"><span class="icon">💬</span> Chat</button>
       <button :class="{active: tab==='rdv'}" @click="tab='rdv'; loadRdv()"><span class="icon">🗓</span> RDV <span class="badge" x-show="rdvBadge > 0" x-text="rdvBadge"></span></button>
+      <button :class="{active: tab==='clients'}" @click="tab='clients'; loadClients()"><span class="icon">🤝</span> Clients <span class="badge" x-show="clientsBadge > 0" x-text="clientsBadge"></span></button>
       <button :class="{active: tab==='pipeline'}" @click="tab='pipeline'"><span class="icon">📤</span> Pipeline</button>
       <button :class="{active: tab==='drafts'}" @click="tab='drafts'; loadDrafts()"><span class="icon">📝</span> Drafts <span class="badge" x-show="draftsBadge > 0" x-text="draftsBadge"></span></button>
       <button :class="{active: tab==='mails'}" @click="tab='mails'"><span class="icon">📧</span> Mails</button>
@@ -200,12 +207,44 @@
     <div x-show="tab==='today'" x-cloak>
       <h2>🔥 Aujourd'hui — <span x-text="today"></span></h2>
       <div class="kpis">
+        <div class="kpi ok"><div class="label">Clients actifs</div><div class="value" x-text="kpis.activeClients || 0"></div></div>
+        <div class="kpi ok"><div class="label">CA mensuel récurrent</div><div class="value" x-text="formatChf(kpis.monthlyRecurringChf || 0)"></div></div>
         <div class="kpi"><div class="label">Envoyés aujourd'hui</div><div class="value" x-text="kpis.sentToday || 0"></div></div>
         <div class="kpi"><div class="label">Cette semaine</div><div class="value" x-text="kpis.sentThisWeek || 0"></div></div>
         <div class="kpi"><div class="label">Total envoyés</div><div class="value" x-text="kpis.totalSent || 0"></div></div>
         <div class="kpi ok"><div class="label">Taux réponse</div><div class="value" x-text="kpis.responseRate || '0.0%'"></div></div>
         <div class="kpi"><div class="label">Drafts en queue</div><div class="value" x-text="kpis.totalDrafts || 0"></div></div>
         <div class="kpi"><div class="label">Opens trackés</div><div class="value" x-text="kpis.totalOpens || 0"></div></div>
+      </div>
+
+      <div class="section" x-show="(actions.activeClients||[]).length > 0">
+        <div class="head">
+          <h3>🤝 Clients actifs</h3>
+          <div class="actions">
+            <span x-show="actions.nextEnding" style="font-size:11px; color:var(--muted);" x-text="actions.nextEnding ? 'prochaine fin: ' + actions.nextEnding.client_name + ' dans ' + actions.nextEnding.daysToEnd + 'j' : ''"></span>
+            <span class="count" x-text="(actions.activeClients||[]).length + ' actif(s)'"></span>
+          </div>
+        </div>
+        <div class="body">
+          <table>
+            <thead><tr><th>Client</th><th>Contact</th><th>Site</th><th>Type</th><th>TJM</th><th>j/mois</th><th>CA mensuel</th><th>Fin</th><th>Status</th></tr></thead>
+            <tbody>
+              <template x-for="c in (actions.activeClients||[])" :key="c.id">
+                <tr @click="tab='clients'; loadClients()" style="cursor:pointer;">
+                  <td class="company" x-text="c.client_name"></td>
+                  <td class="contact" x-text="c.contact_main || '—'"></td>
+                  <td x-text="c.site || '—'"></td>
+                  <td x-text="c.contract_type || '—'"></td>
+                  <td x-text="c.tjm_chf ? c.tjm_chf + ' CHF' : '—'"></td>
+                  <td x-text="c.days_per_month || '—'"></td>
+                  <td style="font-weight:600;" x-text="c.tjm_chf && c.days_per_month ? formatChf(parseFloat(c.tjm_chf) * parseFloat(c.days_per_month)) : '—'"></td>
+                  <td x-text="c.contract_end || 'ongoing'"></td>
+                  <td><span class="pill" :class="'pill-' + c.status" x-text="c.status"></span></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="section" x-show="(actions.upcomingRdv||[]).length > 0">
@@ -458,6 +497,99 @@
               <button class="btn btn-secondary" @click="setRdvStatus(r, 'done')" x-show="r.status !== 'done'">✓ Marquer fait</button>
               <button class="btn btn-secondary" @click="setRdvStatus(r, 'declined')" x-show="r.status !== 'declined' && r.status !== 'done'">✕ Annuler</button>
               <button class="btn btn-danger" @click="deleteRdv(r)" style="margin-left:auto;">🗑</button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- TAB: CLIENTS -->
+    <div x-show="tab==='clients'" x-cloak>
+      <h2>🤝 Clients <span style="font-size: 13px; color: var(--muted); font-weight: normal;" x-text="'(' + clients.length + ')'"></span></h2>
+
+      <div class="kpis">
+        <div class="kpi ok"><div class="label">Actifs</div><div class="value" x-text="clients.filter(c=>c.status==='active').length"></div></div>
+        <div class="kpi"><div class="label">Signés (pas démarrés)</div><div class="value" x-text="clients.filter(c=>c.status==='signed').length"></div></div>
+        <div class="kpi ok"><div class="label">CA mensuel récurrent</div><div class="value" x-text="formatChf(totalMonthlyRevenue)"></div></div>
+        <div class="kpi"><div class="label">Total facturable annuel</div><div class="value" x-text="formatChf(totalMonthlyRevenue * 12)"></div></div>
+      </div>
+
+      <div class="filters">
+        <select x-model="filter.clientStatus">
+          <option value="active_signed">Actifs + signés</option>
+          <option value="">Tous</option>
+          <option value="active">Actifs</option>
+          <option value="signed">Signés (pas démarrés)</option>
+          <option value="paused">Pausés</option>
+          <option value="completed">Terminés</option>
+          <option value="terminated">Résiliés</option>
+        </select>
+        <button class="btn btn-primary" @click="newClient()">➕ Ajouter un client</button>
+        <span style="margin-left:auto; color:var(--muted); font-size:12px;" x-text="filteredClients.length + ' client(s)'"></span>
+      </div>
+
+      <template x-if="filteredClients.length === 0">
+        <div class="empty">
+          Aucun client. Ajoute via le bouton ci-dessus, ou via le chat ("ajoute Roche comme client TJM 950, 8 jours/mois, contrat 2026-04 à 2026-12"), ou convertis un prospect (panneau détail prospect → bouton "Convertir client").
+        </div>
+      </template>
+
+      <template x-for="c in filteredClients" :key="c.id">
+        <div class="section" style="margin-bottom: 16px;">
+          <div class="head">
+            <div>
+              <h3 x-text="c.client_name"></h3>
+              <div style="font-size:12px; color:var(--muted); margin-top:4px;">
+                <span x-text="c.contact_main || '—'"></span>
+                <span x-show="c.email"> · </span><span x-text="c.email"></span>
+                <span x-show="c.site"> · </span><span x-text="c.site"></span>
+              </div>
+            </div>
+            <div class="actions">
+              <span class="pill" :class="'pill-' + c.status" x-text="c.status"></span>
+            </div>
+          </div>
+          <div class="body" style="padding: 16px 20px;">
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px 12px; font-size: 13px;">
+              <div style="color:var(--muted);">Type</div>
+              <div><input type="text" x-model="c.contract_type" @blur="saveClient(c)" style="width: 100%; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;"></div>
+              <div style="color:var(--muted);">Site / lieu</div>
+              <div><input type="text" x-model="c.site" @blur="saveClient(c)" style="width: 100%; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;"></div>
+              <div style="color:var(--muted);">Contrat</div>
+              <div style="display: flex; gap: 6px;">
+                <input type="date" x-model="c.contract_start" @blur="saveClient(c)" style="padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;">
+                <span style="color:var(--muted); align-self:center;">→</span>
+                <input type="date" x-model="c.contract_end" @blur="saveClient(c)" style="padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;" placeholder="ongoing">
+                <span x-show="c.days_to_end !== null && c.contract_end" style="align-self:center; font-size:11px; color:var(--muted);" x-text="'(' + c.days_to_end + 'j)'"></span>
+              </div>
+              <div style="color:var(--muted);">TJM × jours/mois</div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="number" x-model="c.tjm_chf" @blur="saveClient(c)" placeholder="950" style="width: 90px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;">
+                <span>CHF ×</span>
+                <input type="number" x-model="c.days_per_month" @blur="saveClient(c)" placeholder="8" style="width: 70px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;">
+                <span>j/mois =</span>
+                <strong x-text="c.tjm_chf && c.days_per_month ? formatChf(parseFloat(c.tjm_chf) * parseFloat(c.days_per_month)) + ' / mois' : '—'"></strong>
+              </div>
+              <div style="color:var(--muted);">Projet</div>
+              <div><input type="text" x-model="c.project" @blur="saveClient(c)" style="width: 100%; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;"></div>
+              <div style="color:var(--muted);">N° fournisseur</div>
+              <div><input type="text" x-model="c.supplier_id" @blur="saveClient(c)" placeholder="Réf. fournisseur côté client" style="width: 100%; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;"></div>
+              <div style="color:var(--muted);">Notes</div>
+              <div><textarea x-model="c.notes" @blur="saveClient(c)" rows="2" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-size: 13px;"></textarea></div>
+              <div style="color:var(--muted);">Status</div>
+              <div>
+                <select x-model="c.status" @change="saveClient(c)" style="padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;">
+                  <option value="signed">signed (pas démarré)</option>
+                  <option value="active">active</option>
+                  <option value="paused">paused</option>
+                  <option value="completed">completed</option>
+                  <option value="terminated">terminated</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;">
+              <button class="btn btn-danger" @click="deleteClient(c)" style="margin-left:auto;">🗑 Supprimer</button>
             </div>
           </div>
         </div>
@@ -794,6 +926,7 @@
       <div class="actions">
         <button class="btn btn-success" @click="setStatus('reponse')">✓ Répondu</button>
         <button class="btn btn-success" @click="setStatus('rdv')">📅 RDV</button>
+        <button class="btn btn-success" @click="convertToClient(selected)">🤝 Convertir client</button>
         <button class="btn btn-secondary" @click="setStatus('Discarded')">Discard</button>
         <template x-if="['envoye','relance_1'].includes(selected && selected.status)">
           <button class="btn btn-primary" @click="relance(selected.id)">Relance</button>
@@ -852,9 +985,10 @@ function crm() {
     chatInput: '',
     chatThinking: false,
     chatSessionId: null,
+    clients: [],
     imapStatus: { lastImapCheck: null, running: false, lastImapStats: null },
     replyBody: '',
-    filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '', draftStatus: 'pending', rdvStatus: 'active' },
+    filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '', draftStatus: 'pending', rdvStatus: 'active', clientStatus: 'active_signed' },
     kanbanStatuses: ['nouveau', 'envoye', 'relance_1', 'relance_2', 'reponse', 'Discarded'],
 
     async init() {
@@ -871,6 +1005,7 @@ function crm() {
       await this.refresh();
       await this.loadDrafts();
       await this.loadRdv();
+      await this.loadClients();
       // Auto-refresh every 60s
       setInterval(() => {
         this.refresh();
@@ -944,6 +1079,23 @@ function crm() {
 
     get rdvBadge() {
       return this.rdv.filter(r => r.status === 'pending').length;
+    },
+
+    get clientsBadge() {
+      return this.clients.filter(c => c.status === 'active').length;
+    },
+
+    get filteredClients() {
+      const f = this.filter.clientStatus;
+      if (!f) return this.clients;
+      if (f === 'active_signed') return this.clients.filter(c => ['active', 'signed'].includes(c.status));
+      return this.clients.filter(c => c.status === f);
+    },
+
+    get totalMonthlyRevenue() {
+      return this.clients
+        .filter(c => ['active', 'signed'].includes(c.status))
+        .reduce((sum, c) => sum + (parseFloat(c.tjm_chf || 0) * parseFloat(c.days_per_month || 0)), 0);
     },
 
     get filteredRdv() {
@@ -1416,6 +1568,74 @@ function crm() {
       this.chatHistory = [];
       this.chatSessionId = null;
       this.saveChat();
+    },
+
+    // --- Clients ---
+    async loadClients() {
+      try {
+        this.clients = await fetch('/api/clients').then(r => r.json());
+      } catch (err) { console.error('loadClients failed', err); }
+    },
+
+    async saveClient(c) {
+      const allowed = ['client_name', 'contact_main', 'email', 'site', 'contract_type', 'contract_start', 'contract_end', 'tjm_chf', 'days_per_month', 'status', 'project', 'supplier_id', 'notes'];
+      const payload = {};
+      for (const k of allowed) payload[k] = c[k] || '';
+      try {
+        await fetch(`/api/clients/${c.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        await this.refresh();
+      } catch (err) { console.error('saveClient failed', err); }
+    },
+
+    async newClient() {
+      const name = prompt('Nom du client ?');
+      if (!name?.trim()) return;
+      try {
+        await fetch('/api/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_name: name.trim(), status: 'active' }),
+        });
+        await this.loadClients();
+        await this.refresh();
+      } catch (err) { alert('Erreur: ' + err.message); }
+    },
+
+    async deleteClient(c) {
+      if (!confirm(`Supprimer le client ${c.client_name} ? L'historique des relations restera dans le tracker prospects.`)) return;
+      await fetch(`/api/clients/${c.id}`, { method: 'DELETE' });
+      await this.loadClients();
+      await this.refresh();
+    },
+
+    async convertToClient(prospect) {
+      const tjm = prompt(`TJM CHF pour ${prospect.company} ? (vide pour skip)`);
+      const days = tjm ? prompt('Jours/mois prévus ? (vide = variable)') : null;
+      try {
+        const data = await fetch(`/api/clients/from-prospect/${prospect.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tjm_chf: tjm || '', days_per_month: days || '' }),
+        }).then(r => r.json());
+        if (data.id) {
+          alert(`✓ ${data.client_name} ajouté comme client (signed). Configure les détails dans l'onglet 🤝 Clients.`);
+          await this.loadClients();
+          await this.refresh();
+          this.tab = 'clients';
+          this.detailOpen = false;
+        } else {
+          alert('Erreur: ' + (data.error || 'inconnue'));
+        }
+      } catch (err) { alert('Erreur: ' + err.message); }
+    },
+
+    formatChf(n) {
+      if (!n || isNaN(n)) return '0 CHF';
+      return new Intl.NumberFormat('fr-CH', { style: 'currency', currency: 'CHF', maximumFractionDigits: 0 }).format(n);
     },
   };
 }
