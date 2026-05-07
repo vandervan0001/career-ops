@@ -13,7 +13,7 @@ positioning:
 consultant:
   full_name: "Tai Van"
   company_name: "Vanguard Systems"
-  email: "contact@vanguard-systems.ch"
+  email: "tai.van@vanguard-systems.ch"
   phone: "+41 79 172 08 08"
   location: "Le Mont-sur-Lausanne, Suisse"
   linkedin: "linkedin.com/in/taivan"
@@ -363,6 +363,10 @@ sourcing:
   excluded_companies:
     - "Hydro Exploitation"
     - "Techfirm"
+    - "ALRO"
+    - "ALPS Automation"
+    - "SP Groups"
+    - "SP Solutions"
 
   excluded_patterns:
     - "recruitment"

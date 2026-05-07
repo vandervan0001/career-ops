@@ -12,6 +12,20 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["crm-server.mjs"],
       "port": 8788
+    },
+    {
+      "name": "vanguard-crm",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["vanguard-crm.mjs"],
+      "port": 7778,
+      "env": { "PORT": "7778" }
+    },
+    {
+      "name": "vanguard-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "cwd": "/Volumes/Tai_SSD/dev/Projects/Vanguard_Consulting"
     }
   ]
 }

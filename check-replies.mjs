@@ -1,238 +1,241 @@
 #!/usr/bin/env node
 /**
- * check-replies.mjs — Check inbox for unsubscribes, bounces, and replies
+ * check-replies.mjs — Scrape la boîte tai.van@vanguard-systems.ch via IMAP
  *
- * Connects to info@scaliab.io via IMAP, scans recent emails, and updates
- * prospect statuses in data/prospects.tsv automatically.
+ * Connecte à imap.gmail.com avec App Password Workspace, scanne INBOX, matche
+ * les expéditeurs contre data/prospection.tsv, et met à jour le statut +
+ * stocke le texte complet de la réponse dans data/replies/{date}-{slug}.txt
  *
  * Usage:
- *   node check-replies.mjs              # Check last 24h
- *   node check-replies.mjs --days 3     # Check last 3 days
- *   node check-replies.mjs --dry-run    # Preview without updating
+ *   node check-replies.mjs              # check last 24h
+ *   node check-replies.mjs --days 3
+ *   node check-replies.mjs --dry-run    # preview only
  *
- * Detects:
- *   - Unsubscribes: "stop", "désabonnement", "unsubscribe", "ne plus recevoir"
- *   - Bounces: "undeliverable", "delivery failed", "mailbox not found"
- *   - Positive replies: "intéressé", "rdv", "diagnostic", "calendrier"
- *   - General replies: anything from a known prospect email
+ * Détecte:
+ *   - rdv_potentiel: "intéressé", "rdv", "calendrier", "appel"…
+ *   - pass_poli: "pas de besoin", "merci mais", "pas pour l'instant"…
+ *   - bounce: "undeliverable", "delivery failed", "mailer-daemon"
+ *   - desabonne: "stop", "unsubscribe", "ne plus recevoir"
+ *   - reponse: tout autre mail d'un prospect connu
  *
- * Updates data/prospects.tsv accordingly.
- * Reads IMAP config from config/smtp.yml (scaliab.imap section)
+ * Logique conservatrice:
+ *   - Update uniquement si status courant ∈ {envoye, relance_1, relance_2}
+ *   - Ne re-traite pas un message déjà ingéré (data/replies-seen.tsv)
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import yaml from 'js-yaml';
+import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SMTP_FILE = join(ROOT, 'config', 'smtp.yml');
-const PROSPECTS_FILE = join(ROOT, 'data', 'prospects.tsv');
+const PROSPECTION_FILE = join(ROOT, 'data', 'prospection.tsv');
+const REPLIES_DIR = join(ROOT, 'data', 'replies');
+const SEEN_FILE = join(ROOT, 'data', 'replies-seen.tsv');
 
-// --- Detection patterns ---
-const UNSUB_PATTERNS = [
-  /\bstop\b/i,
-  /d[ée]sabonne/i,
-  /unsubscribe/i,
-  /ne plus recevoir/i,
-  /retir[eé].*liste/i,
-  /plus de message/i,
-  /arr[eê]te/i,
+const UNSUB = [
+  /\bstop\b/i, /d[ée]sabonne/i, /unsubscribe/i, /ne plus recevoir/i,
+  /retir[eé].*liste/i, /plus de message/i,
 ];
-
-const BOUNCE_PATTERNS = [
-  /undeliverable/i,
-  /delivery.*(failed|failure|status)/i,
+const BOUNCE = [
+  /undeliverable/i, /delivery.*(failed|failure|status)/i,
   /mailbox.*(not found|unavailable|full)/i,
-  /user.*(unknown|not found)/i,
-  /message.*not delivered/i,
-  /permanent.*failure/i,
-  /mailer.daemon/i,
+  /user.*(unknown|not found)/i, /message.*not delivered/i,
+  /permanent.*failure/i, /mailer.daemon/i, /address rejected/i,
+];
+const PASS_POLI = [
+  /pas de besoin/i, /pas (pour l'instant|d'urgence)/i,
+  /merci.*mais/i, /pas int[ée]ress[ée]/i,
+  /(no|pas).*(merci|need)/i, /(garde|gardons).*contact/i,
+  /pas de projet/i, /not.*relevant/i, /not.*interested/i,
+];
+const POSITIVE = [
+  /int[ée]ress[ée]/i, /rdv|rendez.vous/i, /\bappel\b/i, /\bcall\b/i,
+  /calendrier|cr[ée]neau/i, /volontiers|avec plaisir/i, /^d'accord/i,
+  /quand.*disponible/i, /discutons/i, /\bdemo\b/i,
+  /happy to/i, /let.s talk/i, /interesting/i,
 ];
 
-const POSITIVE_PATTERNS = [
-  /int[ée]ress[ée]/i,
-  /rdv|rendez.vous/i,
-  /diagnostic/i,
-  /r[ée]serv/i,
-  /calendrier|cr[ée]neau/i,
-  /appel|appelez/i,
-  /volontiers|avec plaisir/i,
-  /d'accord/i,
-  /quand.*disponible/i,
-];
-
-// --- Config ---
 function loadConfig() {
   if (!existsSync(SMTP_FILE)) {
-    console.error('ERREUR: config/smtp.yml introuvable.');
-    process.exit(1);
+    throw new Error('config/smtp.yml introuvable');
   }
-  const config = yaml.load(readFileSync(SMTP_FILE, 'utf-8'));
-  return config.scaliab;
+  const cfg = yaml.load(readFileSync(SMTP_FILE, 'utf-8'));
+  if (!cfg.smtp?.imap) {
+    throw new Error('config/smtp.yml: bloc smtp.imap absent. Voir documentation.');
+  }
+  return cfg.smtp.imap;
 }
 
-// --- Prospects ---
-function loadProspects() {
-  if (!existsSync(PROSPECTS_FILE)) return { header: '', prospects: [] };
-  const raw = readFileSync(PROSPECTS_FILE, 'utf-8');
-  const lines = raw.split('\n');
-  const headerLines = lines.filter(l => l.startsWith('#'));
-  const dataLines = lines.filter(l => l.trim() && !l.startsWith('#'));
-  const prospects = dataLines.map(line => {
-    const cols = line.split('\t');
-    return {
-      id: cols[0], date: cols[1], entreprise: cols[2], contact: cols[3],
-      email: cols[4], segment: cols[5], ville: cols[6], pays: cols[7],
-      statut: cols[8], campagne: cols[9], dernier_envoi: cols[10], notes: cols[11] || '',
-    };
-  });
-  return { header: headerLines.join('\n'), prospects };
+function classify(subject, body) {
+  const text = `${subject || ''} ${body || ''}`.toLowerCase();
+  for (const re of BOUNCE) if (re.test(text)) return 'bounce';
+  for (const re of UNSUB) if (re.test(text)) return 'desabonne';
+  for (const re of PASS_POLI) if (re.test(text)) return 'pass_poli';
+  for (const re of POSITIVE) if (re.test(text)) return 'rdv_potentiel';
+  return 'reponse';
 }
 
-function saveProspects(header, prospects) {
-  const lines = prospects.map(p =>
-    [p.id, p.date, p.entreprise, p.contact, p.email, p.segment, p.ville, p.pays, p.statut, p.campagne, p.dernier_envoi, p.notes].join('\t')
+function loadSeen() {
+  if (!existsSync(SEEN_FILE)) return new Set();
+  return new Set(
+    readFileSync(SEEN_FILE, 'utf-8')
+      .split('\n').filter(Boolean)
+      .map(l => l.split('\t')[0])
   );
-  writeFileSync(PROSPECTS_FILE, header + '\n' + lines.join('\n') + '\n');
 }
 
-// --- Email classification ---
-function classifyEmail(subject, body) {
-  const text = (subject + ' ' + body).toLowerCase();
-
-  for (const pat of BOUNCE_PATTERNS) {
-    if (pat.test(text)) return 'bounce';
+function markSeen(messageId, fromAddr, prospectIdx, classification) {
+  if (!existsSync(SEEN_FILE)) {
+    writeFileSync(SEEN_FILE, 'message_id\tfrom\tprospect_idx\tclassification\tts\n');
   }
-  for (const pat of UNSUB_PATTERNS) {
-    if (pat.test(text)) return 'desabonne';
-  }
-  for (const pat of POSITIVE_PATTERNS) {
-    if (pat.test(text)) return 'rdv_potentiel';
-  }
-  return 'repondu';
+  appendFileSync(SEEN_FILE, [messageId, fromAddr, prospectIdx, classification, new Date().toISOString()].join('\t') + '\n');
 }
 
-// --- Main ---
+function slugify(s) {
+  return (s || 'unknown').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
+}
+
+function saveReplyBody(prospect, parsed, classification) {
+  if (!existsSync(REPLIES_DIR)) mkdirSync(REPLIES_DIR, { recursive: true });
+  const ts = (parsed.date || new Date()).toISOString().slice(0, 10);
+  const slug = slugify(prospect.company);
+  const fname = `${ts}-${slug}.txt`;
+  const path = join(REPLIES_DIR, fname);
+  const body = parsed.text || parsed.html?.replace(/<[^>]+>/g, ' ') || '';
+  const headers = [
+    `From: ${parsed.from?.text || ''}`,
+    `To: ${parsed.to?.text || ''}`,
+    `Date: ${(parsed.date || new Date()).toISOString()}`,
+    `Subject: ${parsed.subject || ''}`,
+    `Message-ID: ${parsed.messageId || ''}`,
+    `Classification: ${classification}`,
+    `Prospect: ${prospect.company} (${prospect.contact || prospect.email})`,
+  ].join('\n');
+  writeFileSync(path, `${headers}\n--- BODY ---\n${body}\n`);
+  return fname;
+}
+
+const STATUS_FROM_CLASS = {
+  rdv_potentiel: 'reponse',
+  reponse: 'reponse',
+  pass_poli: 'repondu_pass_poli',
+  desabonne: 'Discarded',
+  bounce: 'envoye', // garde envoyé, mais marque BOUNCE en notes
+};
+
 async function checkReplies({ days, dryRun }) {
   const config = loadConfig();
-  const { header, prospects } = loadProspects();
-  const prospectEmails = new Map();
-  for (const p of prospects) {
-    if (p.email) prospectEmails.set(p.email.toLowerCase(), p);
-  }
+  const { rows } = loadProspectionTsv(PROSPECTION_FILE);
+  const byEmail = new Map();
+  rows.forEach((r, idx) => {
+    if (r.email) byEmail.set(r.email.toLowerCase().trim(), { row: r, idx });
+  });
+  const seen = loadSeen();
 
-  console.log(`\n=== Check Replies ===`);
-  console.log(`Mode: ${dryRun ? 'DRY RUN' : 'MISE À JOUR'}`);
-  console.log(`Période: ${days} derniers jours`);
-  console.log(`Prospects avec email: ${prospectEmails.size}`);
-  console.log('');
+  console.log(`\n=== Check Replies (Workspace IMAP) ===`);
+  console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
+  console.log(`Période: ${days} dernier(s) jour(s)`);
+  console.log(`Prospects indexés: ${byEmail.size}`);
+  console.log(`Déjà vus: ${seen.size}`);
 
-  // Connect IMAP
   const imap = new ImapFlow({
-    host: config.imap?.host || config.host,
-    port: config.imap?.port || 993,
-    secure: config.imap?.secure !== false,
-    auth: {
-      user: config.auth.user,
-      pass: config.auth.pass,
-    },
+    host: config.host,
+    port: config.port || 993,
+    secure: config.secure !== false,
+    auth: { user: config.auth.user, pass: config.auth.pass },
     logger: false,
   });
 
+  let stats = { scanned: 0, matched: 0, skipped: 0, updated: 0, byClass: {} };
+
   try {
     await imap.connect();
-    console.log('Connecté à la boîte mail.');
-
     const lock = await imap.getMailboxLock('INBOX');
     try {
       const since = new Date();
       since.setDate(since.getDate() - days);
-
-      const messages = imap.fetch(
-        { since },
-        { source: true, envelope: true }
-      );
-
-      let processed = 0;
-      let updates = { desabonne: 0, bounce: 0, repondu: 0, rdv_potentiel: 0 };
+      const messages = imap.fetch({ since }, { source: true, envelope: true, uid: true });
 
       for await (const msg of messages) {
+        stats.scanned++;
         const parsed = await simpleParser(msg.source);
-        const fromAddr = parsed.from?.value?.[0]?.address?.toLowerCase() || '';
-        const subject = parsed.subject || '';
-        const body = parsed.text || '';
+        const fromAddr = (parsed.from?.value?.[0]?.address || '').toLowerCase().trim();
+        if (!fromAddr) continue;
+        const messageId = parsed.messageId || `uid-${msg.uid}`;
+        if (seen.has(messageId)) { stats.skipped++; continue; }
 
-        // Check if sender is a known prospect
-        const prospect = prospectEmails.get(fromAddr);
-        if (!prospect) continue;
+        const match = byEmail.get(fromAddr);
+        if (!match) continue;
+        stats.matched++;
 
-        // Skip already processed
-        if (['desabonne', 'bounce', 'rdv_pris', 'converti', 'pas_interesse'].includes(prospect.statut)) continue;
-
-        const classification = classifyEmail(subject, body);
-        const today = new Date().toISOString().slice(0, 10);
-
-        console.log(`[${fromAddr}] ${prospect.entreprise}`);
-        console.log(`  Sujet: ${subject.slice(0, 80)}`);
-        console.log(`  Classification: ${classification}`);
-
-        if (!dryRun) {
-          if (classification === 'desabonne') {
-            prospect.statut = 'desabonne';
-            prospect.notes += ` | unsub:${today}`;
-          } else if (classification === 'bounce') {
-            prospect.statut = 'bounce';
-            prospect.notes += ` | bounce:${today}`;
-          } else if (classification === 'rdv_potentiel') {
-            prospect.statut = 'repondu';
-            prospect.notes += ` | réponse positive:${today} VÉRIFIER`;
-          } else {
-            prospect.statut = 'repondu';
-            prospect.notes += ` | réponse:${today}`;
-          }
+        const { row: prospect, idx } = match;
+        // Update only if prospect was in active outreach
+        if (!['envoye', 'relance_1', 'relance_2', 'nouveau'].includes(prospect.status)) {
+          stats.skipped++;
+          if (!dryRun) markSeen(messageId, fromAddr, idx, 'already-handled');
+          continue;
         }
 
-        updates[classification]++;
-        processed++;
+        const classification = classify(parsed.subject || '', parsed.text || '');
+        stats.byClass[classification] = (stats.byClass[classification] || 0) + 1;
+
+        const today = new Date().toISOString().slice(0, 10);
+        const subject = (parsed.subject || '(sans sujet)').slice(0, 80);
+        console.log(`\n[${classification.toUpperCase()}] ${prospect.company} (${fromAddr})`);
+        console.log(`  Sujet: ${subject}`);
+
+        if (dryRun) continue;
+
+        const replyFile = saveReplyBody(prospect, parsed, classification);
+        const newStatus = classification === 'bounce' ? prospect.status : STATUS_FROM_CLASS[classification];
+        prospect.status = newStatus;
+        const noteTag = classification === 'bounce'
+          ? `BOUNCE ${today}: ${subject}`
+          : `Réponse ${today} (${classification}): ${subject} [reply:${replyFile}]`;
+        prospect.notes = prospect.notes ? `${prospect.notes} | ${noteTag}` : noteTag;
+        markSeen(messageId, fromAddr, idx, classification);
+        stats.updated++;
       }
 
-      if (!dryRun && processed > 0) {
-        saveProspects(header, prospects);
+      if (!dryRun && stats.updated > 0) {
+        saveProspectionTsv(PROSPECTION_FILE, rows);
       }
 
       console.log(`\n=== Résultat ===`);
-      console.log(`Emails analysés depuis ${since.toISOString().slice(0, 10)}`);
-      console.log(`Réponses de prospects: ${processed}`);
-      console.log(`  Désabonnements: ${updates.desabonne}`);
-      console.log(`  Bounces: ${updates.bounce}`);
-      console.log(`  Réponses positives: ${updates.rdv_potentiel} (à vérifier)`);
-      console.log(`  Réponses neutres: ${updates.repondu}`);
-
+      console.log(`Scanned: ${stats.scanned} | Matched: ${stats.matched} | Skipped: ${stats.skipped} | Updated: ${stats.updated}`);
+      Object.entries(stats.byClass).forEach(([c, n]) => console.log(`  ${c}: ${n}`));
     } finally {
       lock.release();
     }
-
     await imap.logout();
   } catch (err) {
     console.error(`Erreur IMAP: ${err.message}`);
-    if (err.code === 'EAUTH' || err.authenticationFailed) {
-      console.error('-> Vérifiez les identifiants IMAP dans config/smtp.yml (section scaliab.imap)');
+    if (err.authenticationFailed) {
+      console.error('-> Vérifiez le bloc smtp.imap dans config/smtp.yml et que IMAP est activé sur Gmail.');
     }
-    process.exit(1);
+    throw err;
   }
+
+  return stats;
 }
 
-// --- CLI ---
-const args = process.argv.slice(2);
-const getArg = (name) => {
-  const idx = args.indexOf(name);
-  return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : null;
-};
+// CLI uniquement si appelé directement
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const args = process.argv.slice(2);
+  const getArg = (name) => {
+    const idx = args.indexOf(name);
+    return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : null;
+  };
+  const days = parseInt(getArg('--days') || '1', 10);
+  const dryRun = args.includes('--dry-run');
+  await checkReplies({ days, dryRun });
+}
 
-const days = parseInt(getArg('--days') || '1');
-const dryRun = args.includes('--dry-run');
-
-await checkReplies({ days, dryRun });
+export { checkReplies };

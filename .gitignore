@@ -2,6 +2,10 @@
 data/mandats.md
 data/pipeline.md
 data/scan-history.tsv
+data/drafts.tsv
+data/tracking.tsv
+data/replies-seen.tsv
+data/replies/
 reports/*.md
 !reports/.gitkeep
 output/*

@@ -124,6 +124,24 @@
   .dist { display: flex; height: 24px; border-radius: 4px; overflow: hidden; }
   .dist-seg { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; transition: opacity 0.2s; }
   .dist-seg:hover { opacity: 0.85; }
+  /* Drafts */
+  .draft-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .draft-card.selected { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-bg); }
+  .draft-card .row1 { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .draft-card .row1 .meta { flex: 1; min-width: 0; }
+  .draft-card .row1 .meta .company { font-weight: 600; font-size: 14px; }
+  .draft-card .row1 .meta .contact { font-size: 12px; color: var(--muted); }
+  .draft-card input.subject { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; font-weight: 600; margin-bottom: 8px; }
+  .draft-card textarea.body { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; min-height: 140px; resize: vertical; line-height: 1.5; }
+  .draft-card .row2 { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .draft-card .row2 input[type="datetime-local"] { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; }
+  .pill-generating { background: #fef3c7; color: #92400e; }
+  .pill-pending_review { background: #dbeafe; color: #1e40af; }
+  .pill-scheduled { background: #fef3c7; color: #92400e; }
+  .pill-sent { background: #d1fae5; color: #065f46; }
+  .pill-error { background: #fee2e2; color: #991b1b; }
+  .draft-bulk-bar { background: var(--primary-bg); border: 1px solid var(--primary-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .draft-bulk-bar .count { font-weight: 600; color: var(--primary); }
 </style>
 </head>
 <body x-data="crm()" x-init="init()">
@@ -133,6 +151,7 @@
     <nav>
       <button :class="{active: tab==='today'}" @click="tab='today'"><span class="icon">🔥</span> Aujourd'hui <span class="badge" x-show="todayBadge > 0" x-text="todayBadge"></span></button>
       <button :class="{active: tab==='pipeline'}" @click="tab='pipeline'"><span class="icon">📤</span> Pipeline</button>
+      <button :class="{active: tab==='drafts'}" @click="tab='drafts'; loadDrafts()"><span class="icon">📝</span> Drafts <span class="badge" x-show="draftsBadge > 0" x-text="draftsBadge"></span></button>
       <button :class="{active: tab==='mails'}" @click="tab='mails'"><span class="icon">📧</span> Mails</button>
       <button :class="{active: tab==='linkedin'}" @click="tab='linkedin'"><span class="icon">🤝</span> LinkedIn</button>
       <button :class="{active: tab==='mandats'}" @click="tab='mandats'"><span class="icon">📊</span> Mandats</button>
@@ -158,7 +177,14 @@
       </div>
 
       <div class="section" x-show="actions.responded && actions.responded.length">
-        <div class="head"><h3>🟢 Réponses à traiter en priorité</h3><span class="count" x-text="(actions.responded||[]).length + ' réponse(s)'"></span></div>
+        <div class="head">
+          <h3>🟢 Réponses à traiter en priorité</h3>
+          <div class="actions">
+            <span class="count" x-show="imapStatus.lastImapCheck" style="font-size:11px; color:var(--muted);" x-text="'inbox: ' + (imapStatus.lastImapCheck ? new Date(imapStatus.lastImapCheck).toLocaleTimeString('fr-CH', {hour:'2-digit',minute:'2-digit'}) : '—')"></span>
+            <button class="btn btn-secondary" @click="checkInbox()" :disabled="imapStatus.running" x-text="imapStatus.running ? '⏳ Scan…' : '🔄 Inbox'"></button>
+            <span class="count" x-text="(actions.responded||[]).length + ' réponse(s)'"></span>
+          </div>
+        </div>
         <div class="body">
           <table>
             <thead><tr><th>Boîte</th><th>Contact</th><th>Status</th><th>Date envoi</th><th>Notes</th></tr></thead>
@@ -201,19 +227,26 @@
       </div>
 
       <div class="section" x-show="(actions.dueFollowups||[]).length > 0">
-        <div class="head"><h3>⏰ Follow-ups dus (J+7+ sans réponse)</h3><span class="count" x-text="(actions.dueFollowups||[]).length"></span></div>
+        <div class="head">
+          <h3>⏰ Follow-ups dus (J+7+ sans réponse)</h3>
+          <div class="actions">
+            <button class="btn btn-secondary" @click="toggleAllFollowups()" x-text="followupSelection.length === (actions.dueFollowups||[]).length && followupSelection.length > 0 ? 'Tout déselectionner' : 'Tout cocher'"></button>
+            <button class="btn btn-primary" :disabled="followupSelection.length === 0" @click="prepareBatch()" x-text="'📝 Préparer batch (' + followupSelection.length + ')'"></button>
+          </div>
+        </div>
         <div class="body">
           <table>
-            <thead><tr><th>Boîte</th><th>Contact</th><th>Status</th><th>Envoyé le</th><th>Jours</th><th>Action</th></tr></thead>
+            <thead><tr><th style="width:32px;"></th><th>Boîte</th><th>Contact</th><th>Status</th><th>Envoyé le</th><th>Jours</th><th>Action</th></tr></thead>
             <tbody>
               <template x-for="p in (actions.dueFollowups||[])" :key="p.id">
                 <tr>
+                  <td><input type="checkbox" :value="p.id" :checked="followupSelection.includes(p.id)" @change="toggleFollowup(p.id)" @click.stop></td>
                   <td class="company" x-text="p.company"></td>
                   <td class="contact" x-text="p.contact || '—'"></td>
                   <td><span class="pill" :class="'pill-' + p.status" x-text="p.status"></span></td>
                   <td x-text="p.date_envoi"></td>
                   <td x-text="daysSince(p.date_envoi) + 'j'"></td>
-                  <td><button class="btn btn-primary" @click="relance(p.id)">Relancer</button></td>
+                  <td><button class="btn btn-primary" @click="relance(p.id)">Relancer (auto)</button></td>
                 </tr>
               </template>
             </tbody>
@@ -315,6 +348,87 @@
           </div>
         </template>
       </div>
+    </div>
+
+    <!-- TAB: DRAFTS -->
+    <div x-show="tab==='drafts'" x-cloak>
+      <h2>📝 Drafts de relance <span style="font-size: 13px; color: var(--muted); font-weight: normal;" x-text="'(' + drafts.length + ')'"></span></h2>
+
+      <div class="kpis">
+        <div class="kpi"><div class="label">Génération en cours</div><div class="value" x-text="drafts.filter(d=>d.status==='generating').length"></div></div>
+        <div class="kpi warn"><div class="label">À relire</div><div class="value" x-text="drafts.filter(d=>d.status==='pending_review').length"></div></div>
+        <div class="kpi"><div class="label">Programmés</div><div class="value" x-text="drafts.filter(d=>d.status==='scheduled').length"></div></div>
+        <div class="kpi ok"><div class="label">Envoyés</div><div class="value" x-text="drafts.filter(d=>d.status==='sent').length"></div></div>
+      </div>
+
+      <div class="filters">
+        <select x-model="filter.draftStatus">
+          <option value="pending">À relire ou programmés</option>
+          <option value="">Tous</option>
+          <option value="pending_review">À relire</option>
+          <option value="generating">En cours</option>
+          <option value="scheduled">Programmés</option>
+          <option value="sent">Envoyés</option>
+          <option value="error">Erreurs</option>
+        </select>
+        <button class="btn btn-secondary" @click="refreshDrafts()">🔄 Refresh (claude)</button>
+        <span style="margin-left:auto; color:var(--muted); font-size:12px;" x-text="filteredDrafts.length + ' draft(s)'"></span>
+      </div>
+
+      <div class="draft-bulk-bar" x-show="draftSelection.length > 0">
+        <span class="count" x-text="draftSelection.length + ' sélectionné(s)'"></span>
+        <button class="btn btn-success" @click="sendSelected()">✓ Tout envoyer maintenant</button>
+        <button class="btn btn-primary" @click="scheduleSelected()">📅 Tout programmer</button>
+        <button class="btn btn-danger" @click="deleteSelected()">🗑 Tout supprimer</button>
+        <button class="btn btn-secondary" @click="draftSelection = []">Reset</button>
+      </div>
+
+      <template x-if="filteredDrafts.length === 0">
+        <div class="empty">
+          Aucun draft. Va sur l'onglet "Aujourd'hui", coche les follow-ups dus, clique "Préparer batch".
+        </div>
+      </template>
+
+      <template x-for="d in filteredDrafts" :key="d.id">
+        <div class="draft-card" :class="{selected: draftSelection.includes(d.id)}">
+          <div class="row1">
+            <input type="checkbox" :value="d.id" :checked="draftSelection.includes(d.id)" @change="toggleDraft(d.id)" :disabled="d.status==='generating' || d.status==='sent'">
+            <div class="meta">
+              <div class="company" x-text="d.company"></div>
+              <div class="contact" x-text="(d.contact || d.email) + ' • ' + d.stage + ' • #' + d.id"></div>
+            </div>
+            <span class="pill" :class="'pill-' + d.status" x-text="d.status"></span>
+          </div>
+
+          <template x-if="d.status === 'generating'">
+            <div style="font-size: 12px; color: var(--muted); padding: 12px; background: #fafbfc; border-radius: 6px;">
+              ⏳ Claude rédige le mail (1-3 min). Clique "Refresh" pour vérifier, ou attends le rafraîchissement auto.
+            </div>
+          </template>
+
+          <template x-if="d.status === 'error'">
+            <div style="font-size: 12px; color: var(--red); padding: 12px; background: #fef2f2; border-radius: 6px;" x-text="d.notes"></div>
+          </template>
+
+          <template x-if="d.status !== 'generating'">
+            <div>
+              <input class="subject" type="text" x-model="d.subject" @blur="patchDraft(d, {subject: d.subject})" placeholder="Objet du mail">
+              <textarea class="body" x-model="d.body" @blur="patchDraft(d, {body: d.body})" placeholder="Corps du mail (sans signature, ajoutée auto)"></textarea>
+              <div class="row2" x-show="d.status === 'pending_review' || d.status === 'scheduled' || d.status === 'error'">
+                <button class="btn btn-success" @click="sendNow(d)" :disabled="d.status === 'sent'">✓ Envoyer maintenant</button>
+                <span style="color: var(--muted); font-size: 12px;">ou planifier:</span>
+                <input type="datetime-local" :value="formatLocal(d.scheduled_at)" @change="schedule(d, $event.target.value)">
+                <button class="btn btn-secondary" @click="askDefaultTime(d)">⏰ Heure naturelle</button>
+                <button class="btn btn-danger" @click="deleteDraft(d)" style="margin-left:auto;">🗑</button>
+              </div>
+              <div class="row2" x-show="d.status === 'sent'">
+                <span style="color: var(--green); font-size: 12px; font-weight: 600;">✓ Envoyé</span>
+                <span style="color: var(--muted); font-size: 11px;" x-text="d.notes"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
     </div>
 
     <!-- TAB: MAILS -->
@@ -484,6 +598,21 @@
             </template>
           </div>
         </template>
+
+        <template x-if="prospectReplyFiles.length > 0">
+          <div style="margin-top: 24px;">
+            <label style="display:block; font-size:11px; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">📧 Réponses reçues (IMAP)</label>
+            <template x-for="rf in prospectReplyFiles" :key="rf">
+              <div style="background:#ecfdf5; border:1px solid var(--green); border-radius:6px; padding:10px 12px; margin-bottom:8px; font-size:12px; cursor:pointer;" @click="loadReply(rf)">
+                <div style="font-weight:600; color:var(--green);">📨 <span x-text="rf"></span></div>
+                <div style="color:var(--muted); margin-top:4px;">Cliquer pour lire le mail complet</div>
+              </div>
+            </template>
+            <template x-if="replyBody">
+              <div class="mail-body" style="margin-top: 8px;" x-text="replyBody"></div>
+            </template>
+          </div>
+        </template>
       </div>
       <div class="actions">
         <button class="btn btn-success" @click="setStatus('reponse')">✓ Répondu</button>
@@ -536,24 +665,39 @@ function crm() {
     selected: null,
     detailOpen: false,
     kanban: false,
-    filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '' },
+    drafts: [],
+    draftSelection: [],
+    followupSelection: [],
+    imapStatus: { lastImapCheck: null, running: false, lastImapStats: null },
+    replyBody: '',
+    filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '', draftStatus: 'pending' },
     kanbanStatuses: ['nouveau', 'envoye', 'relance_1', 'relance_2', 'reponse', 'Discarded'],
 
     async init() {
       await this.refresh();
+      await this.loadDrafts();
       // Auto-refresh every 60s
-      setInterval(() => this.refresh(), 60000);
+      setInterval(() => {
+        this.refresh();
+        // Si on est sur l'onglet drafts ou des drafts sont generating, on les refresh aussi
+        if (this.tab === 'drafts' || this.drafts.some(d => d.status === 'generating')) {
+          this.refreshDrafts();
+        } else {
+          this.loadDrafts();
+        }
+      }, 60000);
     },
 
     async refresh() {
       try {
-        const [p, m, li, ml, t, s] = await Promise.all([
+        const [p, m, li, ml, t, s, imap] = await Promise.all([
           fetch('/api/prospects').then(r => r.json()),
           fetch('/api/mandats').then(r => r.json()),
           fetch('/api/linkedin').then(r => r.json()),
           fetch('/api/mails').then(r => r.json()),
           fetch('/api/today').then(r => r.json()),
           fetch('/api/stats').then(r => r.json()),
+          fetch('/api/imap-status').then(r => r.json()).catch(() => ({})),
         ]);
         this.prospects = p;
         this.mandats = m;
@@ -562,14 +706,51 @@ function crm() {
         this.kpis = t.kpis || {};
         this.actions = t.actions || {};
         this.stats = s;
+        this.imapStatus = imap || this.imapStatus;
         this.lastSync = new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
       } catch (err) {
         console.error('refresh failed', err);
       }
     },
 
+    async checkInbox() {
+      try {
+        const res = await fetch('/api/check-replies?days=2', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok && data.stats) {
+          const s = data.stats;
+          alert(`Inbox scannée: ${s.scanned} mails, ${s.matched} matchés prospects, ${s.updated} mis à jour.${s.updated > 0 ? '\nRefresh en cours…' : ''}`);
+          await this.refresh();
+        } else {
+          alert('Scan IMAP en cours ou erreur. Réessaie dans 30s.');
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    },
+
+    async loadReply(filename) {
+      try {
+        const text = await fetch(`/api/replies/${filename}`).then(r => r.text());
+        this.replyBody = text;
+      } catch (err) {
+        this.replyBody = 'Erreur: ' + err.message;
+      }
+    },
+
     get todayBadge() {
       return (this.actions.responded || []).length + (this.actions.bounces || []).length + (this.actions.liAccepted || []).length;
+    },
+
+    get draftsBadge() {
+      return this.drafts.filter(d => d.status === 'pending_review').length;
+    },
+
+    get filteredDrafts() {
+      const f = this.filter.draftStatus;
+      if (!f) return this.drafts;
+      if (f === 'pending') return this.drafts.filter(d => ['pending_review', 'scheduled', 'generating'].includes(d.status));
+      return this.drafts.filter(d => d.status === f);
     },
 
     get availableStatuses() {
@@ -628,9 +809,19 @@ function crm() {
       return this.mails.filter(m => m.company === this.selected.company);
     },
 
+    get prospectReplyFiles() {
+      if (!this.selected || !this.selected.notes) return [];
+      const matches = [...this.selected.notes.matchAll(/\[reply:([\w.\-]+\.txt)\]/g)];
+      return [...new Set(matches.map(m => m[1]))];
+    },
+
     openProspect(p) {
       this.selected = { ...p };
       this.detailOpen = true;
+      this.replyBody = '';
+      // Auto-load la dernière réponse reçue si disponible
+      const files = this.prospectReplyFiles;
+      if (files.length > 0) this.loadReply(files[files.length - 1]);
     },
 
     async saveProspect() {
@@ -677,6 +868,171 @@ function crm() {
       } catch (err) {
         alert('Erreur réseau: ' + err.message);
       }
+    },
+
+    // --- Follow-up multi-select ---
+    toggleFollowup(id) {
+      const idx = this.followupSelection.indexOf(id);
+      if (idx >= 0) this.followupSelection.splice(idx, 1);
+      else this.followupSelection.push(id);
+    },
+
+    toggleAllFollowups() {
+      const all = (this.actions.dueFollowups || []).map(p => p.id);
+      this.followupSelection = this.followupSelection.length === all.length ? [] : [...all];
+    },
+
+    async prepareBatch() {
+      if (this.followupSelection.length === 0) return;
+      const n = this.followupSelection.length;
+      if (!confirm(`Lancer Claude pour rédiger ${n} relance(s) en draft ? (1-3 min par draft, en parallèle)\n\nLes drafts seront prêts dans l'onglet 📝 Drafts.`)) return;
+      try {
+        const res = await fetch('/api/drafts/prepare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prospectIds: this.followupSelection }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert(`✓ ${data.message}\n\nRendez-vous dans l'onglet 📝 Drafts dans 2-3 min.`);
+          this.followupSelection = [];
+          this.tab = 'drafts';
+          await this.loadDrafts();
+        } else {
+          alert('Erreur: ' + (data.error || 'unknown'));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    },
+
+    // --- Drafts ---
+    async loadDrafts() {
+      try {
+        this.drafts = await fetch('/api/drafts').then(r => r.json());
+      } catch (err) { console.error('loadDrafts failed', err); }
+    },
+
+    async refreshDrafts() {
+      // /api/drafts/refresh hydrate les "generating" qui ont fini
+      try {
+        this.drafts = await fetch('/api/drafts/refresh').then(r => r.json());
+      } catch (err) { console.error('refreshDrafts failed', err); }
+    },
+
+    toggleDraft(id) {
+      const idx = this.draftSelection.indexOf(id);
+      if (idx >= 0) this.draftSelection.splice(idx, 1);
+      else this.draftSelection.push(id);
+    },
+
+    async patchDraft(d, updates) {
+      try {
+        await fetch(`/api/drafts/${d.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates),
+        });
+      } catch (err) { console.error('patchDraft failed', err); }
+    },
+
+    async sendNow(d) {
+      if (!confirm(`Envoyer maintenant le mail à ${d.contact || d.email} (${d.company}) ?`)) return;
+      try {
+        const res = await fetch(`/api/drafts/${d.id}/send`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          d.status = 'sent';
+          await this.loadDrafts();
+          await this.refresh();
+        } else {
+          alert('Erreur: ' + (data.error || 'unknown') + '\n\n' + (data.output || ''));
+        }
+      } catch (err) {
+        alert('Erreur réseau: ' + err.message);
+      }
+    },
+
+    async schedule(d, localValue) {
+      if (!localValue) return;
+      // localValue is "YYYY-MM-DDTHH:MM" — convert to ISO with current TZ offset
+      const iso = new Date(localValue).toISOString();
+      d.scheduled_at = iso;
+      d.status = 'scheduled';
+      await this.patchDraft(d, { scheduled_at: iso, status: 'scheduled' });
+    },
+
+    async askDefaultTime(d) {
+      try {
+        const data = await fetch('/api/drafts/default-time').then(r => r.json());
+        d.scheduled_at = data.scheduled_at;
+        d.status = 'scheduled';
+        await this.patchDraft(d, { scheduled_at: data.scheduled_at, status: 'scheduled' });
+      } catch (err) { alert('Erreur: ' + err.message); }
+    },
+
+    async deleteDraft(d) {
+      if (!confirm(`Supprimer le draft #${d.id} pour ${d.company} ?`)) return;
+      await fetch(`/api/drafts/${d.id}`, { method: 'DELETE' });
+      await this.loadDrafts();
+    },
+
+    async sendSelected() {
+      const ids = [...this.draftSelection];
+      if (ids.length === 0) return;
+      if (!confirm(`Envoyer ${ids.length} mail(s) maintenant ?`)) return;
+      let ok = 0, fail = 0;
+      for (const id of ids) {
+        try {
+          const res = await fetch(`/api/drafts/${id}/send`, { method: 'POST' });
+          const data = await res.json();
+          if (data.ok) ok++; else fail++;
+        } catch (err) { fail++; }
+      }
+      alert(`Envoyés: ${ok} / ${ids.length}${fail ? ` (${fail} erreurs)` : ''}`);
+      this.draftSelection = [];
+      await this.loadDrafts();
+      await this.refresh();
+    },
+
+    async scheduleSelected() {
+      const ids = [...this.draftSelection];
+      if (ids.length === 0) return;
+      if (!confirm(`Programmer ${ids.length} draft(s) à des heures naturelles staggered ?`)) return;
+      let ok = 0;
+      for (const id of ids) {
+        try {
+          const data = await fetch('/api/drafts/default-time').then(r => r.json());
+          await fetch(`/api/drafts/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scheduled_at: data.scheduled_at, status: 'scheduled' }),
+          });
+          ok++;
+        } catch (err) { console.error(err); }
+      }
+      alert(`✓ ${ok} drafts programmés (heures naturelles randomisées 9h-11h).`);
+      this.draftSelection = [];
+      await this.loadDrafts();
+    },
+
+    async deleteSelected() {
+      const ids = [...this.draftSelection];
+      if (ids.length === 0) return;
+      if (!confirm(`Supprimer ${ids.length} draft(s) ?`)) return;
+      for (const id of ids) {
+        await fetch(`/api/drafts/${id}`, { method: 'DELETE' });
+      }
+      this.draftSelection = [];
+      await this.loadDrafts();
+    },
+
+    formatLocal(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     },
   };
 }

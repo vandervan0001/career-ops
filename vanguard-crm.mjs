@@ -11,12 +11,12 @@
  */
 
 import express from 'express';
-import { existsSync, readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, readdirSync, statSync, openSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, spawn } from 'child_process';
-import { openSync } from 'fs';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
+import { checkReplies } from './check-replies.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 7777;
@@ -25,7 +25,11 @@ const MANDATS_FILE = join(ROOT, 'data', 'mandats.md');
 const LINKEDIN_FILE = join(ROOT, 'data', 'linkedin-invitations.tsv');
 const SENT_DIR = join(ROOT, 'output', 'prospection', 'sent');
 const TRACKING_FILE = join(ROOT, 'data', 'tracking.tsv');
+const DRAFTS_FILE = join(ROOT, 'data', 'drafts.tsv');
+const REPLIES_DIR = join(ROOT, 'data', 'replies');
 const FRONTEND_DIR = join(ROOT, 'vanguard-crm-frontend');
+
+const DRAFT_COLUMNS = ['id', 'created_at', 'prospect_id', 'company', 'contact', 'email', 'stage', 'subject', 'body', 'scheduled_at', 'status', 'notes'];
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -99,6 +103,44 @@ function loadTrackingEvents() {
     const [ts, type, msgId, ip, ua, url] = ln.split('\t');
     return { ts, type, msgId, ip, ua, url };
   });
+}
+
+// --- Drafts ---
+
+function loadDrafts() {
+  if (!existsSync(DRAFTS_FILE)) return [];
+  const lines = readFileSync(DRAFTS_FILE, 'utf-8').split('\n').filter(l => l.length);
+  if (lines.length < 2) return [];
+  const header = lines[0].split('\t');
+  return lines.slice(1).map(ln => {
+    const vals = ln.split('\t');
+    const row = {};
+    header.forEach((k, i) => row[k] = (vals[i] || '').replace(/\\n/g, '\n').replace(/\\t/g, '\t'));
+    return row;
+  });
+}
+
+function saveDrafts(rows) {
+  const header = DRAFT_COLUMNS.join('\t');
+  const body = rows.map(r =>
+    DRAFT_COLUMNS.map(c => String(r[c] ?? '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\t/g, '\\t')).join('\t')
+  ).join('\n');
+  writeFileSync(DRAFTS_FILE, `${header}\n${body}\n`);
+}
+
+// Génère une heure "naturelle" pour le scheduling par défaut
+// Entre 9h00 et 11h30, minutes non-rondes
+function naturalDefaultTime(baseDate = new Date()) {
+  const d = new Date(baseDate);
+  const minutes = [8, 13, 17, 22, 27, 31, 38, 43, 47, 52, 56];
+  const hours = [9, 10, 11];
+  d.setHours(hours[Math.floor(Math.random() * hours.length)]);
+  d.setMinutes(minutes[Math.floor(Math.random() * minutes.length)]);
+  d.setSeconds(Math.floor(Math.random() * 60));
+  d.setMilliseconds(0);
+  // Si c'est dans le passé (cas de fin de journée), pousse à demain
+  if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
+  return d.toISOString();
 }
 
 function appendTrackingEvent(type, msgId, ip = '', ua = '', url = '') {
@@ -227,6 +269,11 @@ app.get('/api/today', (req, res) => {
   const opens = tracking.filter(e => e.type === 'open');
   const clicks = tracking.filter(e => e.type === 'click');
 
+  const relanceDrafts = loadDrafts();
+  const pendingReview = relanceDrafts.filter(d => d.status === 'pending_review').length;
+  const generating = relanceDrafts.filter(d => d.status === 'generating').length;
+  const scheduled = relanceDrafts.filter(d => d.status === 'scheduled').length;
+
   res.json({
     today,
     kpis: {
@@ -238,6 +285,9 @@ app.get('/api/today', (req, res) => {
       responseRate: `${responseRate}%`,
       totalOpens: opens.length,
       totalClicks: clicks.length,
+      pendingReviewDrafts: pendingReview,
+      generatingDrafts: generating,
+      scheduledDrafts: scheduled,
     },
     actions: {
       responded,
@@ -276,6 +326,188 @@ app.get('/api/stats', (req, res) => {
 
   res.json({ dailySends, byStatus, bySector, byTargetType });
 });
+
+// --- Drafts API ---
+
+app.get('/api/drafts', (req, res) => {
+  res.json(loadDrafts());
+});
+
+// Crée des drafts pour un batch de prospects via Claude CLI en background
+// Body: { prospectIds: [int, ...] }
+app.post('/api/drafts/prepare', (req, res) => {
+  const { prospectIds } = req.body;
+  if (!Array.isArray(prospectIds) || prospectIds.length === 0) {
+    return res.status(400).json({ error: 'prospectIds[] required' });
+  }
+  const prospects = loadProspects();
+  const targets = prospectIds.map(id => prospects[id]).filter(p => p && ['envoye', 'relance_1'].includes(p.status));
+  if (targets.length === 0) return res.status(400).json({ error: 'no eligible prospect' });
+
+  const claudeBin = '/Users/tai/.local/bin/claude';
+  const drafts = loadDrafts();
+  const newDraftIds = [];
+
+  for (const row of targets) {
+    const id = drafts.reduce((m, r) => Math.max(m, parseInt(r.id || 0, 10)), 0) + newDraftIds.length + 1;
+    newDraftIds.push(id);
+    const stage = row.status === 'envoye' ? 'relance_1' : 'relance_2';
+    const safeCompany = row.company.replace(/"/g, '\\"');
+    const draftBodyFile = `/tmp/draft-${id}-body.txt`;
+    const draftSubjectFile = `/tmp/draft-${id}-subject.txt`;
+    const logFile = `/tmp/vanguard-draft-${id}.log`;
+
+    const prompt = `Tu rédiges une relance pour Vanguard Systems (Tai Van, automaticien freelance Lausanne) — DRAFT MODE: tu écris dans des fichiers, tu n'envoies rien.
+
+CIBLE: company="${safeCompany}" contact="${row.contact || ''}" email="${row.email}" sector="${row.sector}" status_actuel="${row.status}" date_dernier_envoi="${row.date_envoi || ''}".
+SIGNAL initial: ${row.signal || '(aucun)'}.
+NOTES tracker: ${(row.notes || '').slice(0, 300)}.
+
+TÂCHE:
+1. Lis le mail précédent envoyé à cette boîte dans output/prospection/sent/${row.date_envoi || ''}/ (cherche par slug). Note l'angle.
+2. WebSearch brève (2-3 résultats max) actualité récente: recrutement, projet, levée, salon, contrat. Skip si rien.
+3. Rédige relance courte (max 100 mots) avec ANGLE NOUVEAU. Si actualité trouvée → s'appuyer dessus. Sinon: 1ère relance "renfort projet immédiat", 2ème "info-only au cas où".
+4. Règles strictes Vanguard: vouvoiement, salutation "Bonjour Monsieur/Madame [NOM]" si contact (sinon "Bonjour,"), pas d'em-dashes en corps, français accents, pas de jargon (OEM→constructeurs de machines, FAT/SAT OK, PLC→automate). Ton humain pair-à-pair.
+5. Écris UNIQUEMENT 2 fichiers:
+   - ${draftSubjectFile} (1 ligne, l'objet du mail, max 60 chars)
+   - ${draftBodyFile} (le corps texte, sans signature HTML qui sera ajoutée auto à l'envoi)
+6. Ne lance PAS outreach-dispatch.mjs. Le user validera depuis le CRM.
+
+Travaille rapide, pas de question, ne report rien (juste écrire les 2 fichiers).`;
+
+    try {
+      const child = spawn(claudeBin, ['-p', prompt, '--dangerously-skip-permissions'], {
+        cwd: ROOT, detached: true, stdio: ['ignore', openSync(logFile, 'a'), openSync(logFile, 'a')],
+      });
+      child.unref();
+    } catch (err) {
+      console.warn('Failed to spawn claude for draft', id, err.message);
+    }
+
+    drafts.push({
+      id: String(id),
+      created_at: new Date().toISOString(),
+      prospect_id: String(row.id),
+      company: row.company,
+      contact: row.contact || '',
+      email: row.email,
+      stage,
+      subject: '',
+      body: '',
+      scheduled_at: '',
+      status: 'generating',
+      notes: `Claude en cours (log: ${logFile}). subject_file=${draftSubjectFile} body_file=${draftBodyFile}`,
+    });
+  }
+
+  saveDrafts(drafts);
+  res.json({ ok: true, draftIds: newDraftIds, message: `${newDraftIds.length} drafts en cours de génération par Claude (1-3 min chacun, refresh dans 2-3 min)` });
+});
+
+// Hydrate un draft "generating" si Claude a fini d'écrire les fichiers
+function hydrateDraft(d) {
+  if (d.status !== 'generating') return d;
+  const subjectFile = (d.notes.match(/subject_file=(\S+)/) || [])[1];
+  const bodyFile = (d.notes.match(/body_file=(\S+)/) || [])[1];
+  if (subjectFile && bodyFile && existsSync(subjectFile) && existsSync(bodyFile)) {
+    d.subject = readFileSync(subjectFile, 'utf-8').trim().split('\n')[0];
+    d.body = readFileSync(bodyFile, 'utf-8').trim();
+    d.status = 'pending_review';
+  }
+  return d;
+}
+
+app.get('/api/drafts/refresh', (req, res) => {
+  const drafts = loadDrafts();
+  drafts.forEach(hydrateDraft);
+  saveDrafts(drafts);
+  res.json(drafts);
+});
+
+app.patch('/api/drafts/:id', (req, res) => {
+  const drafts = loadDrafts();
+  const draft = drafts.find(d => d.id === req.params.id);
+  if (!draft) return res.status(404).json({ error: 'not found' });
+  const allowed = ['subject', 'body', 'scheduled_at', 'status', 'notes'];
+  for (const k of allowed) {
+    if (k in req.body) draft[k] = String(req.body[k]);
+  }
+  saveDrafts(drafts);
+  res.json(draft);
+});
+
+app.delete('/api/drafts/:id', (req, res) => {
+  const drafts = loadDrafts().filter(d => d.id !== req.params.id);
+  saveDrafts(drafts);
+  res.json({ ok: true });
+});
+
+// Envoie immédiatement un draft via outreach-dispatch.mjs --body-file
+function sendDraft(draft) {
+  if (!draft.body) throw new Error('draft body is empty');
+  const bodyFile = `/tmp/draft-${draft.id}-final-body.txt`;
+  writeFileSync(bodyFile, draft.body);
+  const subjectArg = draft.subject ? `--subject "${draft.subject.replace(/"/g, '\\"')}"` : '';
+  const cmd = `node ${join(ROOT, 'outreach-dispatch.mjs')} --company "${draft.company.replace(/"/g, '\\"')}" --status ${draft.stage === 'relance_1' ? 'envoye' : 'relance_1'} --body-file ${bodyFile} ${subjectArg} --live --force`;
+  const out = execSync(cmd, { cwd: ROOT, stdio: 'pipe', timeout: 60000 }).toString();
+  return out;
+}
+
+app.post('/api/drafts/:id/send', (req, res) => {
+  const drafts = loadDrafts();
+  const draft = drafts.find(d => d.id === req.params.id);
+  if (!draft) return res.status(404).json({ error: 'not found' });
+  if (draft.status === 'sent') return res.status(400).json({ error: 'already sent' });
+  try {
+    const out = sendDraft(draft);
+    draft.status = 'sent';
+    draft.notes = (draft.notes || '') + ` | sent ${new Date().toISOString()}`;
+    saveDrafts(drafts);
+    res.json({ ok: true, output: out });
+  } catch (err) {
+    res.status(500).json({ error: err.message, output: err.stdout?.toString() || '' });
+  }
+});
+
+app.get('/api/drafts/default-time', (req, res) => {
+  res.json({ scheduled_at: naturalDefaultTime() });
+});
+
+// Background scheduler: check drafts scheduled in past, send them
+let schedulerRunning = false;
+async function schedulerTick() {
+  if (schedulerRunning) return;
+  schedulerRunning = true;
+  try {
+    const drafts = loadDrafts();
+    const now = new Date();
+    let dirty = false;
+    for (const d of drafts) {
+      if (d.status !== 'pending_review' && d.status !== 'scheduled') continue;
+      if (!d.scheduled_at) continue;
+      if (d.status === 'pending_review') continue; // pending_review ne s'envoie pas auto
+      const sched = new Date(d.scheduled_at);
+      if (sched <= now) {
+        try {
+          sendDraft(d);
+          d.status = 'sent';
+          d.notes = (d.notes || '') + ` | auto-sent ${now.toISOString()}`;
+          dirty = true;
+          console.log(`[scheduler] sent draft ${d.id} -> ${d.company}`);
+        } catch (err) {
+          d.notes = (d.notes || '') + ` | error ${err.message.slice(0, 200)}`;
+          d.status = 'error';
+          dirty = true;
+          console.error(`[scheduler] error sending draft ${d.id}:`, err.message);
+        }
+      }
+    }
+    if (dirty) saveDrafts(drafts);
+  } finally {
+    schedulerRunning = false;
+  }
+}
+setInterval(schedulerTick, 60_000);
 
 app.post('/api/relance/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
@@ -361,6 +593,52 @@ app.get('/api/tracking/:msgId', (req, res) => {
 
 app.get('/api/tracking', (req, res) => {
   res.json(loadTrackingEvents());
+});
+
+// --- IMAP replies scraping ---
+let lastImapCheck = null;
+let imapRunning = false;
+let lastImapStats = null;
+
+async function imapTick(days = 1) {
+  if (imapRunning) return null;
+  imapRunning = true;
+  try {
+    const stats = await checkReplies({ days, dryRun: false });
+    lastImapCheck = new Date().toISOString();
+    lastImapStats = stats;
+    if (stats.updated > 0) console.log(`[imap] ${stats.updated} prospects mis à jour`);
+    return stats;
+  } catch (err) {
+    console.error('[imap] erreur:', err.message);
+    lastImapStats = { error: err.message };
+    return null;
+  } finally {
+    imapRunning = false;
+  }
+}
+
+// Poll toutes les 5 min
+setInterval(() => imapTick(1), 5 * 60_000);
+// Premier check au démarrage (3s après le boot pour ne pas bloquer)
+setTimeout(() => imapTick(2), 3000);
+
+app.post('/api/check-replies', async (req, res) => {
+  const days = parseInt(req.query.days || '2', 10);
+  const stats = await imapTick(days);
+  res.json({ ok: !!stats, stats, lastImapCheck });
+});
+
+app.get('/api/imap-status', (req, res) => {
+  res.json({ lastImapCheck, running: imapRunning, lastImapStats });
+});
+
+// Lit le texte complet d'une réponse stockée dans data/replies/
+app.get('/api/replies/:file', (req, res) => {
+  if (!/^[\w.\-]+\.txt$/.test(req.params.file)) return res.status(400).json({ error: 'invalid filename' });
+  const path = join(REPLIES_DIR, req.params.file);
+  if (!existsSync(path)) return res.status(404).json({ error: 'not found' });
+  res.type('text/plain').send(readFileSync(path, 'utf-8'));
 });
 
 // --- Static frontend ---
