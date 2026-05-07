@@ -6,6 +6,11 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-07
+- [x] https://www.jobup.ch/en/jobs/detail/b03f75b3-092f-47bc-98c8-12f5981d3da8/ | DRV Emplois | Développeur software/automation Beckhoff (Neuchâtel) → #93 Evaluated 3.5/5 freelance hors noyau Siemens, tracker uniquement
+- [x] https://www.jobs.ch/en/vacancies/detail/9c720afb-03f3-4f58-9920-93525cbaa8be/ | Undisclosed Morat | Ingénieur Automation/Systèmes Industriels → #94 Evaluated 4.0/5 CDI Morat tracker uniquement
+- [x] https://www.jobs.ch/en/vacancies/detail/4c9e7678-641e-4fba-9ae3-a4f75ef59f06/ | Matisa Matériel Industriel SA | Ingénieur-Constructeur électrique (Crissier) → #95 SKIP 2.5/5 hors noyau
+
 ### 2026-05-06
 - [x] https://www.jobs.ch/fr/offres-emplois/detail/cb3905b9-aa3e-4c63-9206-e21bc765ce29/ | Undisclosed (cabinet) / client automation Neuchâtel | Project Manager (H/F) → #92 Evaluated 3.2/5 CDI tracker uniquement (mid 3-5 ans + client undisclosed, filon probable ETEL SA déjà contacté 2026-05-04 — ad confirme besoin actif)
 
