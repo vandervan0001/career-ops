@@ -855,6 +855,114 @@ app.get('/api/replies/:file', (req, res) => {
   res.type('text/plain').send(readFileSync(path, 'utf-8'));
 });
 
+// --- Chat assistant ---
+
+const chatSessions = new Map(); // sessionId -> { messages: [{role, content, ts}], created_at }
+const CHAT_TIMEOUT_MS = 5 * 60_000;
+
+function buildChatPrompt(history, userMessage) {
+  const recentHistory = history.slice(-8); // garde les 8 derniers échanges max
+  const historyText = recentHistory.length === 0 ? '(début de conversation)'
+    : recentHistory.map(m => `${m.role === 'user' ? 'TAI' : 'TOI'}: ${m.content}`).join('\n\n');
+
+  return `Tu es l'assistant CRM personnel de Tai Van, freelance automation chez Vanguard Systems à Lausanne.
+Tu opères dans /Volumes/Tai_SSD/dev/Projects/Prospection. Tu as accès à Read/Edit/Write/Bash et tous les MCPs configurés (Google Calendar, Gmail, etc).
+
+CONTEXTE BUSINESS:
+- Base prospects: data/prospection.tsv (schema: date, company, contact, email, linkedin, sector, signal, score, message_sent, status, notes, target_type, geo_priority, date_envoi)
+- Status valides: nouveau, identifie, envoye, relance_1, relance_2, reponse, repondu_pass_poli, rdv, Discarded
+- Mandats: data/mandats.md
+- RDV: data/rdv.tsv (synchro Google Calendar)
+- Mails reçus: data/replies/*.txt
+- Drafts: data/drafts.tsv
+
+REGLES STRICTES:
+- Tutoiement non, vouvoiement oui dans les emails. Réponses au user (Tai) en tutoiement.
+- PAS d'em-dashes (jamais), virgules ou parenthèses à la place
+- Français avec accents
+- Pas de jargon technique non-vulgarisé
+- Réponse au chat = 1-5 lignes max, confirme ce qui a été fait
+- Si action ambiguë, demande clarification AVANT d'exécuter
+- Si tu modifies un fichier, fais le directement via Edit/Write
+- Si tu ajoutes un prospect, append une ligne TSV à data/prospection.tsv (format exact, séparateur \\t, 14 colonnes)
+- Si tu crées un RDV, ajoute dans data/rdv.tsv via le rdv-detector pattern, OU mieux: utilise le calendar MCP pour créer l'event dans Google Calendar
+- Si tu envoies un mail, NE PAS utiliser outreach-dispatch direct. Utilise le mécanisme drafts: prépare un draft dans data/drafts.tsv avec status=pending_review, et dis-moi de le valider depuis l'UI
+- Pour LinkedIn: il n'y a pas d'envoi auto, tu peux juste mettre à jour le tracker LinkedIn dans data/linkedin-invitations.tsv
+
+HISTORIQUE RÉCENT:
+${historyText}
+
+NOUVEAU MESSAGE DE TAI:
+${userMessage}
+
+EXÉCUTE l'action et réponds court. Pas de blabla, juste le résultat ("OK Cyril Faivre ajouté avec score 8" plutôt que "Je vais m'occuper d'ajouter..."). Si tu fais plusieurs actions, liste les en bullets courts.`;
+}
+
+// POST /api/chat — démarre un message en background, retourne immédiatement
+app.post('/api/chat', (req, res) => {
+  const { message, sessionId } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: 'message required' });
+
+  const id = sessionId || `chat-${Date.now()}`;
+  const session = chatSessions.get(id) || { messages: [], created_at: new Date().toISOString(), running: false };
+  if (session.running) return res.status(409).json({ error: 'message en cours, attends la réponse' });
+
+  session.messages.push({ role: 'user', content: message, ts: new Date().toISOString() });
+  session.running = true;
+  chatSessions.set(id, session);
+
+  const prompt = buildChatPrompt(session.messages.slice(0, -1), message);
+  const claudeBin = '/Users/tai/.local/bin/claude';
+
+  const child = spawn(claudeBin, ['-p', prompt, '--dangerously-skip-permissions'], {
+    cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let stdout = '', stderr = '';
+  child.stdout.on('data', d => stdout += d.toString());
+  child.stderr.on('data', d => stderr += d.toString());
+  const timer = setTimeout(() => {
+    child.kill('SIGTERM');
+  }, CHAT_TIMEOUT_MS);
+  child.on('exit', (code) => {
+    clearTimeout(timer);
+    const reply = code === 0
+      ? (stdout.trim() || '(réponse vide)')
+      : `❌ Erreur: claude exit ${code}${stderr ? ' — ' + stderr.slice(-200) : ''}`;
+    session.messages.push({ role: 'assistant', content: reply, ts: new Date().toISOString() });
+    session.running = false;
+    chatSessions.set(id, session);
+    console.log(`[chat ${id}] message ${session.messages.length} done (exit=${code})`);
+  });
+  child.on('error', (err) => {
+    clearTimeout(timer);
+    session.messages.push({ role: 'assistant', content: `❌ Spawn error: ${err.message}`, ts: new Date().toISOString() });
+    session.running = false;
+    chatSessions.set(id, session);
+  });
+
+  res.json({
+    ok: true,
+    sessionId: id,
+    pending: true,
+    messageIdx: session.messages.length, // index du prochain message attendu (assistant)
+    pollUrl: `/api/chat/${id}?since=${session.messages.length}`,
+  });
+});
+
+// GET /api/chat/:id — retourne la session entière, ou seulement les messages depuis ?since=N
+app.get('/api/chat/:id', (req, res) => {
+  const session = chatSessions.get(req.params.id);
+  if (!session) return res.status(404).json({ error: 'not found' });
+  const since = parseInt(req.query.since || '0', 10);
+  const messages = since > 0 ? session.messages.slice(since) : session.messages;
+  res.json({ sessionId: req.params.id, running: session.running, messages, total: session.messages.length });
+});
+
+app.delete('/api/chat/:id', (req, res) => {
+  chatSessions.delete(req.params.id);
+  res.json({ ok: true });
+});
+
 // --- Static frontend ---
 app.use(express.static(FRONTEND_DIR));
 app.get('/', (req, res) => res.sendFile(join(FRONTEND_DIR, 'index.html')));

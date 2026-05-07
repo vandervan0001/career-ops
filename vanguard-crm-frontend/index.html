@@ -155,6 +155,23 @@
   .pill-unknown { background: #e5e7eb; color: #4b5563; }
   .draft-bulk-bar { background: var(--primary-bg); border: 1px solid var(--primary-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
   .draft-bulk-bar .count { font-weight: 600; color: var(--primary); }
+  /* Chat */
+  .chat-container { display: flex; flex-direction: column; height: calc(100vh - 96px); max-width: 900px; margin: 0 auto; }
+  .chat-thread { flex: 1; overflow-y: auto; padding: 8px 4px 16px; }
+  .chat-msg { margin-bottom: 16px; display: flex; flex-direction: column; }
+  .chat-user { align-items: flex-end; }
+  .chat-assistant { align-items: flex-start; }
+  .chat-meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; padding: 0 4px; }
+  .chat-bubble { max-width: 80%; padding: 12px 16px; border-radius: 12px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; font-size: 14px; }
+  .chat-user .chat-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+  .chat-assistant .chat-bubble { background: var(--card); border: 1px solid var(--border); color: var(--fg); border-bottom-left-radius: 4px; }
+  .chat-thinking { padding: 12px 16px; border-radius: 12px; background: #fef3c7; color: #92400e; font-size: 13px; align-self: flex-start; max-width: 80%; }
+  .chat-input-bar { display: flex; gap: 8px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; align-items: flex-end; }
+  .chat-input-bar textarea { flex: 1; resize: none; padding: 8px 12px; border: none; outline: none; font-family: inherit; font-size: 14px; line-height: 1.5; min-height: 40px; max-height: 200px; background: transparent; }
+  .chat-empty { text-align: center; color: var(--muted); padding: 40px 20px 20px; font-size: 14px; }
+  .chat-empty .examples { display: flex; flex-direction: column; gap: 8px; max-width: 600px; margin: 20px auto 0; }
+  .chat-empty .example { padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.15s; }
+  .chat-empty .example:hover { border-color: var(--primary); background: var(--primary-bg); }
 </style>
 </head>
 <body x-data="crm()" x-init="init()">
@@ -163,6 +180,7 @@
     <h1><span class="v">▲</span> Vanguard CRM</h1>
     <nav>
       <button :class="{active: tab==='today'}" @click="tab='today'"><span class="icon">🔥</span> Aujourd'hui <span class="badge" x-show="todayBadge > 0" x-text="todayBadge"></span></button>
+      <button :class="{active: tab==='chat'}" @click="tab='chat'; $nextTick(() => $refs.chatInput?.focus())"><span class="icon">💬</span> Chat</button>
       <button :class="{active: tab==='rdv'}" @click="tab='rdv'; loadRdv()"><span class="icon">🗓</span> RDV <span class="badge" x-show="rdvBadge > 0" x-text="rdvBadge"></span></button>
       <button :class="{active: tab==='pipeline'}" @click="tab='pipeline'"><span class="icon">📤</span> Pipeline</button>
       <button :class="{active: tab==='drafts'}" @click="tab='drafts'; loadDrafts()"><span class="icon">📝</span> Drafts <span class="badge" x-show="draftsBadge > 0" x-text="draftsBadge"></span></button>
@@ -329,6 +347,45 @@
               </template>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CHAT -->
+    <div x-show="tab==='chat'" x-cloak>
+      <div class="chat-container">
+        <div class="chat-thread" x-ref="chatThread">
+          <template x-if="chatHistory.length === 0">
+            <div class="chat-empty">
+              <h3 style="font-size: 18px; margin-bottom: 8px; color: var(--fg);">💬 Assistant CRM</h3>
+              <p>Demande-moi en langage naturel — je peux mettre à jour les prospects, créer des RDV, préparer des relances, lire les replies, etc.</p>
+              <div class="examples">
+                <div class="example" @click="chatInput = 'J\\'ai eu un échange LinkedIn avec [Prénom Nom] de [Boîte], il/elle est intéressé(e) par [contexte]. Score 7. Mets à jour la base.'">💡 « J'ai eu un échange LinkedIn avec X, mets-le dans la base »</div>
+                <div class="example" @click="chatInput = 'Quel est mon prochain RDV avec un prospect ?'">💡 « Quel est mon prochain RDV avec un prospect ? »</div>
+                <div class="example" @click="chatInput = 'Liste les prospects que j\\'ai pas relancés depuis 14 jours et qui sont en envoye'">💡 « Liste les prospects pas relancés depuis 14 jours »</div>
+                <div class="example" @click="chatInput = 'Prépare une relance pour [Boîte] avec un angle nouveau'">💡 « Prépare une relance pour Acme avec un angle nouveau »</div>
+                <div class="example" @click="chatInput = 'Bilan rapide de la semaine: envois, réponses, RDV pris'">💡 « Bilan rapide de la semaine »</div>
+              </div>
+            </div>
+          </template>
+
+          <template x-for="(m, idx) in chatHistory" :key="idx">
+            <div class="chat-msg" :class="'chat-' + m.role">
+              <div class="chat-meta" x-text="(m.role === 'user' ? 'Toi' : '🤖 Assistant') + ' · ' + new Date(m.ts).toLocaleTimeString('fr-CH', {hour:'2-digit',minute:'2-digit'})"></div>
+              <div class="chat-bubble" x-text="m.content"></div>
+            </div>
+          </template>
+
+          <div x-show="chatThinking" class="chat-msg chat-assistant">
+            <div class="chat-meta">🤖 Assistant</div>
+            <div class="chat-thinking">⏳ Claude réfléchit et exécute (peut prendre 30s à 2 min)...</div>
+          </div>
+        </div>
+
+        <div class="chat-input-bar">
+          <textarea x-ref="chatInput" x-model="chatInput" placeholder="Écris en langage naturel — Cmd+Enter pour envoyer" @keydown.cmd.enter.prevent="sendChat()" @keydown.ctrl.enter.prevent="sendChat()" rows="2"></textarea>
+          <button class="btn btn-primary" @click="sendChat()" :disabled="chatThinking || !chatInput.trim()">Envoyer</button>
+          <button class="btn btn-secondary" @click="resetChat()" x-show="chatHistory.length > 0" title="Nouveau fil">🔄</button>
         </div>
       </div>
     </div>
@@ -791,12 +848,26 @@ function crm() {
     rdv: [],
     rdvReplyId: null,
     calendarSnapshot: { exists: false, synced_at: null, eventCount: 0 },
+    chatHistory: [],
+    chatInput: '',
+    chatThinking: false,
+    chatSessionId: null,
     imapStatus: { lastImapCheck: null, running: false, lastImapStats: null },
     replyBody: '',
     filter: { q: '', status: '', targetType: '', mailQ: '', mailDate: '', draftStatus: 'pending', rdvStatus: 'active' },
     kanbanStatuses: ['nouveau', 'envoye', 'relance_1', 'relance_2', 'reponse', 'Discarded'],
 
     async init() {
+      // Restore chat from localStorage
+      try {
+        const saved = localStorage.getItem('vanguard-chat');
+        if (saved) {
+          const obj = JSON.parse(saved);
+          this.chatHistory = obj.messages || [];
+          this.chatSessionId = obj.sessionId || null;
+        }
+      } catch (err) { console.warn('chat restore failed', err); }
+
       await this.refresh();
       await this.loadDrafts();
       await this.loadRdv();
@@ -1272,6 +1343,79 @@ function crm() {
       if (diffH < 24) return `dans ${diffH}h`;
       const diffD = Math.round(diffH / 24);
       return `dans ${diffD}j`;
+    },
+
+    // --- Chat ---
+    saveChat() {
+      try {
+        localStorage.setItem('vanguard-chat', JSON.stringify({
+          sessionId: this.chatSessionId,
+          messages: this.chatHistory.slice(-50), // garde les 50 derniers
+        }));
+      } catch (err) { /* quota plein, ignore */ }
+    },
+
+    scrollChatBottom() {
+      this.$nextTick(() => {
+        const el = this.$refs.chatThread;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    },
+
+    async sendChat() {
+      const text = this.chatInput.trim();
+      if (!text || this.chatThinking) return;
+      this.chatHistory.push({ role: 'user', content: text, ts: new Date().toISOString() });
+      this.chatInput = '';
+      this.chatThinking = true;
+      this.saveChat();
+      this.scrollChatBottom();
+
+      try {
+        // 1. POST en async — claude tourne en background
+        const post = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, sessionId: this.chatSessionId }),
+        }).then(r => r.json());
+
+        if (post.error) throw new Error(post.error);
+        this.chatSessionId = post.sessionId;
+        const expectedIdx = post.messageIdx;
+
+        // 2. Poll toutes les 3s jusqu'à ce que le message attendu apparaisse (max 6 min)
+        const start = Date.now();
+        while (Date.now() - start < 360_000) {
+          await new Promise(r => setTimeout(r, 3000));
+          try {
+            const status = await fetch(`/api/chat/${this.chatSessionId}?since=${expectedIdx}`).then(r => r.json());
+            if (status.messages && status.messages.length > 0) {
+              const assistantMsg = status.messages.find(m => m.role === 'assistant');
+              if (assistantMsg) {
+                this.chatHistory.push(assistantMsg);
+                await this.refresh();
+                await this.loadRdv();
+                await this.loadDrafts();
+                return;
+              }
+            }
+          } catch (err) { /* retry */ }
+        }
+        throw new Error('timeout 6 min, Claude n\'a pas répondu');
+      } catch (err) {
+        this.chatHistory.push({ role: 'assistant', content: '❌ Erreur: ' + err.message, ts: new Date().toISOString() });
+      } finally {
+        this.chatThinking = false;
+        this.saveChat();
+        this.scrollChatBottom();
+      }
+    },
+
+    resetChat() {
+      if (!confirm('Effacer le fil de chat ? L\'historique local sera supprimé.')) return;
+      this.chatHistory = [];
+      this.chatSessionId = null;
+      this.saveChat();
     },
   };
 }
