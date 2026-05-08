@@ -1,79 +1,91 @@
 # Tai Van
-## Solution Architect & Automation Engineer
+## Senior Systems Consultant — Vanguard Systems
 
-**Vanguard Systems** | Le Mont-sur-Lausanne, Suisse
-contact@vanguard-systems.ch | +41 79 172 08 08
+Le Mont-sur-Lausanne, Suisse
+tai.van@vanguard-systems.ch | +41 79 232 03 96
 linkedin.com/in/tai-van | vanguard-systems.ch
 
 ---
 
 ## Profil
-Ingenieur automation senior et architecte solutions avec expertise approfondie en environnements pharmaceutiques reglementes. Double competence integrateur technique (Siemens, Rockwell) et chef de projet (PMP). Fondateur de Vanguard Systems, reseau de consultants seniors specialise dans l'execution hands-on pour environnements critiques.
 
-## Competences Techniques
+Solution Architect et team leader avec 5 ans d'expérience en automation industrielle dans la pharma régulée. Parcours hands-on chez Merck Corsier-sur-Vevey (Vaud) sur trois postes successifs (Automation Specialist, OT Operation Coordinator avec management d'équipe, OT Operation Supervisor), puis Solution Architect chez Expleo Switzerland où j'ai créé la division Data & Digitalization (RPA, PowerBI, premier chatbot LLM RAG). Aujourd'hui founder de Vanguard Systems, structure de consulting orientée delivery.
+
+## Compétences techniques
 
 ### PLC / DCS / SCADA
-- Siemens: PCS7, WinCC, TIA Portal, S7, Simatic Batch
-- Rockwell: ControlLogix, FactoryTalk, PlantPAx
-- Beckhoff, Emerson
+- Siemens, Yokogawa, Emerson DeltaV, Johnson Controls
+- Plus de 250 contrôleurs gérés en environnement régulé pharma (site Merck Corsier-sur-Vevey)
+- Migration HVAC Johnson Controls → Siemens (mission Merck via Expleo)
 
-### Reseaux & Communications OT
-- Profinet, Ethernet/IP, OPC UA
-- Cybersecurite OT, IEC 62443, segmentation reseau
+### Service / Lifecycle / Maintenance
+- Spare parts lifecycle management (150+ pièces critiques chez Merck)
+- Troubleshooting flows et templates standardisés
+- Change control protocols, modifications de code mineures
 
-### Data & IA
-- Python, TensorFlow, Azure ML
-- Power BI, Power Automate, RPA
-- RAG, agents autonomes
+### Digital & Automation
+- RPA : UiPath, PowerAutomate
+- Business Intelligence : PowerBI dashboards
+- LLM RAG / chatbot intelligent (premier déploiement chez Expleo)
 
-### Standards & Normes
-- GAMP5, GxP, ISA-88, ISA-95
-- IEC 62443, 21 CFR Part 11
-- FAT/SAT, IQ/OQ/PQ
+### Standards & Régulé
+- GMP, 21 CFR Part 11
+- Commissioning : SAT, validation système, mise en service (mission Takeda via Expleo)
 
-## Projets Cles
+## Expérience
 
-### Merck -- Modernisation Automation (2020-2023)
-Corsier-sur-Vevey, Vaud
-- Stabilisation et refonte des processus automatises
-- +20% efficacite equipe, -35% temps de resolution incidents, 90% adoption outils
+### Vanguard Systems — Founder & Senior Systems Consultant
+*Oct 2025 — présent | Le Mont-sur-Lausanne, Suisse*
 
-### Novartis -- Plateforme Production Digitale (2021-2023)
-Basel
-- Plateforme integree (production, qualite, maintenance, supply chain)
-- +50% visibilite operationnelle, -40% temps de decision, ROI positif annee 1
+Structure de consulting orientée delivery dans les environnements automation, engineering et IT industriels. Focus : automation industrielle, utilities, IT industriel, optimisation système-niveau en environnement régulé.
 
-### Roche -- Optimisation Process IA (2023-2024)
-Basel
-- Integration Python, TensorFlow, Azure ML
-- -15% consommation energie, +8% disponibilite, -20% variance qualite
+### Expleo Switzerland SA — Automation Engineer / Solution Architect
+*Mai 2023 — Oct 2025 | Lausanne, VD*
 
-### Takeda -- Commissioning Fill & Finish (2022-2024)
-- Qualification complete FAT/SAT avec validation GMP
-- Deploiement on-schedule, zero deviation GMP majeure
+- **Création de la division Data & Digitalization chez Expleo Switzerland** : conception des premières offres RPA (UiPath, PowerAutomate) et lancement du premier chatbot LLM RAG.
+- **Sécurisation de 3 nouveaux comptes pharma et chimie** grâce aux offres innovantes RPA et IA appliquée.
+- Mission Merck — pilotage de projets Automation HVAC : revamping Johnson Controls vers Siemens.
+- Mission Takeda — Automation Engineer sur projet d'extension de site (nouveau bâtiment) : commissioning, exécution SAT, validation système, mise en service.
 
-### Sun Chemicals -- Automatisation Flux Matieres (2023-2024)
-- Power BI, RPA, Power Automate
-- -60% temps introduction matieres, elimination erreurs, ROI 6 mois
+### Merck SA — OT Operation Supervisor
+*Août 2022 — Avril 2023 | Corsier-sur-Vevey, VD*
 
-### Chatbot Maintenance Intelligent (2023-2024)
-Major Pharma
-- Deploiement RAG on-premise
-- -40% temps resolution incidents, 90% adoption techniciens, 4.5/5 satisfaction
+Pilotage des opérations Service quotidiennes et améliorations stratégiques.
+- Refonte des processus de troubleshooting et automatisation des tâches répétitives via PowerAutomate : **+20 % de productivité**.
+- Création de dashboards PowerBI pour suivre les KPIs Service et fluidifier la communication avec les parties prenantes.
+- Identification et pilotage du **lifecycle de plus de 150 pièces critiques** : stratégies de remplacement et plans de continuité.
 
-### Merck -- Optimisation Energie Systemes Air (2023-2024)
-Corsier-sur-Vevey
-- -30%+ consommation energie, 100% conformite GMP maintenue
+### Merck SA — OT Operation Coordinator (manager équipe automation)
+*Sept 2021 — Juillet 2022 | Corsier-sur-Vevey, VD*
 
-## Certifications
-- PMP -- Project Management Professional (PMI, 2026-2029)
-- Lean Six Sigma Black Belt (CSSSC, 2025)
-- CAS Cybersecurity Foundations (EITCA, 2025)
-- CAS Artificial Intelligence (EITCA, 2024)
+- **Management d'une équipe de 4 automation specialists et engineers** tout en conservant un volet technique hands-on.
+- Planification collaborative des interventions avec production et autres parties prenantes.
+- Développement de troubleshooting flows et templates standardisés : amélioration des temps de réponse Service.
+- **Réduction de 20 % du downtime et 40 % des tickets entrants** grâce à un management efficace de l'équipe et à la résolution structurée des conflits.
+
+### Merck SA — Automation Specialist
+*Avril 2020 — Août 2021 | Corsier-sur-Vevey, VD*
+
+- Maintenance opérationnelle d'un site complexe : plus de **250 contrôleurs** sur technologies Siemens, Yokogawa, DeltaV.
+- Modifications de code mineures sous protocoles de change control.
+- Pilotage de projets d'obsolescence : remplacement d'iFix 4.5 et de contrôleurs Siemens C7 dans les zones chromatographie.
 
 ## Formation
-- The Open University (2025-2029, en cours)
+
+- **MBA — Master of Business Administration** | Open University, UK | 2025 — en cours
+- **Brevet d'Agent de Maintenance** | sfb Bildungszentrum, Prilly VD | 2018 — 2019
+- **Certificat Fédéral de Capacité — Automation CFC** | EMVs, Sion VS | 2009 — 2013
+
+## Certifications
+
+- **PMP — Project Management Professional** | PMI | 2026
+- **CAPM — Certified Associate in Project Management** | PMI | 2025
+- **EITCA Artificial Intelligence Programme** | EITCA | 2024
+- **Lean Six Sigma Green Belt** | CSSC | 2024
 
 ## Langues
-- Francais (natif)
-- English (professionnel)
+
+- Français (natif)
+- Vietnamien (natif)
+- Anglais (advanced)
+- Allemand (intermediate)
