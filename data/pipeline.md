@@ -6,6 +6,22 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-08
+- [x] https://www.jobs.ch/en/vacancies/detail/8ffd5f9b-0224-435f-8721-abe18d39b0a7/ | AVe SA | Senior Pharma/Chemical Project Manager (Martigny) → #097 Evaluated 4.0/5 CDI tracker uniquement (filon AVe SA partenariat sous-traitance)
+- [x] https://www.jobs.ch/en/vacancies/detail/b9ed6f65-3316-4b69-a027-94088b3487b9/ | AVe SA | EIA Project Manager (Vevey) → #098 Evaluated 3.5/5 CDI mid tracker uniquement (filon AVe déjà capté #097)
+- [x] https://www.jobs.ch/en/vacancies/detail/2a68adfb-370d-41e7-affe-05269c8fdebc/ | Demaurex SA (Rotzinger Group) | Head of Service (Vufflens-la-Ville) → #099 Evaluated 3.5/5 EXECUTIVE ALERT — décision Tai requise (robotique delta hors cœur PLC pharma)
+- [x] https://www.jobs.ch/en/vacancies/detail/bcbfac72-c318-452d-af5e-e9f854f4e0d3/ | Apco Technologies SA | Engineering PM Naval (Aigle) → #100 Evaluated 3.0/5 CDI naval tracker uniquement
+- [x] https://www.jobs.ch/en/vacancies/detail/6a34db71-8316-4bfd-afa1-b31bae6ad6b7/ | Eraneos Switzerland | Senior Manager / Principal Industrial Products (Lausanne) → #101 Evaluated 3.3/5 CDI consulting tracker uniquement
+- [x] https://www.jobup.ch/en/jobs/detail/8eded7dc-f478-461f-86a9-c8bb01e31c2b/ | ALBEDIS Geneva | Ingénieur/Administrateur systèmes linux & automation (Lausanne) → SKIP IT supervision Linux/K8s/Modbus hors scope OT industriel
+- [x] https://www.jobs.ch/en/vacancies/detail/e5324096-26db-43d1-ace6-0cf0a080247b/ | Bell Food Group AG | Mitarbeiter Operational Technology (Cheseaux-sur-Lausanne) → SKIP allemand fluent requis (filon Bell SA noté pour prospection — watchlist + Cheseaux VD)
+- [x] https://www.jobs.ch/en/vacancies/detail/ed3c3c59-0386-4fbf-af96-b989b6aea916/ | SpeciTec SA | Network Engineer 6 months (Geneva) → SKIP IT pur (BGP/OSPF/K8s)
+- [x] https://www.jobs.ch/en/vacancies/detail/c10bceef-31b3-4ab7-87ae-75f488ff5b48/ | Schmid AG energy | Project Manager (Moudon) → SKIP allemand bilingue requis
+- [x] https://www.jobs.ch/en/vacancies/detail/cf52aecf-67ab-438f-bead-2ab9eec3525f/ | Safran Timing Technologies | Process Engineer cleanroom (Yverdon) → SKIP microtechnique cleanroom hors scope
+- [x] https://www.jobs.ch/en/vacancies/detail/9e2fcb68-0247-4a75-8bbf-3b5adda60ffc/ | AXEPTA SA | Expert QA pour QC (Vaud) → SKIP QA pure pas automation
+- [x] https://www.jobs.ch/en/vacancies/detail/68e07195-9806-421c-9e5c-d780646c8c8f/ | cross-ING AG | Validation Engineer (Yverdon) → SKIP allemand C1 requis
+- [x] https://www.jobs.ch/en/vacancies/detail/3872692c-f357-49e7-a9fe-3d8cda35116c/ | Abidex SA | Chef de projet eau/sustainability (Combremont) → SKIP CFC + eau/construction hors scope
+- [x] https://www.jobs.ch/en/vacancies/detail/62bc3ad7-4ae7-457f-91b3-5f6bdac13824/ | Swibeco AG | Junior AI & Automation Project Manager (Lausanne) → SKIP niveau junior
+
 ### 2026-05-07
 - [x] https://www.jobup.ch/en/jobs/detail/b03f75b3-092f-47bc-98c8-12f5981d3da8/ | DRV Emplois | Développeur software/automation Beckhoff (Neuchâtel) → #93 Evaluated 3.5/5 freelance hors noyau Siemens, tracker uniquement
 - [x] https://www.jobs.ch/en/vacancies/detail/9c720afb-03f3-4f58-9920-93525cbaa8be/ | Undisclosed Morat | Ingénieur Automation/Systèmes Industriels → #94 Evaluated 4.0/5 CDI Morat tracker uniquement
