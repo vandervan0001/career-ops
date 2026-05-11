@@ -6,6 +6,13 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-11
+- [x] https://www.jobs.ch/en/vacancies/detail/f08b42a6-a782-4ec9-9d39-0710ed957992/ | AXEPTA SA | Ingénieur Automation H/F (Vaud) → #102 Evaluated 3.5/5 CDI senior non-exec tracker uniquement (filon AXEPTA partenariat sous-traitance)
+- [x] https://www.jobs.ch/en/vacancies/detail/0497047f-83ac-41c5-8e2f-8a56f6f87be8/ | Undisclosed (Neuchâtel) | Ingénieur Automation et Systèmes Industriels → #103 Evaluated 4.0/5 CDI senior 5 ans Siemens TIA+WinCC+EPLAN+I4.0 tracker uniquement (filon NE-FR microtechnique à identifier)
+- [x] https://www.jobs.ch/en/vacancies/detail/32946b7d-7f0e-42a1-a6c9-8d8eb695fea9/ | Undisclosed (La Chaux-de-Fonds) | Ingénieur en Automation → SKIP fit Beckhoff/Fanuc machine-outils hors cœur Siemens
+- [x] https://www.jobs.ch/en/vacancies/detail/691ce81e-b701-4e91-af4e-df674325aef1/ | Safeguard Global Switzerland | Spécialiste en Automatisation Industrielle (Neuchâtel) → SKIP CFC technicien
+- [x] https://www.jobs.ch/en/vacancies/detail/a1bf7a1e-8fe9-44d6-9e79-f53fad3c87de/ | Cremo SA | Chef-fe de team Automation (Villars-sur-Glâne) → SKIP DUP (#59 déjà évalué 3.2/5) — Cremo dans watchlist, prospection déjà active (Olivier Michaud envoyé 2026-05-09)
+
 ### 2026-05-08
 - [x] https://www.jobs.ch/en/vacancies/detail/8ffd5f9b-0224-435f-8721-abe18d39b0a7/ | AVe SA | Senior Pharma/Chemical Project Manager (Martigny) → #097 Evaluated 4.0/5 CDI tracker uniquement (filon AVe SA partenariat sous-traitance)
 - [x] https://www.jobs.ch/en/vacancies/detail/b9ed6f65-3316-4b69-a027-94088b3487b9/ | AVe SA | EIA Project Manager (Vevey) → #098 Evaluated 3.5/5 CDI mid tracker uniquement (filon AVe déjà capté #097)
