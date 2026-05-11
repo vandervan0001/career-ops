@@ -16,8 +16,10 @@ import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import { createTransport } from 'nodemailer';
 import yaml from 'js-yaml';
-import { contextLine, ctaLine, inferClassification, painPoint, presentationLine, primaryService, propositionLine, slugify, subjectForRow } from './prospection-core.mjs';
+import { containsOne, contextLine, ctaLine, inferClassification, painPoint, presentationLine, primaryService, propositionLine, slugify, subjectForRow } from './prospection-core.mjs';
 import { loadProspectionTsv, saveProspectionTsv } from './prospection-tsv.mjs';
+import { greeting as buildGreeting } from './salutation-helper.mjs';
+import { filterOutCarnet, logSkipped } from './outreach-guard.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PROSPECTION_FILE = join(ROOT, 'data', 'prospection.tsv');
@@ -37,6 +39,7 @@ const FROM_QUEUE = getArg('--from-queue', null);
 const OVERRIDE_SUBJECT = getArg('--subject', null);
 const OVERRIDE_BODY_RAW = getArg('--body', null);
 const OVERRIDE_BODY_FILE = getArg('--body-file', null);
+const ATTACH_RAW = getArg('--attach', null); // paths séparés par ; (ex: "output/CV.pdf;output/cover.pdf")
 const OVERRIDE_BODY = OVERRIDE_BODY_FILE && existsSync(OVERRIDE_BODY_FILE)
   ? readFileSync(OVERRIDE_BODY_FILE, 'utf-8')
   : OVERRIDE_BODY_RAW;
@@ -171,13 +174,7 @@ function saveTable(_header, rows) {
 }
 
 function greeting(row) {
-  const contact = (row.contact || '').trim();
-  const lang = rowLang(row);
-  if (!contact) return lang === 'en' ? 'Hi,' : 'Bonjour,';
-  const parts = contact.split(' ');
-  const firstName = parts[0];
-  const lastName = parts.length > 1 ? parts.slice(1).join(' ') : firstName;
-  return lang === 'en' ? `Hi ${firstName},` : `Bonjour Monsieur/Madame ${lastName},`;
+  return buildGreeting(row.contact, { lang: rowLang(row), gender: row.gender });
 }
 
 // Détecte la langue d'envoi: "lang=en" dans notes, ou target_type=siemens_partner.
@@ -188,12 +185,26 @@ function rowLang(row) {
   return 'fr';
 }
 
-// Template anglais pour Siemens Solution Partners alémaniques: angle "francophone partner for Suisse romande projects"
+// Template anglais: contexte dynamique selon signal (OEM pharma, Siemens partner, intégrateur, etc.)
 function initialEmailEn(row, profile) {
   const blocks = [greeting(row)];
-  blocks.push("I came across your work as a Siemens Solution Partner. When you win projects in Suisse romande, you may need a local French-speaking automation engineer for the on-site phase (FAT, SAT, commissioning, customer handover).");
-  blocks.push("I'm a freelance automation engineer based near Lausanne. I support integrators on the Romandie portion of their projects: TIA Portal, WinCC, PCS 7, on-site commissioning, and customer-facing FAT/SAT. Native French, fluent English, no travel cost from Zurich or Basel.");
-  blocks.push("Happy to be on your radar for the next project that needs a local pair of hands in Romandie.");
+  const sig = String(row.signal || '').trim();
+  const combo = `${sig} ${row.sector || ''} ${row.target_type || ''}`.toLowerCase();
+
+  // Contexte dynamique selon le type de cible
+  if (/^you\s/i.test(sig)) {
+    // Signal déjà rédigé en anglais ("you design...", "you manufacture...")
+    blocks.push(`I came across ${row.company}, ${sig.charAt(0).toLowerCase() + sig.slice(1)}. When your equipment is installed at pharma or industrial sites in Switzerland, you may need a local automation engineer for the on-site phase (FAT, SAT, commissioning).`);
+  } else if (containsOne(combo, ['packaging', 'pharma', 'filling', 'inspection', 'containment', 'blister', 'cartoning'])) {
+    blocks.push(`I came across ${row.company}'s work in ${row.sector || 'pharma machinery'}. When your machines are commissioned at Swiss pharma sites, you may need a local automation engineer for on-site FAT, SAT, and startup support.`);
+  } else if (containsOne(combo, ['siemens_partner', 'siemens solution partner'])) {
+    blocks.push("I came across your work as a Siemens Solution Partner. When you win projects in Suisse romande, you may need a local French-speaking automation engineer for the on-site phase (FAT, SAT, commissioning, customer handover).");
+  } else {
+    blocks.push(`I came across ${row.company}'s industrial activity. When you have projects in Suisse romande, you may need a local automation engineer for the on-site phase (FAT, SAT, commissioning).`);
+  }
+
+  blocks.push("I'm a freelance automation engineer based near Lausanne. I work with integrators and OEMs on the Swiss portion of their projects: Siemens TIA Portal, Rockwell Studio 5000, on-site commissioning, and customer-facing FAT/SAT. Native French, fluent English.");
+  blocks.push("Happy to be on your radar for the next project that needs a local pair of hands in Switzerland.");
   blocks.push('Best regards,');
   blocks.push(profile.consultant?.full_name || 'Tai Van');
   return blocks.filter(Boolean).join('\n\n');
@@ -278,6 +289,10 @@ function selectRows(rows, profile) {
 
   let selected = rows.filter((row) => row.email).filter((row) => stageForStatus(row.status));
   selected = selected.filter((row) => !['concurrent', 'recruteur'].includes(inferClassification(row, profile)));
+  // GUARD : exclure les contacts du carnet (cf. incident 2026-05-08)
+  const guard = filterOutCarnet(selected);
+  selected = guard.kept;
+  logSkipped(guard.skipped, 'outreach-dispatch');
   if (company) {
     selected = selected.filter((row) => row.company.toLowerCase().includes(company.toLowerCase()));
   }
@@ -294,16 +309,34 @@ function appendNote(existing, note) {
   return `${existing}. ${note}`;
 }
 
+function parseAttachments(raw) {
+  if (!raw) return [];
+  return raw.split(/[;,]/).map(p => p.trim()).filter(Boolean).map(p => {
+    const path = p.startsWith('/') ? p : join(ROOT, p);
+    if (!existsSync(path)) {
+      console.warn(`[attach] fichier introuvable, skip: ${path}`);
+      return null;
+    }
+    return { path, filename: path.split('/').pop() };
+  }).filter(Boolean);
+}
+
 async function sendMail(mailer, smtp, row, subjectLine, body) {
   const trackingMsgId = generateMsgId();
-  return mailer.sendMail({
+  const mailOptions = {
     from: `"${smtp.from.name}" <${smtp.from.address}>`,
     to: row.email,
     subject: subjectLine,
     text: body,
     html: buildHtmlEmail(body, trackingMsgId),
     headers: { 'X-Vanguard-Track-Id': trackingMsgId },
-  });
+  };
+  const attachments = parseAttachments(ATTACH_RAW);
+  if (attachments.length > 0) {
+    mailOptions.attachments = attachments;
+    console.log(`[attach] joindre: ${attachments.map(a => a.filename).join(', ')}`);
+  }
+  return mailer.sendMail(mailOptions);
 }
 
 async function main() {
