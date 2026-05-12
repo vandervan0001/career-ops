@@ -6,6 +6,18 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-12
+- [x] https://www.jobup.ch/fr/emplois/detail/f19ecbfb-779a-4961-9388-37b6d2a7542f/ | Multi Personnel (agence) | Manager Spray Drying Unit, API Production (Neuchâtel) → #104 Evaluated 3.0/5 CDI Manager prod pharma hors cœur automation, tracker uniquement (filon CDMO pharma NE + GEA PSD4 spray drying à identifier prospection)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/620e5e6f-1150-4528-abcc-e48ba8e54937/ | Conti & Associés Versoix | Chef(fe) de Projet MCR → SKIP fit (MCR/GTB bâtiment HVAC, hors automation industrielle)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/b5b25fa2-712e-4cfc-ad98-a868cefb5a4f/ | ESCO SA Geneveys-sur-Coffrane | Automaticien F/H CFC → SKIP title (CFC + CNC câblage chantier)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/dcd53815-cab6-47f2-b15c-6ee12472ca6a/ | Stadler Rail Aigle | Technicien maintenance/mise en service → SKIP technicien + allemand B2 + deadline candidature 2026-04-29 expirée
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/1abe51a0-d9ed-4aa0-8e60-ddb49f717186/ | Undisclosed Neuchâtel | Technicien Maintenance Automation → SKIP title (technicien junior)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/e059b397-d8e1-448a-9c22-3ae979e951ce/ | Undisclosed Lausanne | Automaticien CFC → SKIP title (CFC junior)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/fa528181-9aed-4a86-a0c6-ea379f692bae/ | Undisclosed Genève | Automaticien en maintenance CFC → SKIP title (CFC maintenance)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/3fd4ca01-184c-464a-98be-fa9973de2dca/ | Maison V. Guimet Le Lignon | Electromécanicien/Automaticien stations relevage → SKIP fit (stations relevage hors scope)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/22212e69-9b7d-433b-a6d7-ca2785eebe89/ | TOTECH Palézieux | Technicien Projets Extinction Incendie → SKIP fit (extinction incendie hors scope)
+- [x] https://www.jobup.ch/fr/emplois/detail/6d7a4499-1543-4b39-978f-5bf399d92f8f/ | Gi Group Neuchâtel | Technicien Maintenance Automation → SKIP title (technicien)
+
 ### 2026-05-11
 - [x] https://www.jobs.ch/en/vacancies/detail/f08b42a6-a782-4ec9-9d39-0710ed957992/ | AXEPTA SA | Ingénieur Automation H/F (Vaud) → #102 Evaluated 3.5/5 CDI senior non-exec tracker uniquement (filon AXEPTA partenariat sous-traitance)
 - [x] https://www.jobs.ch/en/vacancies/detail/0497047f-83ac-41c5-8e2f-8a56f6f87be8/ | Undisclosed (Neuchâtel) | Ingénieur Automation et Systèmes Industriels → #103 Evaluated 4.0/5 CDI senior 5 ans Siemens TIA+WinCC+EPLAN+I4.0 tracker uniquement (filon NE-FR microtechnique à identifier)
