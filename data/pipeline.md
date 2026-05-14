@@ -6,6 +6,18 @@
 ## Traitées
 <!-- Les mandats traités apparaissent ici automatiquement -->
 
+### 2026-05-14
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/76f91b31-d37f-4768-ad7a-91c0a2161722/ | AXEPTA SA (cabinet) / client biotech Genève | Ingénieur Méthodes Maintenance → #107 Evaluated 3.4/5 CDI non-exec tracker uniquement (filon AXEPTA partenariat sous-traitance déjà actif #21/#57/#102, biotech ISO 13485/IVDR/FDA)
+- [x] https://www.linkedin.com/jobs/view/4410365655/ | Recrutis (cabinet) / client pharma confidentiel Vaud | E&I Project Manager Pharma Biotech GMP → #108 Evaluated 3.6/5 CDI non-exec tracker uniquement (cabinet Recrutis canal récurrent cf. #67 Vevey, scope CQV IQ/OQ/PQ + SIA 108/NIBT)
+- [x] https://www.linkedin.com/jobs/view/4410169739/ | Randstad / client biotech Aubonne VD | Ingénieur Automation OT GMP → SKIP DUP (#80 Evaluated 4.2/5 le 2026-04-30, Merck Serono Aubonne identifié et outreach actif + entretien Teams 2026-05-11)
+- [x] https://www.linkedin.com/jobs/view/4411885412/ | CLEEVEN Vaud | Ingénieur automaticien DCS DeltaV/Experion/PlantPAx → SKIP DUP (#70 SKIP 2.8/5 CDI consulting entry-mid)
+- [x] https://www.linkedin.com/jobs/view/4413992312/ | Nexans Cortaillod NE | Project Engineer HV Accessories → SKIP fit (HV cables, pas PLC/SCADA/automation)
+- [x] https://www.jobup.ch/fr/emplois/detail/a2856022-9314-48cb-85a2-a4aff4181b20/ | Agap2 - HIQ Consulting Lausanne | Automation Engineer GMP biotech → SKIP DUP (#91 Evaluated 4.0/5 le 2026-05-05, filon partenariat payrolling déjà actif)
+- [x] https://www.jobup.ch/fr/emplois/detail/9c89e3f1-bf66-48a1-97b5-543c3bb6c81b/ | BOBST MEX SA Lausanne | Automation & Embedded Software Developer → SKIP DUP (#55 SKIP 2.5/5 le 2026-04-23, machines spéciales hors cœur pharma)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/b7074e5c-eb46-449a-bba9-88536ce73998/ | CERN Geneva | Electrical Engineer CMS Detector → SKIP fit (HV LV cables détecteur particules, pas PLC/automation industrielle)
+- [x] https://www.jobs.ch/fr/offres-emplois/detail/7f213611-efc2-43c6-8f22-6fe27fa7dceb/ | kohler+partner / INDEX Machines-outils St Blaise NE | Technicien application maintenance CNC → SKIP fit (CNC FANUC/Siemens machine-outils hors cœur pharma/process)
+- [x] https://www.jobup.ch/fr/emplois/detail/0741bd78-9dc1-4af8-96a4-d9df13a9cd93/ | HYDRO Exploitation SA Chippis VS | Electricien Spécialiste Maintenance → SKIP title (électricien CFC + hydroélectrique, hors scope automation senior)
+
 ### 2026-05-12
 - [x] https://www.jobup.ch/fr/emplois/detail/f19ecbfb-779a-4961-9388-37b6d2a7542f/ | Multi Personnel (agence) | Manager Spray Drying Unit, API Production (Neuchâtel) → #104 Evaluated 3.0/5 CDI Manager prod pharma hors cœur automation, tracker uniquement (filon CDMO pharma NE + GEA PSD4 spray drying à identifier prospection)
 - [x] https://www.jobs.ch/fr/offres-emplois/detail/620e5e6f-1150-4528-abcc-e48ba8e54937/ | Conti & Associés Versoix | Chef(fe) de Projet MCR → SKIP fit (MCR/GTB bâtiment HVAC, hors automation industrielle)
